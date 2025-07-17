@@ -16,7 +16,6 @@ import { Sparkles, Trash2, Plus, Loader2, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import type { SuggestShiftAssignmentsInput, SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { EditEmployeeDialog } from "./edit-employee-dialog";
 
 
 type SuggestShiftsDialogProps = {
@@ -45,8 +44,8 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
 
   const { register, control, handleSubmit, reset, watch, setValue } = useForm<FormValues>({
     defaultValues: {
-      employees: initialEmployees,
-      shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: roles[0] || "" }],
+      employees: [],
+      shifts: [],
       scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
     },
   });
@@ -64,7 +63,6 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
 
   const {
     fields: employeeFields,
-    // append: appendEmployee, // We don't want to add employees here, but in the sidebar
     remove: removeEmployee,
   } = useFieldArray({ control, name: "employees" });
   
@@ -75,21 +73,6 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
   } = useFieldArray({ control, name: "shifts" });
 
   const currentEmployees = watch("employees");
-
-  const handleUpdateEmployeeInForm = (updatedEmployee: Employee) => {
-    const employeeIndex = employeeFields.findIndex(emp => emp.id === updatedEmployee.id);
-    if(employeeIndex > -1) {
-        // `update` from useFieldArray is a bit weird with types, setValue is more reliable
-        setValue(`employees.${employeeIndex}`, updatedEmployee);
-    }
-  };
-
-  const handleDeleteEmployeeInForm = (employeeId: string) => {
-    const employeeIndex = employeeFields.findIndex(emp => emp.id === employeeId);
-    if(employeeIndex > -1) {
-        removeEmployee(employeeIndex);
-    }
-  }
 
 
   const handleFormSubmit = async (data: FormValues) => {
