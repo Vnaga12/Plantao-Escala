@@ -51,7 +51,6 @@ export default function CalendarSwitcher({
       id: `cal-${Date.now()}`,
       name: newCalendarName,
       shifts: [],
-      employees: [],
     };
     onCalendarsChange([...calendars, newCalendar]);
     setNewCalendarName("");

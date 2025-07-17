@@ -28,5 +28,4 @@ export type Calendar = {
   id: string;
   name: string;
   shifts: Shift[];
-  employees: Employee[];
 };

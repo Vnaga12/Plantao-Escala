@@ -20,32 +20,6 @@ const initialCalendars: Calendar[] = [
       { id: '3', day: 12, role: 'Ambulatório', employeeName: 'Carlos', startTime: '09:00', endTime: '17:00', color: 'purple' },
       { id: '4', day: 21, role: 'Emergência', employeeName: 'Dr. David', startTime: '20:00', endTime: '04:00', color: 'red' },
     ],
-    employees: [
-        {
-            id: '1',
-            name: 'Dra. Alice',
-            availability: [{ day: 'Monday', startTime: '08:00', endTime: '17:00' }],
-            preferences: 'Prefere turnos da manhã.'
-        },
-        {
-            id: '2',
-            name: 'Beto',
-            availability: [{ day: 'Tuesday', startTime: '12:00', endTime: '20:00' }],
-            preferences: 'Não pode trabalhar nos fins de semana.'
-        },
-        {
-            id: '3',
-            name: 'Carlos',
-            availability: [],
-            preferences: 'Disponível para cobrir turnos.'
-        },
-        {
-            id: '4',
-            name: 'Dr. David',
-            availability: [],
-            preferences: 'Prefere turnos da noite.'
-        },
-    ]
   },
   {
     id: 'cal2',
@@ -53,22 +27,42 @@ const initialCalendars: Calendar[] = [
     shifts: [
         { id: '5', day: 10, role: 'Cirurgia Eletiva', employeeName: 'Dr. David', startTime: '09:00', endTime: '17:00', color: 'blue' },
     ],
-    employees: [
-        {
-            id: '4',
-            name: 'Dr. David',
-            availability: [],
-            preferences: 'Prefere turnos da noite.'
-        },
-        {
-            id: '5',
-            name: 'Dra. Elisa',
-            availability: [],
-            preferences: ''
-        }
-    ]
   }
 ];
+
+const initialEmployees: Employee[] = [
+    {
+        id: '1',
+        name: 'Dra. Alice',
+        availability: [{ day: 'Monday', startTime: '08:00', endTime: '17:00' }],
+        preferences: 'Prefere turnos da manhã.'
+    },
+    {
+        id: '2',
+        name: 'Beto',
+        availability: [{ day: 'Tuesday', startTime: '12:00', endTime: '20:00' }],
+        preferences: 'Não pode trabalhar nos fins de semana.'
+    },
+    {
+        id: '3',
+        name: 'Carlos',
+        availability: [],
+        preferences: 'Disponível para cobrir turnos.'
+    },
+    {
+        id: '4',
+        name: 'Dr. David',
+        availability: [],
+        preferences: 'Prefere turnos da noite.'
+    },
+     {
+        id: '5',
+        name: 'Dra. Elisa',
+        availability: [],
+        preferences: ''
+    }
+];
+
 
 const initialColorMeanings: { color: ShiftColor, meaning: string }[] = [
     { color: 'blue', meaning: 'Cirurgia Eletiva' },
@@ -89,6 +83,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [calendars, setCalendars] = React.useState<Calendar[]>([]);
   const [activeCalendarId, setActiveCalendarId] = React.useState<string>('');
+  const [employees, setEmployees] = React.useState<Employee[]>([]);
   const [roles, setRoles] = React.useState<string[]>([]);
   const [colorMeanings, setColorMeanings] = React.useState<{ color: ShiftColor, meaning: string }[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
@@ -102,6 +97,7 @@ export default function Home() {
         const storedDate = localStorage.getItem('currentDate');
         const storedCalendars = localStorage.getItem('calendars');
         const storedActiveId = localStorage.getItem('activeCalendarId');
+        const storedEmployees = localStorage.getItem('employees');
         const storedRoles = localStorage.getItem('roles');
         const storedColorMeanings = localStorage.getItem('colorMeanings');
         const storedSidebarState = localStorage.getItem('isSidebarOpen');
@@ -110,6 +106,7 @@ export default function Home() {
         const loadedCalendars = storedCalendars ? JSON.parse(storedCalendars) : initialCalendars;
         setCalendars(loadedCalendars);
         setActiveCalendarId(storedActiveId || loadedCalendars[0]?.id || '');
+        setEmployees(storedEmployees ? JSON.parse(storedEmployees) : initialEmployees);
         setRoles(storedRoles ? JSON.parse(storedRoles) : initialRoles);
         setColorMeanings(storedColorMeanings ? JSON.parse(storedColorMeanings) : initialColorMeanings);
         setIsSidebarOpen(storedSidebarState ? JSON.parse(storedSidebarState) : true);
@@ -123,6 +120,7 @@ export default function Home() {
         });
         setCalendars(initialCalendars);
         setActiveCalendarId(initialCalendars[0]?.id || '');
+        setEmployees(initialEmployees);
         setRoles(initialRoles);
         setColorMeanings(initialColorMeanings);
         setIsSidebarOpen(true);
@@ -135,16 +133,16 @@ export default function Home() {
         localStorage.setItem('currentDate', currentDate.toISOString());
         localStorage.setItem('calendars', JSON.stringify(calendars));
         localStorage.setItem('activeCalendarId', activeCalendarId);
+        localStorage.setItem('employees', JSON.stringify(employees));
         localStorage.setItem('roles', JSON.stringify(roles));
         localStorage.setItem('colorMeanings', JSON.stringify(colorMeanings));
         localStorage.setItem('isSidebarOpen', JSON.stringify(isSidebarOpen));
     }
-  }, [currentDate, calendars, activeCalendarId, roles, colorMeanings, isSidebarOpen, isClient]);
+  }, [currentDate, calendars, activeCalendarId, employees, roles, colorMeanings, isSidebarOpen, isClient]);
 
 
   const activeCalendar = calendars.find(c => c.id === activeCalendarId) ?? calendars[0];
   const shifts = activeCalendar?.shifts || [];
-  const employees = activeCalendar?.employees || [];
 
   const handleNextMonth = () => {
     setCurrentDate((prevDate) => addMonths(prevDate, 1));
@@ -154,18 +152,10 @@ export default function Home() {
     setCurrentDate((prevDate) => subMonths(prevDate, 1));
   };
 
-  const updateActiveCalendar = (updater: (calendar: Calendar) => Calendar) => {
+  const updateActiveCalendarShifts = (newShifts: Shift[]) => {
     setCalendars(prev => prev.map(cal => 
-      cal.id === activeCalendarId ? updater(cal) : cal
+      cal.id === activeCalendarId ? { ...cal, shifts: newShifts } : cal
     ));
-  };
-
-  const handleSetShifts = (newShifts: Shift[]) => {
-    updateActiveCalendar(cal => ({ ...cal, shifts: newShifts }));
-  };
-
-  const handleSetEmployees = (newEmployees: Employee[]) => {
-    updateActiveCalendar(cal => ({ ...cal, employees: newEmployees }));
   };
 
   const handleAddShift = (newShift: Omit<Shift, 'id'>) => {
@@ -173,19 +163,19 @@ export default function Home() {
       ...newShift,
       id: Date.now().toString(),
     };
-    handleSetShifts([...shifts, shiftWithId]);
+    updateActiveCalendarShifts([...shifts, shiftWithId]);
     toast({ title: "Turno Adicionado", description: "O novo turno foi adicionado ao calendário." });
   };
   
   const handleUpdateShift = (updatedShift: Shift) => {
     const newShifts = shifts.map(s => s.id === updatedShift.id ? updatedShift : s);
-    handleSetShifts(newShifts);
+    updateActiveCalendarShifts(newShifts);
     toast({ title: "Turno Atualizado", description: "O turno foi atualizado com sucesso." });
   };
 
   const handleDeleteShift = (shiftId: string) => {
     const newShifts = shifts.filter(s => s.id !== shiftId);
-    handleSetShifts(newShifts);
+    updateActiveCalendarShifts(newShifts);
     toast({ title: "Turno Excluído", description: "O turno foi removido do calendário." });
   };
   
@@ -244,7 +234,7 @@ export default function Home() {
               }
           });
       }
-      handleSetShifts(newShifts);
+      updateActiveCalendarShifts(newShifts);
   };
   
   const filteredShifts = shifts.filter(shift => {
@@ -255,15 +245,6 @@ export default function Home() {
     );
   });
   
-  const handleCalendarsChange = (newCalendars: Calendar[]) => {
-     // When adding a new calendar, ensure it has an employees array.
-    const calendarsWithEmployees = newCalendars.map(cal => ({
-      ...cal,
-      employees: cal.employees || [],
-    }));
-    setCalendars(calendarsWithEmployees);
-  };
-
   if (!isClient || !activeCalendar) {
     // You can render a loader or null here to avoid hydration mismatch
     return null;
@@ -284,7 +265,7 @@ export default function Home() {
         calendars={calendars}
         activeCalendarId={activeCalendarId}
         onCalendarChange={setActiveCalendarId}
-        onCalendarsChange={handleCalendarsChange}
+        onCalendarsChange={setCalendars}
         colorMeanings={colorMeanings}
         onColorMeaningsChange={setColorMeanings}
         isSidebarOpen={isSidebarOpen}
@@ -293,7 +274,7 @@ export default function Home() {
       <div className="flex flex-1 overflow-hidden">
         {isSidebarOpen && <EmployeeSidebar 
             employees={employees} 
-            onEmployeesChange={handleSetEmployees}
+            onEmployeesChange={setEmployees}
             shifts={shifts}
             currentDate={currentDate}
             onUpdateShift={handleUpdateShift}

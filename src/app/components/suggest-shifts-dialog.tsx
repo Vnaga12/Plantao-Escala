@@ -36,7 +36,7 @@ const weekdays = [
     { value: "Sunday", label: "Domingo" },
 ];
 
-export function SuggestShiftsDialog({ employees: initialEmployees, onApplySuggestions, roles }: SuggestShiftsDialogProps) {
+export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: SuggestShiftsDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isPending, setIsPending] = React.useState(false);
   const [suggestions, setSuggestions] = React.useState<SuggestShiftAssignmentsOutput | null>(null);
@@ -44,7 +44,7 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
 
   const { register, control, handleSubmit, reset, watch, setValue } = useForm<FormValues>({
     defaultValues: {
-      employees: [],
+      employees: employees,
       shifts: [],
       scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
     },
@@ -54,12 +54,12 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
   React.useEffect(() => {
     if (isOpen) {
         reset({
-            employees: initialEmployees,
+            employees: employees,
             shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: roles[0] || "" }],
             scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
         });
     }
-  }, [initialEmployees, roles, reset, isOpen]);
+  }, [employees, roles, reset, isOpen]);
 
   const {
     fields: employeeFields,
@@ -189,7 +189,7 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
             </TabsList>
             <ScrollArea className="flex-1 p-1">
               <TabsContent value="employees" className="mt-2">
-                  <p className="text-sm text-muted-foreground mb-4">A equipe listada é a do hospital selecionado. Use esta aba para ajustar as preferências e disponibilidade para esta sugestão específica.</p>
+                  <p className="text-sm text-muted-foreground mb-4">Ajuste as preferências e disponibilidade da equipe para esta sugestão específica.</p>
                   {employeeFields.map((field, index) => (
                       <div key={field.id} className="p-4 border rounded-lg mb-4 bg-background">
                           <div className="flex justify-between items-center mb-2">
