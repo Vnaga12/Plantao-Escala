@@ -24,7 +24,15 @@ type SuggestShiftsDialogProps = {
 
 type FormValues = SuggestShiftAssignmentsInput;
 
-const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const weekdays = [
+    { value: "Monday", label: "Segunda-feira" },
+    { value: "Tuesday", label: "Terça-feira" },
+    { value: "Wednesday", label: "Quarta-feira" },
+    { value: "Thursday", label: "Quinta-feira" },
+    { value: "Friday", label: "Sexta-feira" },
+    { value: "Saturday", label: "Sábado" },
+    { value: "Sunday", label: "Domingo" },
+];
 
 export function SuggestShiftsDialog({ employees: initialEmployees, onApplySuggestions }: SuggestShiftsDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -36,7 +44,7 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
     defaultValues: {
       employees: initialEmployees,
       shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: "Doctor" }],
-      scheduleConstraints: "Ensure at least one doctor is on call at all times. No employee should work more than 40 hours a week.",
+      scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
     },
   });
 
@@ -61,13 +69,13 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
     if (result.success && result.data) {
       setSuggestions(result.data);
       toast({
-        title: "Suggestions Ready",
-        description: "AI has generated shift suggestions.",
+        title: "Sugestões Prontas",
+        description: "A IA gerou sugestões de turnos.",
       });
     } else {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: "Erro",
         description: result.error,
       });
     }
@@ -90,14 +98,14 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
     return (
       <div className="mt-4 space-y-2">
         <div className="flex justify-between items-center">
-          <Label className="text-sm font-medium">Availability</Label>
+          <Label className="text-sm font-medium">Disponibilidade</Label>
           <Button
             type="button"
             size="sm"
             variant="outline"
             onClick={() => append({ day: 'Monday', startTime: '09:00', endTime: '17:00' })}
           >
-            <Plus className="mr-2 h-3 w-3" /> Add
+            <Plus className="mr-2 h-3 w-3" /> Adicionar
           </Button>
         </div>
         <div className="space-y-2 pl-2">
@@ -110,7 +118,7 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <SelectTrigger className="col-span-2"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {weekdays.map(day => <SelectItem key={day} value={day}>{day}</SelectItem>)}
+                        {weekdays.map(day => <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   )}
@@ -124,50 +132,54 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
               </div>
             </div>
           ))}
-          {fields.length === 0 && <p className="text-xs text-muted-foreground pt-2">No availability specified.</p>}
+          {fields.length === 0 && <p className="text-xs text-muted-foreground pt-2">Nenhuma disponibilidade especificada.</p>}
         </div>
       </div>
     );
   };
+
+  const getDayLabel = (dayValue: string) => {
+    return weekdays.find(d => d.value === dayValue)?.label || dayValue;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>
           <Sparkles />
-          Suggest Shifts
+          Sugerir Turnos
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>AI-Powered Shift Suggestions</DialogTitle>
+          <DialogTitle>Sugestões de Turnos com IA</DialogTitle>
           <DialogDescription>
-            Define your team and required shifts, and let AI build the optimal schedule.
+            Defina sua equipe e os turnos necessários, e deixe a IA construir o cronograma ideal.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="flex-1 overflow-y-auto">
           <Tabs defaultValue="employees" className="h-full flex flex-col">
             <TabsList className="flex-shrink-0">
-              <TabsTrigger value="employees">Employees</TabsTrigger>
-              <TabsTrigger value="shifts">Shifts to Fill</TabsTrigger>
-              <TabsTrigger value="constraints">Constraints</TabsTrigger>
-              {suggestions && <TabsTrigger value="suggestions">Suggestions</TabsTrigger>}
+              <TabsTrigger value="employees">Funcionários</TabsTrigger>
+              <TabsTrigger value="shifts">Turnos a Preencher</TabsTrigger>
+              <TabsTrigger value="constraints">Restrições</TabsTrigger>
+              {suggestions && <TabsTrigger value="suggestions">Sugestões</TabsTrigger>}
             </TabsList>
             <ScrollArea className="flex-1 p-1">
               <TabsContent value="employees" className="mt-2">
                   {employeeFields.map((field, index) => (
                       <div key={field.id} className="p-4 border rounded-lg mb-4 bg-background">
                           <div className="flex justify-between items-center mb-2">
-                             <Label className="font-semibold">Employee #{index + 1}</Label>
+                             <Label className="font-semibold">Funcionário #{index + 1}</Label>
                              <Button type="button" variant="ghost" size="icon" onClick={() => removeEmployee(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                           </div>
-                          <Input {...register(`employees.${index}.name`)} placeholder="Name" className="mb-2" />
-                          <Textarea {...register(`employees.${index}.preferences`)} placeholder="Preferences (e.g., prefers morning shifts)" />
+                          <Input {...register(`employees.${index}.name`)} placeholder="Nome" className="mb-2" />
+                          <Textarea {...register(`employees.${index}.preferences`)} placeholder="Preferências (ex: prefere turnos da manhã)" />
                           <EmployeeFormFields index={index} control={control} register={register} />
                       </div>
                   ))}
                   <Button type="button" variant="outline" onClick={() => appendEmployee({ id: Date.now().toString(), name: '', availability: [], preferences: '' })}>
-                      <Plus className="mr-2 h-4 w-4" /> Add Employee
+                      <Plus className="mr-2 h-4 w-4" /> Adicionar Funcionário
                   </Button>
               </TabsContent>
               <TabsContent value="shifts" className="mt-2">
@@ -178,9 +190,9 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
                               name={`shifts.${index}.day`}
                               render={({ field }) => (
                                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                  <SelectTrigger><SelectValue placeholder="Select day" /></SelectTrigger>
+                                  <SelectTrigger><SelectValue placeholder="Selecione o dia" /></SelectTrigger>
                                   <SelectContent>
-                                    {weekdays.map(day => <SelectItem key={day} value={day}>{day}</SelectItem>)}
+                                    {weekdays.map(day => <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>)}
                                   </SelectContent>
                                   </Select>
                               )}
@@ -195,9 +207,9 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Doctor">Doctor</SelectItem>
-                                        <SelectItem value="Nurse">Nurse</SelectItem>
-                                        <SelectItem value="Technician">Technician</SelectItem>
+                                        <SelectItem value="Doctor">Médico(a)</SelectItem>
+                                        <SelectItem value="Nurse">Enfermeiro(a)</SelectItem>
+                                        <SelectItem value="Technician">Técnico(a)</SelectItem>
                                     </SelectContent>
                                     </Select>
                                 )}
@@ -207,24 +219,24 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
                       </div>
                   ))}
                   <Button type="button" variant="outline" onClick={() => appendShift({ day: 'Tuesday', startTime: '09:00', endTime: '17:00', role: 'Nurse' })}>
-                      <Plus className="mr-2 h-4 w-4" /> Add Shift
+                      <Plus className="mr-2 h-4 w-4" /> Adicionar Turno
                   </Button>
               </TabsContent>
               <TabsContent value="constraints" className="mt-2">
-                 <Textarea {...register('scheduleConstraints')} rows={10} placeholder="e.g. Ensure fairness in weekend shifts." />
+                 <Textarea {...register('scheduleConstraints')} rows={10} placeholder="ex: Garantir justiça nos turnos de fim de semana." />
               </TabsContent>
               <TabsContent value="suggestions" className="mt-2">
-                  {isPending && <div className="flex items-center justify-center p-8"><Loader2 className="animate-spin mr-2"/> Generating...</div>}
+                  {isPending && <div className="flex items-center justify-center p-8"><Loader2 className="animate-spin mr-2"/> Gerando...</div>}
                   {suggestions && (
                       <div className="bg-background rounded-lg p-4">
-                          <h3 className="font-bold mb-2 text-lg">AI Summary & Rationale</h3>
+                          <h3 className="font-bold mb-2 text-lg">Resumo e Justificativa da IA</h3>
                           <p className="text-sm bg-muted p-3 rounded-md mb-4">{suggestions.summary}</p>
-                          <h3 className="font-bold mb-2 text-lg">Suggested Assignments</h3>
+                          <h3 className="font-bold mb-2 text-lg">Atribuições Sugeridas</h3>
                           <div className="space-y-2">
                           {suggestions.assignments.map((a, i) => (
                               <div key={i} className="text-sm p-3 border rounded-lg grid grid-cols-1 sm:grid-cols-3 gap-2 bg-white">
                                   <span className="font-semibold">{initialEmployees.find(e => e.id === a.employeeId)?.name}</span>
-                                  <span>{a.role} on {a.shiftDay}</span>
+                                  <span>{a.role} na {getDayLabel(a.shiftDay)}</span>
                                   <span className="font-mono">{a.shiftStartTime} - {a.shiftEndTime}</span>
                               </div>
                           ))}
@@ -235,10 +247,10 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
             </ScrollArea>
             <div className="mt-auto pt-4 border-t flex justify-end gap-2 flex-shrink-0">
               {suggestions ? (
-                 <Button type="button" onClick={handleApply}>Apply to Calendar</Button>
+                 <Button type="button" onClick={handleApply}>Aplicar ao Calendário</Button>
               ) : (
                 <Button type="submit" disabled={isPending}>
-                  {isPending ? <><Loader2 className="animate-spin mr-2"/> Thinking...</> : "Generate Suggestions"}
+                  {isPending ? <><Loader2 className="animate-spin mr-2"/> Pensando...</> : "Gerar Sugestões"}
                 </Button>
               )}
             </div>

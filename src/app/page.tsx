@@ -8,24 +8,24 @@ import Header from "@/app/components/header";
 import CalendarView from "@/app/components/calendar-view";
 
 const initialShifts: Shift[] = [
-  { id: '1', day: 5, role: 'Doctor', employeeName: 'Dr. Alice', startTime: '08:00', endTime: '16:00', color: 'blue' },
-  { id: '2', day: 5, role: 'Nurse', employeeName: 'Bob', startTime: '14:00', endTime: '22:00', color: 'green' },
-  { id: '3', day: 12, role: 'Technician', employeeName: 'Charlie', startTime: '09:00', endTime: '17:00', color: 'purple' },
-  { id: '4', day: 21, role: 'Doctor', employeeName: 'Dr. Dave', startTime: '20:00', endTime: '04:00', color: 'blue' },
+  { id: '1', day: 5, role: 'Doctor', employeeName: 'Dra. Alice', startTime: '08:00', endTime: '16:00', color: 'blue' },
+  { id: '2', day: 5, role: 'Nurse', employeeName: 'Beto', startTime: '14:00', endTime: '22:00', color: 'green' },
+  { id: '3', day: 12, role: 'Technician', employeeName: 'Carlos', startTime: '09:00', endTime: '17:00', color: 'purple' },
+  { id: '4', day: 21, role: 'Doctor', employeeName: 'Dr. David', startTime: '20:00', endTime: '04:00', color: 'blue' },
 ];
 
 const initialEmployees: Employee[] = [
     {
         id: '1',
-        name: 'Dr. Alice',
+        name: 'Dra. Alice',
         availability: [{ day: 'Monday', startTime: '08:00', endTime: '17:00' }],
-        preferences: 'Prefers morning shifts.'
+        preferences: 'Prefere turnos da manhã.'
     },
     {
         id: '2',
-        name: 'Bob',
+        name: 'Beto',
         availability: [{ day: 'Tuesday', startTime: '12:00', endTime: '20:00' }],
-        preferences: 'Cannot work on weekends.'
+        preferences: 'Não pode trabalhar nos fins de semana.'
     },
 ];
 
@@ -69,13 +69,13 @@ export default function Home() {
       const daysInMonth = getDaysInMonth(currentDate);
 
       const weekdayMap: { [key: string]: number } = {
-          'sunday': 0,
-          'monday': 1,
-          'tuesday': 2,
-          'wednesday': 3,
-          'thursday': 4,
-          'friday': 5,
-          'saturday': 6,
+          'sunday': 0, 'domingo': 0,
+          'monday': 1, 'segunda-feira': 1,
+          'tuesday': 2, 'terça-feira': 2,
+          'wednesday': 3, 'quarta-feira': 3,
+          'thursday': 4, 'quinta-feira': 4,
+          'friday': 5, 'sexta-feira': 5,
+          'saturday': 6, 'sábado': 6,
       };
 
       const newShifts: Shift[] = [];
@@ -90,7 +90,7 @@ export default function Home() {
           const dayOfWeek = getDay(dateForDay);
 
           const matchingSuggestions = suggestedShifts.filter(suggestion => {
-              const suggestionDay = suggestion.shiftDay.toLowerCase();
+              const suggestionDay = suggestion.shiftDay.toLowerCase().replace('-feira', '');
               return weekdayMap[suggestionDay] === dayOfWeek;
           });
 
@@ -102,7 +102,7 @@ export default function Home() {
                     id: `suggested-${dateForDay.getTime()}-${index}`,
                     day: day,
                     role: suggestion.role,
-                    employeeName: employee?.name || 'Unknown',
+                    employeeName: employee?.name || 'Desconhecido',
                     startTime: suggestion.shiftStartTime,
                     endTime: suggestion.shiftEndTime,
                     color: roleColors[suggestion.role],

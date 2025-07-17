@@ -58,7 +58,7 @@ const SuggestShiftAssignmentsOutputSchema = z.object({
     .array(
       z.object({
         employeeId: z.string().describe('The ID of the employee assigned to the shift.'),
-        shiftDay: z.string().describe('Day of the week for the assigned shift.'),
+        shiftDay: z.string().describe('Day of the week for the assigned shift. Use Portuguese, e.g. Segunda-feira, Terça-feira.'),
         shiftStartTime: z.string().describe('Start time of the assigned shift.'),
         shiftEndTime: z.string().describe('End time of the assigned shift.'),
         role: z.string().describe('The role that the employee will fulfill'),
@@ -78,18 +78,19 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
   name: 'suggestShiftAssignmentsPrompt',
   input: {schema: SuggestShiftAssignmentsInputSchema},
   output: {schema: SuggestShiftAssignmentsOutputSchema},
-  prompt: `You are an AI assistant helping to create optimal shift assignments for a medical team.
+  prompt: `Você é um assistente de IA que ajuda a criar atribuições de turno ideais para uma equipe médica. A resposta deve ser em português.
 
-  Based on the employee availability, preferences, shift requirements, and schedule constraints, suggest shift assignments.
+  Com base na disponibilidade dos funcionários, preferências, requisitos de turno e restrições de horário, sugira atribuições de turno.
 
-  Employees: {{JSON.stringify(employees)}}
-  Shifts: {{JSON.stringify(shifts)}}
-  Schedule Constraints: {{{scheduleConstraints}}}
+  Funcionários: {{JSON.stringify(employees)}}
+  Turnos: {{JSON.stringify(shifts)}}
+  Restrições de Horário: {{{scheduleConstraints}}}
 
-  Consider employee preferences and fairness when making assignments.
-  Return the shift assignments as a JSON object.
-  Ensure that your response matches the output schema exactly, including all fields.
-  Think step by step, and explain your reasoning in the summary.
+  Considere as preferências dos funcionários e a justiça ao fazer as atribuições.
+  Retorne as atribuições de turno como um objeto JSON.
+  Certifique-se de que sua resposta corresponda exatamente ao esquema de saída, incluindo todos os campos.
+  Pense passo a passo e explique seu raciocínio no resumo.
+  Os dias da semana em shiftDay devem estar em português (ex: Segunda-feira, Terça-feira, etc.).
   `,config: {
     safetySettings: [
       {
@@ -123,4 +124,3 @@ const suggestShiftAssignmentsFlow = ai.defineFlow(
     return output!;
   }
 );
-

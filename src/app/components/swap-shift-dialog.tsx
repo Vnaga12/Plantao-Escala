@@ -24,19 +24,19 @@ export function SwapShiftDialog() {
           </DialogTrigger>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Swap Shift</p>
+          <p>Trocar Turno</p>
         </TooltipContent>
       </Tooltip>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Swap Shift</DialogTitle>
+          <DialogTitle>Trocar Turno</DialogTitle>
           <DialogDescription>
-            This feature is coming soon. You will be able to select another shift to swap with.
+            Este recurso estará disponível em breve. Você poderá selecionar outro turno para trocar.
           </DialogDescription>
         </DialogHeader>
         {/* Placeholder for swap UI */}
         <div className="py-4">
-            <p className="text-center text-muted-foreground">Swap functionality will be implemented here.</p>
+            <p className="text-center text-muted-foreground">A funcionalidade de troca será implementada aqui.</p>
         </div>
       </DialogContent>
     </Dialog>

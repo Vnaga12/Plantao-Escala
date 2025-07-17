@@ -9,7 +9,7 @@ export type Shift = {
 };
 
 export type EmployeeAvailability = {
-  day: string;
+  day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday' | string;
   startTime: string;
   endTime: string;
 };

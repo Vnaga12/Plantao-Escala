@@ -2,6 +2,7 @@
 
 import type { Shift } from "@/lib/types";
 import { format, getDaysInMonth, startOfMonth, getDay, addDays, isToday, isSameMonth } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import ShiftCard from "./shift-card";
 import { AddShiftDialog } from "./add-shift-dialog";
@@ -20,7 +21,7 @@ export default function CalendarView({ currentDate, shifts, onAddShift }: Calend
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const emptyDays = Array.from({ length: startingDayOfWeek }, (_, i) => i);
 
-  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
   return (
     <div className="flex flex-col h-full">

@@ -52,41 +52,41 @@ export function AddShiftDialog({ onAddShift, day }: AddShiftDialogProps) {
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Add New Shift</DialogTitle>
+            <DialogTitle>Adicionar Novo Turno</DialogTitle>
             <DialogDescription>
-              Fill in the details for the new shift on day {day}.
+              Preencha os detalhes para o novo turno no dia {day}.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="role" className="text-right">Role</Label>
+              <Label htmlFor="role" className="text-right">Função</Label>
               <Select defaultValue="Nurse" onValueChange={(value: Shift['role']) => control.setValue('role', value)}>
                 <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select a role" />
+                  <SelectValue placeholder="Selecione uma função" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Doctor">Doctor</SelectItem>
-                  <SelectItem value="Nurse">Nurse</SelectItem>
-                  <SelectItem value="Technician">Technician</SelectItem>
+                  <SelectItem value="Doctor">Médico(a)</SelectItem>
+                  <SelectItem value="Nurse">Enfermeiro(a)</SelectItem>
+                  <SelectItem value="Technician">Técnico(a)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="employeeName" className="text-right">Employee</Label>
-              <Input id="employeeName" {...register("employeeName", { required: "Employee name is required" })} className="col-span-3" />
+              <Label htmlFor="employeeName" className="text-right">Funcionário</Label>
+              <Input id="employeeName" {...register("employeeName", { required: "O nome do funcionário é obrigatório" })} className="col-span-3" />
               {errors.employeeName && <p className="col-span-4 text-xs text-red-500 text-right">{errors.employeeName.message}</p>}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="startTime" className="text-right">Start Time</Label>
-              <Input id="startTime" type="time" {...register("startTime", { required: "Start time is required" })} className="col-span-3" />
+              <Label htmlFor="startTime" className="text-right">Início</Label>
+              <Input id="startTime" type="time" {...register("startTime", { required: "A hora de início é obrigatória" })} className="col-span-3" />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="endTime" className="text-right">End Time</Label>
-              <Input id="endTime" type="time" {...register("endTime", { required: "End time is required" })} className="col-span-3" />
+              <Label htmlFor="endTime" className="text-right">Fim</Label>
+              <Input id="endTime" type="time" {...register("endTime", { required: "A hora de término é obrigatória" })} className="col-span-3" />
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Save Shift</Button>
+            <Button type="submit">Salvar Turno</Button>
           </DialogFooter>
         </form>
       </DialogContent>
