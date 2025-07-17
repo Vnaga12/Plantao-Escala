@@ -99,7 +99,7 @@ export function SettingsDialog({
         </DialogHeader>
         <div className="py-4 space-y-6">
           <div>
-            <Label className="text-base font-semibold">Funções da Equipe</Label>
+            <Label className="text-base font-semibold">Funções do Grupo</Label>
             <p className="text-sm text-muted-foreground mb-2">Adicione, edite ou remova as funções disponíveis.</p>
             <div className="space-y-2">
               {internalRoles.map((role, index) => (

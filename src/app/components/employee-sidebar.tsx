@@ -60,7 +60,7 @@ export default function EmployeeSidebar({
     <aside className="w-64 flex-shrink-0 border-r bg-gray-50 p-4 flex flex-col print:hidden">
       <div className="flex-1 flex flex-col min-h-0">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Equipe</h2>
+          <h2 className="text-lg font-semibold">Grupo</h2>
           <Button size="sm" variant="outline" onClick={handleAddEmployee}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Adicionar

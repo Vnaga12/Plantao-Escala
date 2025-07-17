@@ -175,20 +175,20 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: Su
         <DialogHeader>
           <DialogTitle>Sugestões de Turnos com IA</DialogTitle>
           <DialogDescription>
-            Defina sua equipe e os turnos necessários, e deixe a IA construir o cronograma ideal.
+            Defina seu grupo e os turnos necessários, e deixe a IA construir o cronograma ideal.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="flex-1 overflow-y-auto">
           <Tabs defaultValue="employees" className="h-full flex flex-col">
             <TabsList className="flex-shrink-0">
-              <TabsTrigger value="employees">Equipe ({currentEmployees.length})</TabsTrigger>
+              <TabsTrigger value="employees">Grupo ({currentEmployees.length})</TabsTrigger>
               <TabsTrigger value="shifts">Turnos a Preencher</TabsTrigger>
               <TabsTrigger value="constraints">Restrições</TabsTrigger>
               {suggestions && <TabsTrigger value="suggestions">Sugestões</TabsTrigger>}
             </TabsList>
             <ScrollArea className="flex-1 p-1">
               <TabsContent value="employees" className="mt-2">
-                  <p className="text-sm text-muted-foreground mb-4">Ajuste as preferências e disponibilidade da equipe para esta sugestão específica.</p>
+                  <p className="text-sm text-muted-foreground mb-4">Ajuste as preferências e disponibilidade do grupo para esta sugestão específica.</p>
                   {employeeFields.map((field, index) => (
                       <div key={field.id} className="p-4 border rounded-lg mb-4 bg-background">
                           <div className="flex justify-between items-center mb-2">
@@ -204,7 +204,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: Su
                           <EmployeeFormFields index={index} control={control} register={register} />
                       </div>
                   ))}
-                   {employeeFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum funcionário nesta equipe. Adicione funcionários na barra lateral.</p>}
+                   {employeeFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum funcionário neste grupo. Adicione funcionários na barra lateral.</p>}
               </TabsContent>
               <TabsContent value="shifts" className="mt-2">
                   {shiftFields.map((field, index) => (
@@ -282,5 +282,3 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: Su
     </Dialog>
   );
 }
-
-    
