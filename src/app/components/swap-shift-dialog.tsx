@@ -1,9 +1,13 @@
+
 "use client"
 
+import * as React from "react"
+import type { Shift, Employee } from "@/lib/types"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -11,10 +15,47 @@ import {
 import { Button } from "@/components/ui/button"
 import { ArrowRightLeft } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/components/ui/use-toast"
 
-export function SwapShiftDialog() {
+type SwapShiftDialogProps = {
+  shift: Shift;
+  employees: Employee[];
+  onUpdateShift: (updatedShift: Shift) => void;
+};
+
+export function SwapShiftDialog({ shift, employees, onUpdateShift }: SwapShiftDialogProps) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = React.useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleSwap = () => {
+    if (!selectedEmployeeId) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Por favor, selecione um funcionário para realizar a troca.",
+      });
+      return;
+    }
+    const newEmployee = employees.find(e => e.id === selectedEmployeeId);
+    if (newEmployee) {
+      const updatedShift = { ...shift, employeeName: newEmployee.name };
+      onUpdateShift(updatedShift);
+      toast({
+        title: "Troca Realizada com Sucesso",
+        description: `${shift.employeeName} trocou de turno com ${newEmployee.name}.`,
+      });
+      setIsOpen(false);
+      setSelectedEmployeeId(null);
+    }
+  };
+
+  const availableEmployees = employees.filter(e => e.name !== shift.employeeName);
+
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <Tooltip>
         <TooltipTrigger asChild>
           <DialogTrigger asChild>
@@ -31,13 +72,30 @@ export function SwapShiftDialog() {
         <DialogHeader>
           <DialogTitle>Trocar Turno</DialogTitle>
           <DialogDescription>
-            Este recurso estará disponível em breve. Você poderá selecionar outro turno para trocar.
+            Selecione um funcionário para trocar o turno com <span className="font-semibold">{shift.employeeName}</span>.
           </DialogDescription>
         </DialogHeader>
-        {/* Placeholder for swap UI */}
-        <div className="py-4">
-            <p className="text-center text-muted-foreground">A funcionalidade de troca será implementada aqui.</p>
+        <div className="py-4 grid gap-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="employee" className="text-right">Trocar com</Label>
+            <Select onValueChange={setSelectedEmployeeId}>
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Selecione um funcionário" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableEmployees.map(employee => (
+                  <SelectItem key={employee.id} value={employee.id}>
+                    {employee.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
+          <Button onClick={handleSwap}>Confirmar Troca</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

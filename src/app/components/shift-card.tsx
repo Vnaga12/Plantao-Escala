@@ -1,6 +1,7 @@
+
 "use client";
 
-import type { Shift } from "@/lib/types";
+import type { Shift, Employee } from "@/lib/types";
 import { Clock, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,8 @@ import { SwapShiftDialog } from "./swap-shift-dialog";
 
 type ShiftCardProps = {
   shift: Shift;
+  employees: Employee[];
+  onUpdateShift: (updatedShift: Shift) => void;
 };
 
 const roleColorClasses = {
@@ -22,7 +25,7 @@ const roleColorClasses = {
   purple: "bg-purple-100 border-purple-400 text-purple-800",
 };
 
-export default function ShiftCard({ shift }: ShiftCardProps) {
+export default function ShiftCard({ shift, employees, onUpdateShift }: ShiftCardProps) {
   return (
     <TooltipProvider>
       <div className={cn("rounded-lg border-l-4 p-2 text-xs shadow-sm", roleColorClasses[shift.color])}>
@@ -35,7 +38,7 @@ export default function ShiftCard({ shift }: ShiftCardProps) {
               <span>{shift.startTime} - {shift.endTime}</span>
             </div>
           </div>
-          <SwapShiftDialog />
+          <SwapShiftDialog shift={shift} employees={employees} onUpdateShift={onUpdateShift} />
         </div>
       </div>
     </TooltipProvider>

@@ -1,6 +1,7 @@
+
 "use client";
 
-import type { Shift } from "@/lib/types";
+import type { Employee, Shift } from "@/lib/types";
 import { format, getDaysInMonth, startOfMonth, getDay, addDays, isToday, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -11,9 +12,11 @@ type CalendarViewProps = {
   currentDate: Date;
   shifts: Shift[];
   onAddShift: (newShift: Omit<Shift, 'id' | 'color'>) => void;
+  employees: Employee[];
+  onUpdateShift: (updatedShift: Shift) => void;
 };
 
-export default function CalendarView({ currentDate, shifts, onAddShift }: CalendarViewProps) {
+export default function CalendarView({ currentDate, shifts, onAddShift, employees, onUpdateShift }: CalendarViewProps) {
   const firstDayOfMonth = startOfMonth(currentDate);
   const daysInMonth = getDaysInMonth(currentDate);
   const startingDayOfWeek = getDay(firstDayOfMonth); // Sunday is 0
@@ -65,7 +68,7 @@ export default function CalendarView({ currentDate, shifts, onAddShift }: Calend
               </div>
               <div className="flex flex-col gap-1 overflow-y-auto">
                 {shiftsForDay.map((shift) => (
-                  <ShiftCard key={shift.id} shift={shift} />
+                  <ShiftCard key={shift.id} shift={shift} employees={employees} onUpdateShift={onUpdateShift} />
                 ))}
               </div>
             </div>

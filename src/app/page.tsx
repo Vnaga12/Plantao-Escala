@@ -27,12 +27,25 @@ const initialEmployees: Employee[] = [
         availability: [{ day: 'Tuesday', startTime: '12:00', endTime: '20:00' }],
         preferences: 'Não pode trabalhar nos fins de semana.'
     },
+    {
+        id: '3',
+        name: 'Carlos',
+        availability: [],
+        preferences: 'Disponível para cobrir turnos.'
+    },
+    {
+        id: '4',
+        name: 'Dr. David',
+        availability: [],
+        preferences: 'Prefere turnos da noite.'
+    },
 ];
 
 export default function Home() {
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [shifts, setShifts] = React.useState<Shift[]>(initialShifts);
   const [employees, setEmployees] = React.useState<Employee[]>(initialEmployees);
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   const handleNextMonth = () => {
     setCurrentDate((prevDate) => addMonths(prevDate, 1));
@@ -110,11 +123,20 @@ export default function Home() {
               }
           });
       }
-
-      // Replace all shifts for the current month with the generated schedule.
       setShifts(newShifts);
   };
-
+  
+  const handleUpdateShift = (updatedShift: Shift) => {
+    setShifts(prev => prev.map(s => s.id === updatedShift.id ? updatedShift : s));
+  };
+  
+  const filteredShifts = shifts.filter(shift => {
+    const query = searchQuery.toLowerCase();
+    return (
+      shift.employeeName.toLowerCase().includes(query) ||
+      shift.role.toLowerCase().includes(query)
+    );
+  });
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">
@@ -124,12 +146,16 @@ export default function Home() {
         onNextMonth={handleNextMonth}
         employees={employees}
         onApplySuggestions={handleApplySuggestions}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
       <main className="flex-1 overflow-auto p-4 md:p-6">
         <CalendarView 
           currentDate={currentDate} 
-          shifts={shifts}
+          shifts={filteredShifts}
           onAddShift={handleAddShift} 
+          employees={employees}
+          onUpdateShift={handleUpdateShift}
         />
       </main>
     </div>
