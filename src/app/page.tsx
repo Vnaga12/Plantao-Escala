@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { addMonths, subMonths, getDaysInMonth, getDay } from "date-fns";
+import { addMonths, subMonths, getDaysInMonth, getDay, format } from "date-fns";
 import type { Shift, Employee, Calendar, ShiftColor } from "@/lib/types";
 import Header from "@/app/components/header";
 import CalendarView from "@/app/components/calendar-view";
@@ -237,6 +237,37 @@ export default function Home() {
       updateActiveCalendarShifts(newShifts);
   };
   
+  const handleAddDayEvent = (event: { date: Date; name: string; color: ShiftColor }) => {
+    const { date, name, color } = event;
+    const day = date.getDate();
+
+    const newCalendars = calendars.map(cal => {
+      // Check if event for this day already exists in this calendar
+      const eventExists = cal.shifts.some(s => s.day === day && s.role === name);
+      if (cal.shifts.some(s => s.day === day && s.role === 'Feriado')) return cal;
+
+      const newShift: Shift = {
+        id: `event-${date.getTime()}-${cal.id}`,
+        day: day,
+        role: name,
+        employeeName: '', // Unassigned
+        startTime: '00:00',
+        endTime: '23:59',
+        color: color
+      };
+      
+      // Add the new shift, replacing any other shifts on that day if needed
+      const otherShifts = cal.shifts.filter(s => s.day !== day);
+      return { ...cal, shifts: [...otherShifts, newShift] };
+    });
+
+    setCalendars(newCalendars);
+    toast({
+      title: "Evento de Dia Inteiro Adicionado",
+      description: `${name} foi adicionado a ${format(date, 'dd/MM/yyyy')} em todos os calendários.`,
+    });
+  };
+
   const filteredShifts = shifts.filter(shift => {
     const query = searchQuery.toLowerCase();
     return (
@@ -281,6 +312,7 @@ export default function Home() {
             onDeleteShift={handleDeleteShift}
             roles={roles}
             calendarName={activeCalendar.name}
+            onAddDayEvent={handleAddDayEvent}
              />}
         <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
           <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none">
