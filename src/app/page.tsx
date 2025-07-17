@@ -238,7 +238,7 @@ export default function Home() {
     );
   });
 
-  if (!isClient) {
+  if (!isClient || !activeCalendar) {
     // You can render a loader or null here to avoid hydration mismatch
     return null;
   }
@@ -273,6 +273,7 @@ export default function Home() {
             onUpdateShift={handleUpdateShift}
             onDeleteShift={handleDeleteShift}
             roles={roles}
+            calendarName={activeCalendar.name}
              />}
         <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
           <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none">

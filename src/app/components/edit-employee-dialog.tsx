@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Save, CalendarDays, Pencil } from 'lucide-react';
+import { Plus, Trash2, Save, CalendarDays, Pencil, Hospital } from 'lucide-react';
 import type { Employee, Shift } from "@/lib/types";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
@@ -58,6 +58,7 @@ type EditEmployeeDialogProps = {
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
   roles: string[];
+  calendarName: string;
 };
 
 export function EditEmployeeDialog({ 
@@ -69,7 +70,8 @@ export function EditEmployeeDialog({
     currentDate,
     onUpdateShift,
     onDeleteShift,
-    roles
+    roles,
+    calendarName
 }: EditEmployeeDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const { toast } = useToast();
@@ -156,7 +158,7 @@ export function EditEmployeeDialog({
                     </div>
                     <div className="space-y-3">
                       {assignedShifts.length > 0 ? assignedShifts.map((shift) => (
-                        <div key={shift.id} className="grid grid-cols-[auto,1fr,auto] items-center gap-4 p-2 border rounded-md bg-gray-50/50">
+                        <div key={shift.id} className="grid grid-cols-[auto,1fr,auto] items-center gap-4 p-3 border rounded-md bg-gray-50/50">
                           <div className="font-semibold text-center">
                             <div className="text-2xl">{shift.day}</div>
                             <div className="text-xs uppercase">{format(new Date(currentDate.getFullYear(), currentDate.getMonth(), shift.day), 'EEE', { locale: ptBR })}</div>
@@ -164,6 +166,9 @@ export function EditEmployeeDialog({
                           <div>
                             <div className="font-medium">{shift.role}</div>
                             <div className="text-sm text-muted-foreground">{shift.startTime} - {shift.endTime}</div>
+                            <div className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
+                                <Hospital className="h-3.5 w-3.5" /> {calendarName}
+                            </div>
                           </div>
                            <div className="flex items-center">
                             {/* NOTE: EditShiftDialog and other dialogs won't work nested. This is a placeholder for a future refactor. */}

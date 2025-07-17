@@ -16,6 +16,7 @@ type EmployeeSidebarProps = {
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
   roles: string[];
+  calendarName: string;
 };
 
 export default function EmployeeSidebar({ 
@@ -25,7 +26,8 @@ export default function EmployeeSidebar({
   currentDate,
   onUpdateShift,
   onDeleteShift,
-  roles
+  roles,
+  calendarName
 }: EmployeeSidebarProps) {
   
   const handleAddEmployee = () => {
@@ -77,6 +79,7 @@ export default function EmployeeSidebar({
                     onUpdateShift={onUpdateShift}
                     onDeleteShift={onDeleteShift}
                     roles={roles}
+                    calendarName={calendarName}
                  >
                     <Button variant="ghost" size="icon" className="h-7 w-7">
                         <User className="h-4 w-4" />
