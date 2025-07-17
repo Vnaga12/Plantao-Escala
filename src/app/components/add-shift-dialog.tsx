@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,12 +17,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle } from "lucide-react";
-import type { Shift } from "@/lib/types";
+import type { Shift, ShiftColor } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
-type AddShiftFormValues = Omit<Shift, 'id' | 'color' | 'day'>;
+const availableColors: { name: ShiftColor, class: string }[] = [
+  { name: 'blue', class: 'bg-blue-500' },
+  { name: 'green', class: 'bg-green-500' },
+  { name: 'purple', class: 'bg-purple-500' },
+  { name: 'red', class: 'bg-red-500' },
+  { name: 'yellow', class: 'bg-yellow-500' },
+  { name: 'gray', class: 'bg-gray-500' },
+];
+
+type AddShiftFormValues = Omit<Shift, 'id' | 'day'>;
 
 type AddShiftDialogProps = {
-  onAddShift: (shift: Omit<Shift, 'id' | 'color'>) => void;
+  onAddShift: (shift: Omit<Shift, 'id'>) => void;
   day: number;
   roles: string[];
 };
@@ -35,6 +45,7 @@ export function AddShiftDialog({ onAddShift, day, roles }: AddShiftDialogProps) 
       startTime: "09:00",
       endTime: "17:00",
       role: roles[0] || "",
+      color: 'blue'
     }
   });
 
@@ -62,16 +73,22 @@ export function AddShiftDialog({ onAddShift, day, roles }: AddShiftDialogProps) 
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="role" className="text-right">Função</Label>
-              <Select defaultValue={roles[0] || ""} onValueChange={(value: string) => control.setValue('role', value)}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Selecione uma função" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roles.map(role => (
-                    <SelectItem key={role} value={role}>{role}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                  name="role"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Selecione uma função" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        {roles.map(role => (
+                            <SelectItem key={role} value={role}>{role}</SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                 )}
+              />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="employeeName" className="text-right">Funcionário</Label>
@@ -85,6 +102,30 @@ export function AddShiftDialog({ onAddShift, day, roles }: AddShiftDialogProps) 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="endTime" className="text-right">Fim</Label>
               <Input id="endTime" type="time" {...register("endTime", { required: "A hora de término é obrigatória" })} className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="color" className="text-right">Cor</Label>
+               <Controller
+                name="color"
+                control={control}
+                render={({ field }) => (
+                  <div className="col-span-3 flex gap-2">
+                    {availableColors.map(color => (
+                      <button
+                        key={color.name}
+                        type="button"
+                        onClick={() => field.onChange(color.name)}
+                        className={cn(
+                          "h-6 w-6 rounded-full border-2",
+                          color.class,
+                          field.value === color.name ? 'border-primary' : 'border-transparent'
+                        )}
+                        aria-label={`Select ${color.name} color`}
+                      />
+                    ))}
+                  </div>
+                )}
+              />
             </div>
           </div>
           <DialogFooter>

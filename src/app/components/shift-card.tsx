@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Shift, Employee } from "@/lib/types";
+import type { Shift, Employee, ShiftColor } from "@/lib/types";
 import { Clock, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -19,10 +19,13 @@ type ShiftCardProps = {
   onUpdateShift: (updatedShift: Shift) => void;
 };
 
-const roleColorClasses = {
+const roleColorClasses: Record<ShiftColor, string> = {
   blue: "bg-blue-100 border-blue-400 text-blue-800",
   green: "bg-green-100 border-green-400 text-green-800",
   purple: "bg-purple-100 border-purple-400 text-purple-800",
+  red: "bg-red-100 border-red-400 text-red-800",
+  yellow: "bg-yellow-100 border-yellow-400 text-yellow-800",
+  gray: "bg-gray-100 border-gray-400 text-gray-800",
 };
 
 export default function ShiftCard({ shift, employees, onUpdateShift }: ShiftCardProps) {

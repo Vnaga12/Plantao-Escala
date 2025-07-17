@@ -1,4 +1,6 @@
 
+export type ShiftColor = 'blue' | 'green' | 'purple' | 'red' | 'yellow' | 'gray';
+
 export type Shift = {
   id: string;
   day: number;
@@ -6,7 +8,7 @@ export type Shift = {
   employeeName: string;
   startTime: string;
   endTime: string;
-  color: 'blue' | 'green' | 'purple';
+  color: ShiftColor;
 };
 
 export type EmployeeAvailability = {

@@ -3,9 +3,10 @@
 
 import * as React from "react";
 import { addMonths, subMonths, getDaysInMonth, getDay } from "date-fns";
-import type { Shift, Employee, Calendar } from "@/lib/types";
+import type { Shift, Employee, Calendar, ShiftColor } from "@/lib/types";
 import Header from "@/app/components/header";
 import CalendarView from "@/app/components/calendar-view";
+import ColorLegend from "./components/color-legend";
 
 const initialEmployees: Employee[] = [
     {
@@ -39,19 +40,28 @@ const initialCalendars: Calendar[] = [
     id: 'cal1',
     name: 'Hospital Principal',
     shifts: [
-      { id: '1', day: 5, role: 'Médico(a)', employeeName: 'Dra. Alice', startTime: '08:00', endTime: '16:00', color: 'blue' },
-      { id: '2', day: 5, role: 'Enfermeiro(a)', employeeName: 'Beto', startTime: '14:00', endTime: '22:00', color: 'green' },
-      { id: '3', day: 12, role: 'Técnico(a)', employeeName: 'Carlos', startTime: '09:00', endTime: '17:00', color: 'purple' },
-      { id: '4', day: 21, role: 'Médico(a)', employeeName: 'Dr. David', startTime: '20:00', endTime: '04:00', color: 'blue' },
+      { id: '1', day: 5, role: 'Cirurgia Eletiva', employeeName: 'Dra. Alice', startTime: '08:00', endTime: '16:00', color: 'blue' },
+      { id: '2', day: 5, role: 'Plantão', employeeName: 'Beto', startTime: '14:00', endTime: '22:00', color: 'green' },
+      { id: '3', day: 12, role: 'Ambulatório', employeeName: 'Carlos', startTime: '09:00', endTime: '17:00', color: 'purple' },
+      { id: '4', day: 21, role: 'Emergência', employeeName: 'Dr. David', startTime: '20:00', endTime: '04:00', color: 'red' },
     ]
   },
   {
     id: 'cal2',
     name: 'Clínica Secundária',
     shifts: [
-        { id: '5', day: 10, role: 'Médico(a)', employeeName: 'Dr. David', startTime: '09:00', endTime: '17:00', color: 'blue' },
+        { id: '5', day: 10, role: 'Cirurgia Eletiva', employeeName: 'Dr. David', startTime: '09:00', endTime: '17:00', color: 'blue' },
     ]
   }
+];
+
+const initialColorMeanings: { color: ShiftColor, meaning: string }[] = [
+    { color: 'blue', meaning: 'Cirurgia Eletiva' },
+    { color: 'green', meaning: 'Plantão' },
+    { color: 'purple', meaning: 'Ambulatório' },
+    { color: 'red', meaning: 'Emergência' },
+    { color: 'yellow', meaning: 'Aviso' },
+    { color: 'gray', meaning: 'Outro' },
 ];
 
 export default function Home() {
@@ -60,7 +70,9 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [calendars, setCalendars] = React.useState<Calendar[]>(initialCalendars);
   const [activeCalendarId, setActiveCalendarId] = React.useState<string>('cal1');
-  const [roles, setRoles] = React.useState(['Médico(a)', 'Enfermeiro(a)', 'Técnico(a)']);
+  const [roles, setRoles] = React.useState(['Cirurgia Eletiva', 'Plantão', 'Ambulatório', 'Emergência', 'Técnico(a)']);
+  const [colorMeanings, setColorMeanings] = React.useState(initialColorMeanings);
+
 
   const activeCalendar = calendars.find(c => c.id === activeCalendarId) ?? calendars[0];
   const shifts = activeCalendar?.shifts || [];
@@ -79,17 +91,10 @@ export default function Home() {
     ));
   };
 
-  const handleAddShift = (newShift: Omit<Shift, 'id' | 'color'>) => {
-    const roleColors: Record<string, Shift['color']> = {
-      'Médico(a)': 'blue',
-      'Enfermeiro(a)': 'green',
-      'Técnico(a)': 'purple',
-    };
-    
+  const handleAddShift = (newShift: Omit<Shift, 'id'>) => {
     const shiftWithId: Shift = {
       ...newShift,
       id: Date.now().toString(),
-      color: roleColors[newShift.role] || 'blue',
     };
     handleSetShifts([...shifts, shiftWithId]);
   };
@@ -116,10 +121,12 @@ export default function Home() {
       };
 
       const newShifts: Shift[] = [];
-      const roleColors: Record<string, Shift['color']> = {
-        'Médico(a)': 'blue',
-        'Enfermeiro(a)': 'green',
-        'Técnico(a)': 'purple',
+      const roleColors: Record<string, ShiftColor> = {
+        'Cirurgia Eletiva': 'blue',
+        'Plantão': 'green',
+        'Ambulatório': 'purple',
+        'Emergência': 'red',
+        'Técnico(a)': 'gray',
       };
 
       for (let day = 1; day <= daysInMonth; day++) {
@@ -142,7 +149,7 @@ export default function Home() {
                     employeeName: employee?.name || 'Desconhecido',
                     startTime: suggestion.shiftStartTime,
                     endTime: suggestion.shiftEndTime,
-                    color: roleColors[suggestion.role] || 'blue',
+                    color: roleColors[suggestion.role] || 'gray',
                 });
               }
           });
@@ -189,6 +196,7 @@ export default function Home() {
           onUpdateShift={handleUpdateShift}
           roles={roles}
         />
+        <ColorLegend meanings={colorMeanings} />
       </main>
     </div>
   );
