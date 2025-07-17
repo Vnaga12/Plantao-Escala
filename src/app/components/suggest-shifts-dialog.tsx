@@ -282,3 +282,5 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: Su
     </Dialog>
   );
 }
+
+    
