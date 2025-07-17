@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Edit } from "lucide-react";
+import { Edit, Pencil } from "lucide-react";
 import type { Shift, ShiftColor } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -66,12 +66,19 @@ export function EditShiftDialog({ onUpdateShift, shift, roles }: EditShiftDialog
     }
   }, [isOpen, shift, reset])
 
+  const triggerButton = (
+    <Button variant="ghost" size="icon" className="h-6 w-6">
+        <Edit className="h-3 w-3 text-gray-500" />
+    </Button>
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6">
-            <Edit className="h-3 w-3 text-gray-500" />
-        </Button>
+      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+        {shift.id.startsWith('suggested') ?
+          <Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="h-4 w-4" /></Button> : 
+          triggerButton
+        }
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -148,3 +155,4 @@ export function EditShiftDialog({ onUpdateShift, shift, roles }: EditShiftDialog
   );
 }
 
+    

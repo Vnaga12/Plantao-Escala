@@ -35,6 +35,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { EditShiftDialog } from "./edit-shift-dialog";
 
 const weekdays = [
     { value: "Monday", label: "Segunda-feira" },
@@ -171,8 +172,7 @@ export function EditEmployeeDialog({
                             </div>
                           </div>
                            <div className="flex items-center">
-                            {/* NOTE: EditShiftDialog and other dialogs won't work nested. This is a placeholder for a future refactor. */}
-                            <Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="h-4 w-4" /></Button>
+                            <EditShiftDialog shift={shift} onUpdateShift={onUpdateShift} roles={roles} />
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
@@ -276,3 +276,5 @@ export function EditEmployeeDialog({
     </Dialog>
   );
 }
+
+    
