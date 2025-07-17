@@ -51,6 +51,7 @@ export default function CalendarSwitcher({
       id: `cal-${Date.now()}`,
       name: newCalendarName,
       shifts: [],
+      employees: [],
     };
     onCalendarsChange([...calendars, newCalendar]);
     setNewCalendarName("");
@@ -83,7 +84,7 @@ export default function CalendarSwitcher({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-[200px]">
-          <DropdownMenuLabel>Calendários Disponíveis</DropdownMenuLabel>
+          <DropdownMenuLabel>Hospitais Disponíveis</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {calendars.map((calendar) => (
             <DropdownMenuItem
@@ -108,7 +109,7 @@ export default function CalendarSwitcher({
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setAddIsOpen(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Novo Calendário
+            Novo Hospital
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -117,13 +118,13 @@ export default function CalendarSwitcher({
       <Dialog open={isAddOpen} onOpenChange={setAddIsOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Criar Novo Calendário</DialogTitle>
+            <DialogTitle>Criar Novo Hospital</DialogTitle>
             <DialogDescription>
-              Dê um nome ao seu novo calendário (ex: Hospital Central).
+              Dê um nome ao seu novo hospital/calendário (ex: Hospital Central).
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="name">Nome do Calendário</Label>
+            <Label htmlFor="name">Nome do Hospital</Label>
             <Input
               id="name"
               value={newCalendarName}
@@ -142,10 +143,10 @@ export default function CalendarSwitcher({
       <Dialog open={isEditOpen} onOpenChange={setEditIsOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Nome do Calendário</DialogTitle>
+            <DialogTitle>Editar Nome do Hospital</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="edit-name">Nome do Calendário</Label>
+            <Label htmlFor="edit-name">Nome do Hospital</Label>
             <Input
               id="edit-name"
               value={editingCalendar?.name || ""}

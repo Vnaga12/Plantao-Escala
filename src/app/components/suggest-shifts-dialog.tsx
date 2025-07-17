@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
-import type { Employee, EmployeeAvailability } from "@/lib/types";
+import type { Employee } from "@/lib/types";
 import { getShiftSuggestions } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -64,9 +64,8 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
 
   const {
     fields: employeeFields,
-    append: appendEmployee,
+    // append: appendEmployee, // We don't want to add employees here, but in the sidebar
     remove: removeEmployee,
-    update: updateEmployee,
   } = useFieldArray({ control, name: "employees" });
   
   const {
@@ -96,7 +95,14 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
   const handleFormSubmit = async (data: FormValues) => {
     setIsPending(true);
     setSuggestions(null);
-    const result = await getShiftSuggestions(data);
+    
+    // Ensure all employees have IDs for the AI flow
+    const processedData = {
+        ...data,
+        employees: data.employees.map(emp => ({...emp, id: emp.id || `temp-${Math.random()}`}))
+    }
+
+    const result = await getShiftSuggestions(processedData);
     setIsPending(false);
 
     if (result.success && result.data) {
@@ -143,13 +149,13 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
         </div>
         <div className="space-y-2 pl-2">
           {fields.map((item, k) => (
-            <div key={item.id} className="grid grid-cols-4 items-center gap-2">
+            <div key={item.id} className="grid grid-cols-[1fr,1fr,auto] items-center gap-2">
                 <Controller
                   control={control}
                   name={`employees.${index}.availability.${k}.day`}
                   render={({ field }) => (
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <SelectTrigger className="col-span-2"><SelectValue /></SelectTrigger>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {weekdays.map(day => <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>)}
                       </SelectContent>
@@ -193,31 +199,22 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
         <form onSubmit={handleSubmit(handleFormSubmit)} className="flex-1 overflow-y-auto">
           <Tabs defaultValue="employees" className="h-full flex flex-col">
             <TabsList className="flex-shrink-0">
-              <TabsTrigger value="employees">Funcionários</TabsTrigger>
+              <TabsTrigger value="employees">Equipe ({currentEmployees.length})</TabsTrigger>
               <TabsTrigger value="shifts">Turnos a Preencher</TabsTrigger>
               <TabsTrigger value="constraints">Restrições</TabsTrigger>
               {suggestions && <TabsTrigger value="suggestions">Sugestões</TabsTrigger>}
             </TabsList>
             <ScrollArea className="flex-1 p-1">
               <TabsContent value="employees" className="mt-2">
-                  <p className="text-sm text-muted-foreground mb-4">Gerencie a equipe na barra lateral. Use esta aba para ajustar as preferências e disponibilidade para esta sugestão específica.</p>
+                  <p className="text-sm text-muted-foreground mb-4">A equipe listada é a do hospital selecionado. Use esta aba para ajustar as preferências e disponibilidade para esta sugestão específica.</p>
                   {employeeFields.map((field, index) => (
                       <div key={field.id} className="p-4 border rounded-lg mb-4 bg-background">
                           <div className="flex justify-between items-center mb-2">
                              <Label className="font-semibold">{currentEmployees[index]?.name || `Funcionário #${index + 1}`}</Label>
                              <div className="flex items-center gap-2">
-                                <EditEmployeeDialog 
-                                  employee={currentEmployees[index]} 
-                                  onUpdateEmployee={handleUpdateEmployeeInForm}
-                                  onDeleteEmployee={handleDeleteEmployeeInForm}
-                                >
-                                  <Button type="button" variant="outline" size="sm">
-                                      <User className="mr-2 h-4 w-4" />
-                                      Editar Perfil
-                                  </Button>
-                                </EditEmployeeDialog>
-
-                               <Button type="button" variant="ghost" size="icon" onClick={() => removeEmployee(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                               {/* EditEmployeeDialog expects a lot of props that we don't have here. 
+                                   A simpler approach is to edit the details inline for now.
+                                */}
                              </div>
                           </div>
                           <Input {...register(`employees.${index}.name`)} placeholder="Nome" className="mb-2" />
@@ -225,9 +222,7 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
                           <EmployeeFormFields index={index} control={control} register={register} />
                       </div>
                   ))}
-                  <Button type="button" variant="outline" onClick={() => appendEmployee({ id: `emp-${Date.now()}`, name: '', availability: [], preferences: '' })}>
-                      <Plus className="mr-2 h-4 w-4" /> Adicionar Funcionário
-                  </Button>
+                   {employeeFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum funcionário nesta equipe. Adicione funcionários na barra lateral.</p>}
               </TabsContent>
               <TabsContent value="shifts" className="mt-2">
                   {shiftFields.map((field, index) => (
@@ -294,7 +289,7 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
               {suggestions ? (
                  <Button type="button" onClick={handleApply}>Aplicar ao Calendário</Button>
               ) : (
-                <Button type="submit" disabled={isPending}>
+                <Button type="submit" disabled={isPending || currentEmployees.length === 0}>
                   {isPending ? <><Loader2 className="animate-spin mr-2"/> Pensando...</> : "Gerar Sugestões"}
                 </Button>
               )}

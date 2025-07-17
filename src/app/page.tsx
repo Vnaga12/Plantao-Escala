@@ -10,33 +10,6 @@ import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
 
-const initialEmployees: Employee[] = [
-    {
-        id: '1',
-        name: 'Dra. Alice',
-        availability: [{ day: 'Monday', startTime: '08:00', endTime: '17:00' }],
-        preferences: 'Prefere turnos da manhã.'
-    },
-    {
-        id: '2',
-        name: 'Beto',
-        availability: [{ day: 'Tuesday', startTime: '12:00', endTime: '20:00' }],
-        preferences: 'Não pode trabalhar nos fins de semana.'
-    },
-    {
-        id: '3',
-        name: 'Carlos',
-        availability: [],
-        preferences: 'Disponível para cobrir turnos.'
-    },
-    {
-        id: '4',
-        name: 'Dr. David',
-        availability: [],
-        preferences: 'Prefere turnos da noite.'
-    },
-];
-
 const initialCalendars: Calendar[] = [
   {
     id: 'cal1',
@@ -46,6 +19,32 @@ const initialCalendars: Calendar[] = [
       { id: '2', day: 5, role: 'Plantão', employeeName: 'Beto', startTime: '14:00', endTime: '22:00', color: 'green' },
       { id: '3', day: 12, role: 'Ambulatório', employeeName: 'Carlos', startTime: '09:00', endTime: '17:00', color: 'purple' },
       { id: '4', day: 21, role: 'Emergência', employeeName: 'Dr. David', startTime: '20:00', endTime: '04:00', color: 'red' },
+    ],
+    employees: [
+        {
+            id: '1',
+            name: 'Dra. Alice',
+            availability: [{ day: 'Monday', startTime: '08:00', endTime: '17:00' }],
+            preferences: 'Prefere turnos da manhã.'
+        },
+        {
+            id: '2',
+            name: 'Beto',
+            availability: [{ day: 'Tuesday', startTime: '12:00', endTime: '20:00' }],
+            preferences: 'Não pode trabalhar nos fins de semana.'
+        },
+        {
+            id: '3',
+            name: 'Carlos',
+            availability: [],
+            preferences: 'Disponível para cobrir turnos.'
+        },
+        {
+            id: '4',
+            name: 'Dr. David',
+            availability: [],
+            preferences: 'Prefere turnos da noite.'
+        },
     ]
   },
   {
@@ -53,6 +52,20 @@ const initialCalendars: Calendar[] = [
     name: 'Clínica Secundária',
     shifts: [
         { id: '5', day: 10, role: 'Cirurgia Eletiva', employeeName: 'Dr. David', startTime: '09:00', endTime: '17:00', color: 'blue' },
+    ],
+    employees: [
+        {
+            id: '4',
+            name: 'Dr. David',
+            availability: [],
+            preferences: 'Prefere turnos da noite.'
+        },
+        {
+            id: '5',
+            name: 'Dra. Elisa',
+            availability: [],
+            preferences: ''
+        }
     ]
   }
 ];
@@ -73,7 +86,6 @@ export default function Home() {
   const { toast } = useToast();
   
   const [currentDate, setCurrentDate] = React.useState(new Date());
-  const [employees, setEmployees] = React.useState<Employee[]>([]);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [calendars, setCalendars] = React.useState<Calendar[]>([]);
   const [activeCalendarId, setActiveCalendarId] = React.useState<string>('');
@@ -88,18 +100,16 @@ export default function Home() {
     setIsClient(true);
     try {
         const storedDate = localStorage.getItem('currentDate');
-        const storedEmployees = localStorage.getItem('employees');
         const storedCalendars = localStorage.getItem('calendars');
         const storedActiveId = localStorage.getItem('activeCalendarId');
         const storedRoles = localStorage.getItem('roles');
         const storedColorMeanings = localStorage.getItem('colorMeanings');
         const storedSidebarState = localStorage.getItem('isSidebarOpen');
 
-
         if (storedDate) setCurrentDate(new Date(storedDate));
-        setEmployees(storedEmployees ? JSON.parse(storedEmployees) : initialEmployees);
-        setCalendars(storedCalendars ? JSON.parse(storedCalendars) : initialCalendars);
-        setActiveCalendarId(storedActiveId || 'cal1');
+        const loadedCalendars = storedCalendars ? JSON.parse(storedCalendars) : initialCalendars;
+        setCalendars(loadedCalendars);
+        setActiveCalendarId(storedActiveId || loadedCalendars[0]?.id || '');
         setRoles(storedRoles ? JSON.parse(storedRoles) : initialRoles);
         setColorMeanings(storedColorMeanings ? JSON.parse(storedColorMeanings) : initialColorMeanings);
         setIsSidebarOpen(storedSidebarState ? JSON.parse(storedSidebarState) : true);
@@ -111,9 +121,8 @@ export default function Home() {
             title: "Erro ao Carregar Dados",
             description: "Não foi possível carregar os dados salvos. Usando valores padrão.",
         });
-        setEmployees(initialEmployees);
         setCalendars(initialCalendars);
-        setActiveCalendarId('cal1');
+        setActiveCalendarId(initialCalendars[0]?.id || '');
         setRoles(initialRoles);
         setColorMeanings(initialColorMeanings);
         setIsSidebarOpen(true);
@@ -124,18 +133,18 @@ export default function Home() {
   React.useEffect(() => {
     if (isClient) {
         localStorage.setItem('currentDate', currentDate.toISOString());
-        localStorage.setItem('employees', JSON.stringify(employees));
         localStorage.setItem('calendars', JSON.stringify(calendars));
         localStorage.setItem('activeCalendarId', activeCalendarId);
         localStorage.setItem('roles', JSON.stringify(roles));
         localStorage.setItem('colorMeanings', JSON.stringify(colorMeanings));
         localStorage.setItem('isSidebarOpen', JSON.stringify(isSidebarOpen));
     }
-  }, [currentDate, employees, calendars, activeCalendarId, roles, colorMeanings, isSidebarOpen, isClient]);
+  }, [currentDate, calendars, activeCalendarId, roles, colorMeanings, isSidebarOpen, isClient]);
 
 
   const activeCalendar = calendars.find(c => c.id === activeCalendarId) ?? calendars[0];
   const shifts = activeCalendar?.shifts || [];
+  const employees = activeCalendar?.employees || [];
 
   const handleNextMonth = () => {
     setCurrentDate((prevDate) => addMonths(prevDate, 1));
@@ -145,10 +154,18 @@ export default function Home() {
     setCurrentDate((prevDate) => subMonths(prevDate, 1));
   };
 
-  const handleSetShifts = (newShifts: Shift[]) => {
+  const updateActiveCalendar = (updater: (calendar: Calendar) => Calendar) => {
     setCalendars(prev => prev.map(cal => 
-      cal.id === activeCalendarId ? { ...cal, shifts: newShifts } : cal
+      cal.id === activeCalendarId ? updater(cal) : cal
     ));
+  };
+
+  const handleSetShifts = (newShifts: Shift[]) => {
+    updateActiveCalendar(cal => ({ ...cal, shifts: newShifts }));
+  };
+
+  const handleSetEmployees = (newEmployees: Employee[]) => {
+    updateActiveCalendar(cal => ({ ...cal, employees: newEmployees }));
   };
 
   const handleAddShift = (newShift: Omit<Shift, 'id'>) => {
@@ -237,6 +254,15 @@ export default function Home() {
       shift.role.toLowerCase().includes(query)
     );
   });
+  
+  const handleCalendarsChange = (newCalendars: Calendar[]) => {
+     // When adding a new calendar, ensure it has an employees array.
+    const calendarsWithEmployees = newCalendars.map(cal => ({
+      ...cal,
+      employees: cal.employees || [],
+    }));
+    setCalendars(calendarsWithEmployees);
+  };
 
   if (!isClient || !activeCalendar) {
     // You can render a loader or null here to avoid hydration mismatch
@@ -258,7 +284,7 @@ export default function Home() {
         calendars={calendars}
         activeCalendarId={activeCalendarId}
         onCalendarChange={setActiveCalendarId}
-        onCalendarsChange={setCalendars}
+        onCalendarsChange={handleCalendarsChange}
         colorMeanings={colorMeanings}
         onColorMeaningsChange={setColorMeanings}
         isSidebarOpen={isSidebarOpen}
@@ -267,7 +293,7 @@ export default function Home() {
       <div className="flex flex-1 overflow-hidden">
         {isSidebarOpen && <EmployeeSidebar 
             employees={employees} 
-            onEmployeesChange={setEmployees}
+            onEmployeesChange={handleSetEmployees}
             shifts={shifts}
             currentDate={currentDate}
             onUpdateShift={handleUpdateShift}
