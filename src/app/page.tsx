@@ -188,14 +188,16 @@ export default function Home() {
         onCalendarsChange={setCalendars}
       />
       <main className="flex-1 overflow-auto p-4 md:p-6">
-        <CalendarView 
-          currentDate={currentDate} 
-          shifts={filteredShifts}
-          onAddShift={handleAddShift} 
-          employees={employees}
-          onUpdateShift={handleUpdateShift}
-          roles={roles}
-        />
+        <div className="bg-white rounded-lg shadow">
+          <CalendarView 
+            currentDate={currentDate} 
+            shifts={filteredShifts}
+            onAddShift={handleAddShift} 
+            employees={employees}
+            onUpdateShift={handleUpdateShift}
+            roles={roles}
+          />
+        </div>
         <ColorLegend meanings={colorMeanings} />
       </main>
     </div>

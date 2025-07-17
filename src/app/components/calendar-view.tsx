@@ -40,7 +40,7 @@ export default function CalendarView({ currentDate, shifts, onAddShift, employee
         {emptyDays.map((_, index) => (
           <div key={`empty-${index}`} className="border-r border-b" />
         ))}
-        {days.map((day) => {
+        {days.map((day, index) => {
           const dateForDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
           const shiftsForDay = shifts.filter(
             (shift) => shift.day === day && isSameMonth(dateForDay, currentDate)
@@ -50,8 +50,8 @@ export default function CalendarView({ currentDate, shifts, onAddShift, employee
             <div
               key={day}
               className={cn(
-                "border-r border-b p-2 flex flex-col gap-2 transition-colors duration-200 hover:bg-sky-50 relative min-h-[120px]",
-                !isSameMonth(dateForDay, currentDate) && "bg-gray-50 text-gray-400"
+                "border-b p-2 flex flex-col gap-2 transition-colors duration-200 hover:bg-sky-50 relative min-h-[120px]",
+                (index + startingDayOfWeek) % 7 !== 6 && "border-r" // Don't add right border to last column
               )}
             >
               <div className="flex justify-between items-center">
