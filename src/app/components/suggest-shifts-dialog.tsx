@@ -42,11 +42,11 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: Su
   const [suggestions, setSuggestions] = React.useState<SuggestShiftAssignmentsOutput | null>(null);
   const { toast } = useToast();
 
-  const { register, control, handleSubmit, reset, watch, setValue } = useForm<FormValues>({
+  const { register, control, handleSubmit, reset, watch } = useForm<FormValues>({
     defaultValues: {
-      employees: employees,
+      employees: [],
       shifts: [],
-      scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
+      scheduleConstraints: "",
     },
   });
   
@@ -58,12 +58,12 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: Su
             shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: roles[0] || "" }],
             scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
         });
+        setSuggestions(null);
     }
-  }, [employees, roles, reset, isOpen]);
+  }, [isOpen, employees, roles, reset]);
 
   const {
     fields: employeeFields,
-    remove: removeEmployee,
   } = useFieldArray({ control, name: "employees" });
   
   const {
@@ -283,3 +283,5 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: Su
     </Dialog>
   );
 }
+
+    
