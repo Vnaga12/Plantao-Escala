@@ -16,7 +16,8 @@ import { Sparkles, Trash2, Plus, Loader2, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import type { SuggestShiftAssignmentsInput, SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Link from "next/link";
+import { EditEmployeeDialog } from "./edit-employee-dialog";
+
 
 type SuggestShiftsDialogProps = {
   employees: Employee[];
@@ -42,7 +43,7 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
   const [suggestions, setSuggestions] = React.useState<SuggestShiftAssignmentsOutput | null>(null);
   const { toast } = useToast();
 
-  const { register, control, handleSubmit, reset, watch } = useForm<FormValues>({
+  const { register, control, handleSubmit, reset, watch, setValue } = useForm<FormValues>({
     defaultValues: {
       employees: initialEmployees,
       shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: roles[0] || "" }],
@@ -52,17 +53,20 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
   
   // Keep form in sync with external changes
   React.useEffect(() => {
-    reset({
-        employees: initialEmployees,
-        shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: roles[0] || "" }],
-        scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
-    });
+    if (isOpen) {
+        reset({
+            employees: initialEmployees,
+            shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: roles[0] || "" }],
+            scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
+        });
+    }
   }, [initialEmployees, roles, reset, isOpen]);
 
   const {
     fields: employeeFields,
     append: appendEmployee,
     remove: removeEmployee,
+    update: updateEmployee,
   } = useFieldArray({ control, name: "employees" });
   
   const {
@@ -72,6 +76,22 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
   } = useFieldArray({ control, name: "shifts" });
 
   const currentEmployees = watch("employees");
+
+  const handleUpdateEmployeeInForm = (updatedEmployee: Employee) => {
+    const employeeIndex = employeeFields.findIndex(emp => emp.id === updatedEmployee.id);
+    if(employeeIndex > -1) {
+        // `update` from useFieldArray is a bit weird with types, setValue is more reliable
+        setValue(`employees.${employeeIndex}`, updatedEmployee);
+    }
+  };
+
+  const handleDeleteEmployeeInForm = (employeeId: string) => {
+    const employeeIndex = employeeFields.findIndex(emp => emp.id === employeeId);
+    if(employeeIndex > -1) {
+        removeEmployee(employeeIndex);
+    }
+  }
+
 
   const handleFormSubmit = async (data: FormValues) => {
     setIsPending(true);
@@ -186,16 +206,21 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
                           <div className="flex justify-between items-center mb-2">
                              <Label className="font-semibold">{currentEmployees[index]?.name || `Funcionário #${index + 1}`}</Label>
                              <div className="flex items-center gap-2">
-                               <Button type="button" variant="outline" size="sm" asChild>
-                                  <Link href={`/employee/${field.id}`} target="_blank">
-                                    <User className="mr-2 h-4 w-4" />
-                                    Ver Perfil
-                                  </Link>
-                               </Button>
+                                <EditEmployeeDialog 
+                                  employee={currentEmployees[index]} 
+                                  onUpdateEmployee={handleUpdateEmployeeInForm}
+                                  onDeleteEmployee={handleDeleteEmployeeInForm}
+                                >
+                                  <Button type="button" variant="outline" size="sm">
+                                      <User className="mr-2 h-4 w-4" />
+                                      Editar Perfil
+                                  </Button>
+                                </EditEmployeeDialog>
+
                                <Button type="button" variant="ghost" size="icon" onClick={() => removeEmployee(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                              </div>
                           </div>
-                          <Input {...register(`employees.${index}.name`)} placeholder="Nome" className="mb-2" readOnly />
+                          <Input {...register(`employees.${index}.name`)} placeholder="Nome" className="mb-2" />
                           <Textarea {...register(`employees.${index}.preferences`)} placeholder="Preferências (ex: prefere turnos da manhã)" />
                           <EmployeeFormFields index={index} control={control} register={register} />
                       </div>
@@ -280,5 +305,3 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
     </Dialog>
   );
 }
-
-    

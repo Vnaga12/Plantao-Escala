@@ -2,18 +2,19 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlusCircle, User } from "lucide-react";
+import { PlusCircle, User, Trash2 } from "lucide-react";
 import type { Employee } from "@/lib/types";
+import { EditEmployeeDialog } from "./edit-employee-dialog";
 
 type EmployeeSidebarProps = {
   employees: Employee[];
-  setEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
+  onEmployeesChange: (employees: Employee[]) => void;
 };
 
-export default function EmployeeSidebar({ employees, setEmployees }: EmployeeSidebarProps) {
+export default function EmployeeSidebar({ employees, onEmployeesChange }: EmployeeSidebarProps) {
+  
   const handleAddEmployee = () => {
     const newEmployee: Employee = {
       id: `emp-${Date.now()}`,
@@ -21,8 +22,20 @@ export default function EmployeeSidebar({ employees, setEmployees }: EmployeeSid
       availability: [],
       preferences: "",
     };
-    setEmployees([...employees, newEmployee]);
+    onEmployeesChange([...employees, newEmployee]);
   };
+
+  const handleUpdateEmployee = (updatedEmployee: Employee) => {
+    const newEmployees = employees.map(emp => 
+        emp.id === updatedEmployee.id ? updatedEmployee : emp
+    );
+    onEmployeesChange(newEmployees);
+  };
+  
+  const handleDeleteEmployee = (employeeId: string) => {
+    const newEmployees = employees.filter(emp => emp.id !== employeeId);
+    onEmployeesChange(newEmployees);
+  }
 
   return (
     <aside className="w-64 flex-shrink-0 border-r bg-gray-50 p-4 flex flex-col print:hidden">
@@ -34,19 +47,20 @@ export default function EmployeeSidebar({ employees, setEmployees }: EmployeeSid
         </Button>
       </div>
       <ScrollArea className="flex-1">
-        <div className="space-y-2">
+        <div className="space-y-1">
           {employees.map((employee) => (
             <div
               key={employee.id}
-              className="flex items-center justify-between p-2 rounded-md hover:bg-gray-100"
+              className="flex items-center justify-between p-2 rounded-md hover:bg-gray-100 group"
             >
               <span className="font-medium text-sm text-gray-700">{employee.name}</span>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href={`/employee/${employee.id}`} target="_blank" rel="noopener noreferrer">
-                  <User className="mr-2 h-4 w-4" />
-                  Perfil
-                </Link>
-              </Button>
+              <div className="flex items-center">
+                 <EditEmployeeDialog employee={employee} onUpdateEmployee={handleUpdateEmployee} onDeleteEmployee={handleDeleteEmployee} >
+                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                        <User className="h-4 w-4" />
+                    </Button>
+                 </EditEmployeeDialog>
+              </div>
             </div>
           ))}
         </div>
@@ -54,5 +68,3 @@ export default function EmployeeSidebar({ employees, setEmployees }: EmployeeSid
     </aside>
   );
 }
-
-    
