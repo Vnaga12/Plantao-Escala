@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Employee, Calendar } from "@/lib/types";
+import type { Employee, Calendar, ShiftColor } from "@/lib/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Download, Search, Settings } from "lucide-react";
@@ -27,6 +27,8 @@ type HeaderProps = {
   activeCalendarId: string;
   onCalendarChange: (id: string) => void;
   onCalendarsChange: (calendars: Calendar[]) => void;
+  colorMeanings: { color: ShiftColor, meaning: string }[];
+  onColorMeaningsChange: (meanings: { color: ShiftColor, meaning: string }[]) => void;
 };
 
 export default function Header({ 
@@ -43,6 +45,8 @@ export default function Header({
   activeCalendarId,
   onCalendarChange,
   onCalendarsChange,
+  colorMeanings,
+  onColorMeaningsChange,
 }: HeaderProps) {
   
   const handlePrint = () => {
@@ -86,7 +90,12 @@ export default function Header({
             />
           </div>
            <SuggestShiftsDialog employees={employees} onApplySuggestions={onApplySuggestions} roles={roles} />
-           <SettingsDialog roles={roles} onRolesChange={onRolesChange} />
+           <SettingsDialog 
+              roles={roles} 
+              onRolesChange={onRolesChange} 
+              colorMeanings={colorMeanings} 
+              onColorMeaningsChange={onColorMeaningsChange} 
+            />
           <Button variant="outline" onClick={handlePrint}>
             <Download />
             Exportar PDF

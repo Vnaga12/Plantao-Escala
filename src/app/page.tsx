@@ -186,6 +186,8 @@ export default function Home() {
         activeCalendarId={activeCalendarId}
         onCalendarChange={setActiveCalendarId}
         onCalendarsChange={setCalendars}
+        colorMeanings={colorMeanings}
+        onColorMeaningsChange={setColorMeanings}
       />
       <main className="flex-1 overflow-auto p-4 md:p-6">
         <div className="bg-white rounded-lg shadow">
