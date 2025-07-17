@@ -37,7 +37,7 @@ export default function CalendarView({
   const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full print:h-auto print:overflow-visible">
       <div className="grid grid-cols-7 text-center font-semibold text-sm text-gray-600 border-b">
         {weekDays.map((day) => (
           <div key={day} className="py-3">
@@ -45,9 +45,9 @@ export default function CalendarView({
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-7 grid-rows-5 flex-1">
+      <div className="grid grid-cols-7 grid-rows-5 flex-1 print:grid-rows-none print:flex-none">
         {emptyDays.map((_, index) => (
-          <div key={`empty-${index}`} className="border-r border-b" />
+          <div key={`empty-${index}`} className="border-r border-b print:min-h-[160px]" />
         ))}
         {days.map((day, index) => {
           const dateForDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
@@ -59,7 +59,7 @@ export default function CalendarView({
             <div
               key={day}
               className={cn(
-                "border-b p-2 flex flex-col gap-2 transition-colors duration-200 hover:bg-sky-50 relative min-h-[120px]",
+                "border-b p-2 flex flex-col gap-2 transition-colors duration-200 hover:bg-sky-50 relative min-h-[120px] print:min-h-[160px] print:break-inside-avoid",
                 (index + startingDayOfWeek) % 7 !== 6 && "border-r" // Don't add right border to last column
               )}
             >
@@ -74,9 +74,11 @@ export default function CalendarView({
                 >
                   {day}
                 </span>
-                <AddShiftDialog onAddShift={onAddShift} day={day} roles={roles} />
+                <div className="print:hidden">
+                    <AddShiftDialog onAddShift={onAddShift} day={day} roles={roles} />
+                </div>
               </div>
-              <div className="flex flex-col gap-1 overflow-y-auto">
+              <div className="flex flex-col gap-1 overflow-y-auto print:overflow-visible">
                 {shiftsForDay.map((shift) => (
                   <ShiftCard 
                     key={shift.id} 

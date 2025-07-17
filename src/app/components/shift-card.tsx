@@ -28,12 +28,12 @@ type ShiftCardProps = {
 };
 
 const roleColorClasses: Record<ShiftColor, string> = {
-  blue: "bg-blue-100 border-blue-400 text-blue-800",
-  green: "bg-green-100 border-green-400 text-green-800",
-  purple: "bg-purple-100 border-purple-400 text-purple-800",
-  red: "bg-red-100 border-red-400 text-red-800",
-  yellow: "bg-yellow-100 border-yellow-400 text-yellow-800",
-  gray: "bg-gray-100 border-gray-400 text-gray-800",
+  blue: "bg-blue-100 border-blue-400 text-blue-800 print:bg-blue-100 print:border-blue-400",
+  green: "bg-green-100 border-green-400 text-green-800 print:bg-green-100 print:border-green-400",
+  purple: "bg-purple-100 border-purple-400 text-purple-800 print:bg-purple-100 print:border-purple-400",
+  red: "bg-red-100 border-red-400 text-red-800 print:bg-red-100 print:border-red-400",
+  yellow: "bg-yellow-100 border-yellow-400 text-yellow-800 print:bg-yellow-100 print:border-yellow-400",
+  gray: "bg-gray-100 border-gray-400 text-gray-800 print:bg-gray-100 print:border-gray-400",
 };
 
 export default function ShiftCard({ shift, employees, onUpdateShift, onDeleteShift, roles }: ShiftCardProps) {
@@ -48,7 +48,7 @@ export default function ShiftCard({ shift, employees, onUpdateShift, onDeleteShi
             <span>{shift.startTime} - {shift.endTime}</span>
           </div>
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center print:hidden">
             <EditShiftDialog shift={shift} roles={roles} onUpdateShift={onUpdateShift} />
             <SwapShiftDialog shift={shift} employees={employees} onUpdateShift={onUpdateShift} />
             <AlertDialog>

@@ -54,7 +54,7 @@ export default function Header({
   };
 
   return (
-    <header className="flex-shrink-0 border-b">
+    <header className="flex-shrink-0 border-b print:hidden">
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">

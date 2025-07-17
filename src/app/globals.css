@@ -70,3 +70,53 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
+  .print\:block {
+    display: block !important;
+  }
+  .print\:flex {
+    display: flex !important;
+  }
+  main {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+  .print\:border-none {
+    border: none !important;
+  }
+  .print\:bg-white {
+    background-color: white !important;
+  }
+  .print\:p-0 {
+    padding: 0 !important;
+  }
+   .print\:min-h-\[160px\] {
+    min-height: 160px !important;
+  }
+  .print\:overflow-visible {
+    overflow: visible !important;
+  }
+  .print\:h-auto {
+    height: auto !important;
+  }
+  .print\:flex-none {
+    flex: none !important;
+  }
+  .print\:grid-rows-none {
+    grid-template-rows: none !important;
+  }
+  .print\:break-inside-avoid {
+    break-inside: avoid;
+  }
+}

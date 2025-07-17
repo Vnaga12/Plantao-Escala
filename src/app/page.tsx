@@ -254,8 +254,8 @@ export default function Home() {
         colorMeanings={colorMeanings}
         onColorMeaningsChange={setColorMeanings}
       />
-      <main className="flex-1 overflow-auto p-4 md:p-6">
-        <div className="bg-white rounded-lg shadow">
+      <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
+        <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none">
           <CalendarView 
             currentDate={currentDate} 
             shifts={filteredShifts}
@@ -266,7 +266,9 @@ export default function Home() {
             roles={roles}
           />
         </div>
-        <ColorLegend meanings={colorMeanings} />
+        <div className="print:hidden">
+            <ColorLegend meanings={colorMeanings} />
+        </div>
       </main>
     </div>
   );
