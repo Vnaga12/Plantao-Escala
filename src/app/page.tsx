@@ -8,6 +8,7 @@ import Header from "@/app/components/header";
 import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
+import EmployeeSidebar from "./components/employee-sidebar";
 
 const initialEmployees: Employee[] = [
     {
@@ -254,22 +255,27 @@ export default function Home() {
         colorMeanings={colorMeanings}
         onColorMeaningsChange={setColorMeanings}
       />
-      <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
-        <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none">
-          <CalendarView 
-            currentDate={currentDate} 
-            shifts={filteredShifts}
-            onAddShift={handleAddShift} 
-            employees={employees}
-            onUpdateShift={handleUpdateShift}
-            onDeleteShift={handleDeleteShift}
-            roles={roles}
-          />
-        </div>
-        <div className="print:hidden">
-            <ColorLegend meanings={colorMeanings} />
-        </div>
-      </main>
+      <div className="flex flex-1 overflow-hidden">
+        <EmployeeSidebar employees={employees} setEmployees={setEmployees} />
+        <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
+          <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none">
+            <CalendarView 
+              currentDate={currentDate} 
+              shifts={filteredShifts}
+              onAddShift={handleAddShift} 
+              employees={employees}
+              onUpdateShift={handleUpdateShift}
+              onDeleteShift={handleDeleteShift}
+              roles={roles}
+            />
+          </div>
+          <div className="print:hidden">
+              <ColorLegend meanings={colorMeanings} />
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
+
+    

@@ -49,6 +49,15 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
       scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
     },
   });
+  
+  // Keep form in sync with external changes
+  React.useEffect(() => {
+    reset({
+        employees: initialEmployees,
+        shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: roles[0] || "" }],
+        scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
+    });
+  }, [initialEmployees, roles, reset, isOpen]);
 
   const {
     fields: employeeFields,
@@ -171,6 +180,7 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
             </TabsList>
             <ScrollArea className="flex-1 p-1">
               <TabsContent value="employees" className="mt-2">
+                  <p className="text-sm text-muted-foreground mb-4">Gerencie a equipe na barra lateral. Use esta aba para ajustar as preferências e disponibilidade para esta sugestão específica.</p>
                   {employeeFields.map((field, index) => (
                       <div key={field.id} className="p-4 border rounded-lg mb-4 bg-background">
                           <div className="flex justify-between items-center mb-2">
@@ -185,7 +195,7 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
                                <Button type="button" variant="ghost" size="icon" onClick={() => removeEmployee(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                              </div>
                           </div>
-                          <Input {...register(`employees.${index}.name`)} placeholder="Nome" className="mb-2" />
+                          <Input {...register(`employees.${index}.name`)} placeholder="Nome" className="mb-2" readOnly />
                           <Textarea {...register(`employees.${index}.preferences`)} placeholder="Preferências (ex: prefere turnos da manhã)" />
                           <EmployeeFormFields index={index} control={control} register={register} />
                       </div>
@@ -270,3 +280,5 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
     </Dialog>
   );
 }
+
+    
