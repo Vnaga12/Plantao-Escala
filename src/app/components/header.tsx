@@ -55,7 +55,7 @@ export default function Header({
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Logo className="h-8 w-8 text-primary" />
-            <h1 className="text-xl font-bold font-headline text-gray-800">RotationWise</h1>
+            <h1 className="text-xl font-bold font-headline text-gray-800">Escala de Cirurgia</h1>
           </div>
            <CalendarSwitcher
             calendars={calendars}

@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'RotationWise',
+  title: 'Escala de Cirurgia',
   description: 'Uma aplicação para agendamento de turnos médicos.',
 };
 
