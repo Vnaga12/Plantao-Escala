@@ -1,7 +1,8 @@
+
 export type Shift = {
   id: string;
   day: number;
-  role: 'Doctor' | 'Nurse' | 'Technician';
+  role: string;
   employeeName: string;
   startTime: string;
   endTime: string;
@@ -19,4 +20,10 @@ export type Employee = {
   name: string;
   availability: EmployeeAvailability[];
   preferences: string;
+};
+
+export type Calendar = {
+  id: string;
+  name: string;
+  shifts: Shift[];
 };

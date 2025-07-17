@@ -20,6 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 type SuggestShiftsDialogProps = {
   employees: Employee[];
   onApplySuggestions: (suggestions: SuggestShiftAssignmentsOutput['assignments']) => void;
+  roles: string[];
 };
 
 type FormValues = SuggestShiftAssignmentsInput;
@@ -34,7 +35,7 @@ const weekdays = [
     { value: "Sunday", label: "Domingo" },
 ];
 
-export function SuggestShiftsDialog({ employees: initialEmployees, onApplySuggestions }: SuggestShiftsDialogProps) {
+export function SuggestShiftsDialog({ employees: initialEmployees, onApplySuggestions, roles }: SuggestShiftsDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isPending, setIsPending] = React.useState(false);
   const [suggestions, setSuggestions] = React.useState<SuggestShiftAssignmentsOutput | null>(null);
@@ -43,7 +44,7 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
   const { register, control, handleSubmit, reset } = useForm<FormValues>({
     defaultValues: {
       employees: initialEmployees,
-      shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: "Doctor" }],
+      shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: roles[0] || "" }],
       scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
     },
   });
@@ -207,9 +208,7 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Doctor">Médico(a)</SelectItem>
-                                        <SelectItem value="Nurse">Enfermeiro(a)</SelectItem>
-                                        <SelectItem value="Technician">Técnico(a)</SelectItem>
+                                      {roles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
                                     </SelectContent>
                                     </Select>
                                 )}
@@ -218,7 +217,7 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
                           </div>
                       </div>
                   ))}
-                  <Button type="button" variant="outline" onClick={() => appendShift({ day: 'Tuesday', startTime: '09:00', endTime: '17:00', role: 'Nurse' })}>
+                  <Button type="button" variant="outline" onClick={() => appendShift({ day: 'Tuesday', startTime: '09:00', endTime: '17:00', role: roles[0] || '' })}>
                       <Plus className="mr-2 h-4 w-4" /> Adicionar Turno
                   </Button>
               </TabsContent>

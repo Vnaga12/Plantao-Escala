@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -23,16 +24,17 @@ type AddShiftFormValues = Omit<Shift, 'id' | 'color' | 'day'>;
 type AddShiftDialogProps = {
   onAddShift: (shift: Omit<Shift, 'id' | 'color'>) => void;
   day: number;
+  roles: string[];
 };
 
-export function AddShiftDialog({ onAddShift, day }: AddShiftDialogProps) {
+export function AddShiftDialog({ onAddShift, day, roles }: AddShiftDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<AddShiftFormValues>({
     defaultValues: {
       employeeName: "",
       startTime: "09:00",
       endTime: "17:00",
-      role: "Nurse",
+      role: roles[0] || "",
     }
   });
 
@@ -60,14 +62,14 @@ export function AddShiftDialog({ onAddShift, day }: AddShiftDialogProps) {
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="role" className="text-right">Função</Label>
-              <Select defaultValue="Nurse" onValueChange={(value: Shift['role']) => control.setValue('role', value)}>
+              <Select defaultValue={roles[0] || ""} onValueChange={(value: string) => control.setValue('role', value)}>
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Selecione uma função" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Doctor">Médico(a)</SelectItem>
-                  <SelectItem value="Nurse">Enfermeiro(a)</SelectItem>
-                  <SelectItem value="Technician">Técnico(a)</SelectItem>
+                  {roles.map(role => (
+                    <SelectItem key={role} value={role}>{role}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

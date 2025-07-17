@@ -14,9 +14,10 @@ type CalendarViewProps = {
   onAddShift: (newShift: Omit<Shift, 'id' | 'color'>) => void;
   employees: Employee[];
   onUpdateShift: (updatedShift: Shift) => void;
+  roles: string[];
 };
 
-export default function CalendarView({ currentDate, shifts, onAddShift, employees, onUpdateShift }: CalendarViewProps) {
+export default function CalendarView({ currentDate, shifts, onAddShift, employees, onUpdateShift, roles }: CalendarViewProps) {
   const firstDayOfMonth = startOfMonth(currentDate);
   const daysInMonth = getDaysInMonth(currentDate);
   const startingDayOfWeek = getDay(firstDayOfMonth); // Sunday is 0
@@ -64,7 +65,7 @@ export default function CalendarView({ currentDate, shifts, onAddShift, employee
                 >
                   {day}
                 </span>
-                <AddShiftDialog onAddShift={onAddShift} day={day} />
+                <AddShiftDialog onAddShift={onAddShift} day={day} roles={roles} />
               </div>
               <div className="flex flex-col gap-1 overflow-y-auto">
                 {shiftsForDay.map((shift) => (
