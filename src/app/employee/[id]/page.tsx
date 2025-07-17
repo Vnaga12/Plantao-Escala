@@ -6,143 +6,165 @@ import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Home } from 'lucide-react';
+import { Home, ArrowLeft } from 'lucide-react';
 import type { Employee, Calendar, Shift } from '@/lib/types';
+import { useToast } from '@/components/ui/use-toast';
+import { getDaysInMonth } from 'date-fns';
 
-// Mock data, as we don't have a central data fetching hook.
-// In a real app, this would come from a global state or an API call.
-const initialEmployees: Employee[] = [
-    {
-        id: '1',
-        name: 'Dra. Alice',
-        availability: [{ day: 'Monday', startTime: '08:00', endTime: '17:00' }],
-        preferences: 'Prefere turnos da manhã.'
-    },
-    {
-        id: '2',
-        name: 'Beto',
-        availability: [{ day: 'Tuesday', startTime: '12:00', endTime: '20:00' }],
-        preferences: 'Não pode trabalhar nos fins de semana.'
-    },
-    {
-        id: '3',
-        name: 'Carlos',
-        availability: [],
-        preferences: 'Disponível para cobrir turnos.'
-    },
-    {
-        id: '4',
-        name: 'Dr. David',
-        availability: [],
-        preferences: 'Prefere turnos da noite.'
-    },
-];
-
-const initialCalendars: Calendar[] = [
-  {
-    id: 'cal1',
-    name: 'Hospital Principal',
-    shifts: [
-      { id: '1', day: 5, role: 'Cirurgia Eletiva', employeeName: 'Dra. Alice', startTime: '08:00', endTime: '16:00', color: 'blue' },
-      { id: '2', day: 5, role: 'Plantão', employeeName: 'Beto', startTime: '14:00', endTime: '22:00', color: 'green' },
-      { id: '3', day: 12, role: 'Ambulatório', employeeName: 'Carlos', startTime: '09:00', endTime: '17:00', color: 'purple' },
-      { id: '4', day: 21, role: 'Emergência', employeeName: 'Dr. David', startTime: '20:00', endTime: '04:00', color: 'red' },
-      { id: 's1', day: 15, role: 'Cirurgia Eletiva', employeeName: 'Dra. Alice', startTime: '08:00', endTime: '16:00', color: 'blue' },
-    ]
-  },
-  {
-    id: 'cal2',
-    name: 'Clínica Secundária',
-    shifts: [
-        { id: '5', day: 10, role: 'Cirurgia Eletiva', employeeName: 'Dr. David', startTime: '09:00', endTime: '17:00', color: 'blue' },
-    ]
-  }
-];
+type EmployeeWithShifts = Employee & {
+    shifts: (Shift & { calendarName: string })[];
+};
 
 export default function EmployeeProfilePage() {
   const router = useRouter();
   const params = useParams();
   const { id } = params;
+  const { toast } = useToast();
 
-  const [employee, setEmployee] = React.useState<Employee | null>(null);
-  const [employeeShifts, setEmployeeShifts] = React.useState<Shift[]>([]);
+  const [employee, setEmployee] = React.useState<EmployeeWithShifts | null>(null);
+  const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    if (id) {
-      const foundEmployee = initialEmployees.find(e => e.id === id);
-      if (foundEmployee) {
-        setEmployee(foundEmployee);
-        const allShifts = initialCalendars.flatMap(cal => 
-            cal.shifts.map(shift => ({...shift, calendarName: cal.name}))
-        );
-        const shiftsForEmployee = allShifts.filter(shift => shift.employeeName === foundEmployee.name);
-        setEmployeeShifts(shiftsForEmployee.sort((a,b) => a.day - b.day));
-      }
+    // This is a workaround to get data from localStorage since we don't have a backend.
+    // In a real application, this would be an API call.
+    const loadData = () => {
+        try {
+            const storedCalendars = localStorage.getItem('calendars');
+            const storedEmployees = localStorage.getItem('employees');
+            const currentDate = new Date(localStorage.getItem('currentDate') || new Date());
+            
+            if (storedCalendars && storedEmployees) {
+                const calendars: Calendar[] = JSON.parse(storedCalendars);
+                const employees: Employee[] = JSON.parse(storedEmployees);
+                const currentMonth = currentDate.getMonth();
+                const currentYear = currentDate.getFullYear();
+                
+                const foundEmployee = employees.find(e => e.id === id);
+    
+                if (foundEmployee) {
+                    const allShifts = calendars.flatMap(cal => 
+                        cal.shifts.map(shift => ({...shift, calendarName: cal.name}))
+                    );
+
+                    const shiftsForEmployee = allShifts.filter(shift => {
+                        const shiftDate = new Date(currentYear, currentMonth, shift.day);
+                        return shift.employeeName === foundEmployee.name && 
+                               shiftDate.getMonth() === currentMonth &&
+                               shiftDate.getFullYear() === currentYear;
+                    });
+                    
+                    setEmployee({
+                        ...foundEmployee,
+                        shifts: shiftsForEmployee.sort((a,b) => a.day - b.day),
+                    });
+                }
+            } else {
+                 toast({
+                    variant: "destructive",
+                    title: "Dados não encontrados",
+                    description: "Não foi possível carregar os dados do calendário. Volte à página inicial e tente novamente.",
+                });
+            }
+        } catch (error) {
+            console.error("Failed to load data from localStorage", error);
+            toast({
+                variant: "destructive",
+                title: "Erro ao carregar dados",
+                description: "Ocorreu um problema ao carregar as informações do localStorage.",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // Check if running on client side
+    if (typeof window !== 'undefined') {
+        loadData();
     }
-  }, [id]);
+    
+  }, [id, toast]);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <p>Carregando perfil do funcionário...</p>
+      </div>
+    );
+  }
 
   if (!employee) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <p>Funcionário não encontrado.</p>
+      <div className="flex h-screen w-full items-center justify-center flex-col gap-4">
+        <p className='text-lg'>Funcionário não encontrado ou dados indisponíveis.</p>
+         <Button variant="outline" onClick={() => router.push('/')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar para o Calendário
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8">
-      <Button variant="outline" onClick={() => router.push('/')} className="mb-4">
+    <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
+      <Button variant="outline" onClick={() => router.push('/')} className="mb-4 bg-white">
         <Home className="mr-2 h-4 w-4" />
         Voltar para o Calendário
       </Button>
-      <Card>
+      <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl">{employee.name}</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-3xl font-bold text-gray-800">{employee.name}</CardTitle>
+          <CardDescription className="text-md text-gray-600">
             Preferências: {employee.preferences || 'Nenhuma preferência listada.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <h3 className="font-semibold mb-2">Disponibilidade Padrão</h3>
-          {employee.availability.length > 0 ? (
-            <ul className="list-disc pl-5 text-sm text-muted-foreground">
-              {employee.availability.map((avail, index) => (
-                <li key={index}>{avail.day}: {avail.startTime} - {avail.endTime}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground">Nenhuma disponibilidade padrão definida.</p>
-          )}
-
-          <h3 className="font-semibold mt-6 mb-2">Plantões Agendados (Mês Atual)</h3>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Dia</TableHead>
-                <TableHead>Função</TableHead>
-                <TableHead>Horário</TableHead>
-                <TableHead>Hospital/Clínica</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {employeeShifts.length > 0 ? (
-                employeeShifts.map(shift => (
-                  <TableRow key={shift.id}>
-                    <TableCell>{shift.day}</TableCell>
-                    <TableCell>{shift.role}</TableCell>
-                    <TableCell>{shift.startTime} - {shift.endTime}</TableCell>
-                    <TableCell>{(shift as any).calendarName}</TableCell>
-                  </TableRow>
-                ))
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="font-semibold mb-2 text-lg text-gray-700 border-b pb-2">Disponibilidade Padrão</h3>
+              {employee.availability.length > 0 ? (
+                <ul className="list-disc pl-5 mt-2 space-y-1 text-sm text-muted-foreground">
+                  {employee.availability.map((avail, index) => (
+                    <li key={index}><span className="font-medium text-gray-700">{avail.day}</span>: {avail.startTime} - {avail.endTime}</li>
+                  ))}
+                </ul>
               ) : (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center">
-                    Nenhum plantão agendado para este mês.
-                  </TableCell>
-                </TableRow>
+                <p className="text-sm text-muted-foreground mt-2">Nenhuma disponibilidade padrão definida.</p>
               )}
-            </TableBody>
-          </Table>
+            </div>
+            <div>
+              <h3 className="font-semibold mt-6 mb-2 text-lg text-gray-700 border-b pb-2">Plantões Agendados (Mês Atual)</h3>
+              <div className="border rounded-lg overflow-hidden mt-2">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50">
+                      <TableHead>Dia</TableHead>
+                      <TableHead>Função</TableHead>
+                      <TableHead>Horário</TableHead>
+                      <TableHead>Hospital/Clínica</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {employee.shifts.length > 0 ? (
+                      employee.shifts.map(shift => (
+                        <TableRow key={shift.id}>
+                          <TableCell>{shift.day}</TableCell>
+                          <TableCell>{shift.role}</TableCell>
+                          <TableCell>{shift.startTime} - {shift.endTime}</TableCell>
+                          <TableCell>{shift.calendarName}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center h-24 text-muted-foreground">
+                          Nenhum plantão agendado para este mês.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

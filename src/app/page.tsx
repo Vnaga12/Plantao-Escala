@@ -65,15 +65,65 @@ const initialColorMeanings: { color: ShiftColor, meaning: string }[] = [
     { color: 'gray', meaning: 'Outro' },
 ];
 
+const initialRoles = ['Cirurgia Eletiva', 'Plantão', 'Ambulatório', 'Emergência', 'Técnico(a)'];
+
+
 export default function Home() {
-  const [currentDate, setCurrentDate] = React.useState(new Date());
-  const [employees, setEmployees] = React.useState<Employee[]>(initialEmployees);
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [calendars, setCalendars] = React.useState<Calendar[]>(initialCalendars);
-  const [activeCalendarId, setActiveCalendarId] = React.useState<string>('cal1');
-  const [roles, setRoles] = React.useState(['Cirurgia Eletiva', 'Plantão', 'Ambulatório', 'Emergência', 'Técnico(a)']);
-  const [colorMeanings, setColorMeanings] = React.useState(initialColorMeanings);
   const { toast } = useToast();
+  
+  const [currentDate, setCurrentDate] = React.useState(new Date());
+  const [employees, setEmployees] = React.useState<Employee[]>([]);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [calendars, setCalendars] = React.useState<Calendar[]>([]);
+  const [activeCalendarId, setActiveCalendarId] = React.useState<string>('');
+  const [roles, setRoles] = React.useState<string[]>([]);
+  const [colorMeanings, setColorMeanings] = React.useState<{ color: ShiftColor, meaning: string }[]>([]);
+  
+  const [isClient, setIsClient] = React.useState(false);
+  
+  // Hydration logic
+  React.useEffect(() => {
+    setIsClient(true);
+    try {
+        const storedDate = localStorage.getItem('currentDate');
+        const storedEmployees = localStorage.getItem('employees');
+        const storedCalendars = localStorage.getItem('calendars');
+        const storedActiveId = localStorage.getItem('activeCalendarId');
+        const storedRoles = localStorage.getItem('roles');
+        const storedColorMeanings = localStorage.getItem('colorMeanings');
+
+        if (storedDate) setCurrentDate(new Date(storedDate));
+        setEmployees(storedEmployees ? JSON.parse(storedEmployees) : initialEmployees);
+        setCalendars(storedCalendars ? JSON.parse(storedCalendars) : initialCalendars);
+        setActiveCalendarId(storedActiveId || 'cal1');
+        setRoles(storedRoles ? JSON.parse(storedRoles) : initialRoles);
+        setColorMeanings(storedColorMeanings ? JSON.parse(storedColorMeanings) : initialColorMeanings);
+    } catch (error) {
+        console.error("Failed to load from localStorage", error);
+        toast({
+            variant: "destructive",
+            title: "Erro ao Carregar Dados",
+            description: "Não foi possível carregar os dados salvos. Usando valores padrão.",
+        });
+        setEmployees(initialEmployees);
+        setCalendars(initialCalendars);
+        setActiveCalendarId('cal1');
+        setRoles(initialRoles);
+        setColorMeanings(initialColorMeanings);
+    }
+  }, [toast]);
+
+  // Save to localStorage whenever state changes
+  React.useEffect(() => {
+    if (isClient) {
+        localStorage.setItem('currentDate', currentDate.toISOString());
+        localStorage.setItem('employees', JSON.stringify(employees));
+        localStorage.setItem('calendars', JSON.stringify(calendars));
+        localStorage.setItem('activeCalendarId', activeCalendarId);
+        localStorage.setItem('roles', JSON.stringify(roles));
+        localStorage.setItem('colorMeanings', JSON.stringify(colorMeanings));
+    }
+  }, [currentDate, employees, calendars, activeCalendarId, roles, colorMeanings, isClient]);
 
 
   const activeCalendar = calendars.find(c => c.id === activeCalendarId) ?? calendars[0];
@@ -179,6 +229,11 @@ export default function Home() {
       shift.role.toLowerCase().includes(query)
     );
   });
+
+  if (!isClient) {
+    // You can render a loader or null here to avoid hydration mismatch
+    return null;
+  }
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">

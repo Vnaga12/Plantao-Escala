@@ -42,7 +42,7 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
   const [suggestions, setSuggestions] = React.useState<SuggestShiftAssignmentsOutput | null>(null);
   const { toast } = useToast();
 
-  const { register, control, handleSubmit, reset } = useForm<FormValues>({
+  const { register, control, handleSubmit, reset, watch } = useForm<FormValues>({
     defaultValues: {
       employees: initialEmployees,
       shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: roles[0] || "" }],
@@ -61,6 +61,8 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
     append: appendShift,
     remove: removeShift,
   } = useFieldArray({ control, name: "shifts" });
+
+  const currentEmployees = watch("employees");
 
   const handleFormSubmit = async (data: FormValues) => {
     setIsPending(true);
@@ -172,14 +174,14 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
                   {employeeFields.map((field, index) => (
                       <div key={field.id} className="p-4 border rounded-lg mb-4 bg-background">
                           <div className="flex justify-between items-center mb-2">
-                             <Label className="font-semibold">Funcionário #{index + 1}</Label>
-                             <div className="flex items-center">
-                               <Link href={`/employee/${field.id}`} target="_blank">
-                                <Button type="button" variant="outline" size="sm">
-                                  <User className="mr-2 h-4 w-4" />
-                                  Ver Perfil
-                                </Button>
-                               </Link>
+                             <Label className="font-semibold">{currentEmployees[index]?.name || `Funcionário #${index + 1}`}</Label>
+                             <div className="flex items-center gap-2">
+                               <Button type="button" variant="outline" size="sm" asChild>
+                                  <Link href={`/employee/${field.id}`} target="_blank">
+                                    <User className="mr-2 h-4 w-4" />
+                                    Ver Perfil
+                                  </Link>
+                               </Button>
                                <Button type="button" variant="ghost" size="icon" onClick={() => removeEmployee(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                              </div>
                           </div>
@@ -243,7 +245,7 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
                           <div className="space-y-2">
                           {suggestions.assignments.map((a, i) => (
                               <div key={i} className="text-sm p-3 border rounded-lg grid grid-cols-1 sm:grid-cols-3 gap-2 bg-white">
-                                  <span className="font-semibold">{initialEmployees.find(e => e.id === a.employeeId)?.name}</span>
+                                  <span className="font-semibold">{currentEmployees.find(e => e.id === a.employeeId)?.name}</span>
                                   <span>{a.role} na {getDayLabel(a.shiftDay)}</span>
                                   <span className="font-mono">{a.shiftStartTime} - {a.shiftEndTime}</span>
                               </div>
