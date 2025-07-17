@@ -7,6 +7,7 @@ import type { Shift, Employee, Calendar, ShiftColor } from "@/lib/types";
 import Header from "@/app/components/header";
 import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
+import { useToast } from "@/components/ui/use-toast";
 
 const initialEmployees: Employee[] = [
     {
@@ -72,6 +73,7 @@ export default function Home() {
   const [activeCalendarId, setActiveCalendarId] = React.useState<string>('cal1');
   const [roles, setRoles] = React.useState(['Cirurgia Eletiva', 'Plantão', 'Ambulatório', 'Emergência', 'Técnico(a)']);
   const [colorMeanings, setColorMeanings] = React.useState(initialColorMeanings);
+  const { toast } = useToast();
 
 
   const activeCalendar = calendars.find(c => c.id === activeCalendarId) ?? calendars[0];
@@ -97,8 +99,21 @@ export default function Home() {
       id: Date.now().toString(),
     };
     handleSetShifts([...shifts, shiftWithId]);
+    toast({ title: "Turno Adicionado", description: "O novo turno foi adicionado ao calendário." });
+  };
+  
+  const handleUpdateShift = (updatedShift: Shift) => {
+    const newShifts = shifts.map(s => s.id === updatedShift.id ? updatedShift : s);
+    handleSetShifts(newShifts);
+    toast({ title: "Turno Atualizado", description: "O turno foi atualizado com sucesso." });
   };
 
+  const handleDeleteShift = (shiftId: string) => {
+    const newShifts = shifts.filter(s => s.id !== shiftId);
+    handleSetShifts(newShifts);
+    toast({ title: "Turno Excluído", description: "O turno foi removido do calendário." });
+  };
+  
   const handleApplySuggestions = (suggestedShifts: {
       employeeId: string;
       shiftDay: string;
@@ -157,11 +172,6 @@ export default function Home() {
       handleSetShifts(newShifts);
   };
   
-  const handleUpdateShift = (updatedShift: Shift) => {
-    const newShifts = shifts.map(s => s.id === updatedShift.id ? updatedShift : s);
-    handleSetShifts(newShifts);
-  };
-  
   const filteredShifts = shifts.filter(shift => {
     const query = searchQuery.toLowerCase();
     return (
@@ -197,6 +207,7 @@ export default function Home() {
             onAddShift={handleAddShift} 
             employees={employees}
             onUpdateShift={handleUpdateShift}
+            onDeleteShift={handleDeleteShift}
             roles={roles}
           />
         </div>
