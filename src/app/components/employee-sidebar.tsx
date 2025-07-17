@@ -5,15 +5,28 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusCircle, User, Trash2 } from "lucide-react";
-import type { Employee } from "@/lib/types";
+import type { Employee, Shift } from "@/lib/types";
 import { EditEmployeeDialog } from "./edit-employee-dialog";
 
 type EmployeeSidebarProps = {
   employees: Employee[];
   onEmployeesChange: (employees: Employee[]) => void;
+  shifts: Shift[];
+  currentDate: Date;
+  onUpdateShift: (updatedShift: Shift) => void;
+  onDeleteShift: (shiftId: string) => void;
+  roles: string[];
 };
 
-export default function EmployeeSidebar({ employees, onEmployeesChange }: EmployeeSidebarProps) {
+export default function EmployeeSidebar({ 
+  employees, 
+  onEmployeesChange,
+  shifts,
+  currentDate,
+  onUpdateShift,
+  onDeleteShift,
+  roles
+}: EmployeeSidebarProps) {
   
   const handleAddEmployee = () => {
     const newEmployee: Employee = {
@@ -55,7 +68,16 @@ export default function EmployeeSidebar({ employees, onEmployeesChange }: Employ
             >
               <span className="font-medium text-sm text-gray-700">{employee.name}</span>
               <div className="flex items-center">
-                 <EditEmployeeDialog employee={employee} onUpdateEmployee={handleUpdateEmployee} onDeleteEmployee={handleDeleteEmployee} >
+                 <EditEmployeeDialog 
+                    employee={employee} 
+                    onUpdateEmployee={handleUpdateEmployee} 
+                    onDeleteEmployee={handleDeleteEmployee} 
+                    shifts={shifts}
+                    currentDate={currentDate}
+                    onUpdateShift={onUpdateShift}
+                    onDeleteShift={onDeleteShift}
+                    roles={roles}
+                 >
                     <Button variant="ghost" size="icon" className="h-7 w-7">
                         <User className="h-4 w-4" />
                     </Button>

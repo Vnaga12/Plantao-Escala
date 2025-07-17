@@ -265,7 +265,15 @@ export default function Home() {
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
       <div className="flex flex-1 overflow-hidden">
-        {isSidebarOpen && <EmployeeSidebar employees={employees} onEmployeesChange={setEmployees} />}
+        {isSidebarOpen && <EmployeeSidebar 
+            employees={employees} 
+            onEmployeesChange={setEmployees}
+            shifts={shifts}
+            currentDate={currentDate}
+            onUpdateShift={handleUpdateShift}
+            onDeleteShift={handleDeleteShift}
+            roles={roles}
+             />}
         <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
           <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none">
             <CalendarView 
