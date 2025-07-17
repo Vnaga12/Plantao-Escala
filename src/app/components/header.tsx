@@ -4,7 +4,7 @@
 import type { Employee, Calendar, ShiftColor } from "@/lib/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Download, Search, Settings } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/app/components/icons/logo";
 import { SuggestShiftsDialog } from "./suggest-shifts-dialog";
@@ -29,6 +29,8 @@ type HeaderProps = {
   onCalendarsChange: (calendars: Calendar[]) => void;
   colorMeanings: { color: ShiftColor, meaning: string }[];
   onColorMeaningsChange: (meanings: { color: ShiftColor, meaning: string }[]) => void;
+  isSidebarOpen: boolean;
+  onToggleSidebar: () => void;
 };
 
 export default function Header({ 
@@ -47,6 +49,8 @@ export default function Header({
   onCalendarsChange,
   colorMeanings,
   onColorMeaningsChange,
+  isSidebarOpen,
+  onToggleSidebar,
 }: HeaderProps) {
   
   const handlePrint = () => {
@@ -57,6 +61,9 @@ export default function Header({
     <header className="flex-shrink-0 border-b print:hidden">
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={onToggleSidebar}>
+                {isSidebarOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
+            </Button>
           <div className="flex items-center gap-2">
             <Logo className="h-8 w-8 text-primary" />
             <h1 className="text-xl font-bold font-headline text-gray-800">Escala de Cirurgia</h1>

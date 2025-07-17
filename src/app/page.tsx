@@ -79,6 +79,7 @@ export default function Home() {
   const [activeCalendarId, setActiveCalendarId] = React.useState<string>('');
   const [roles, setRoles] = React.useState<string[]>([]);
   const [colorMeanings, setColorMeanings] = React.useState<{ color: ShiftColor, meaning: string }[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   
   const [isClient, setIsClient] = React.useState(false);
   
@@ -92,6 +93,8 @@ export default function Home() {
         const storedActiveId = localStorage.getItem('activeCalendarId');
         const storedRoles = localStorage.getItem('roles');
         const storedColorMeanings = localStorage.getItem('colorMeanings');
+        const storedSidebarState = localStorage.getItem('isSidebarOpen');
+
 
         if (storedDate) setCurrentDate(new Date(storedDate));
         setEmployees(storedEmployees ? JSON.parse(storedEmployees) : initialEmployees);
@@ -99,6 +102,8 @@ export default function Home() {
         setActiveCalendarId(storedActiveId || 'cal1');
         setRoles(storedRoles ? JSON.parse(storedRoles) : initialRoles);
         setColorMeanings(storedColorMeanings ? JSON.parse(storedColorMeanings) : initialColorMeanings);
+        setIsSidebarOpen(storedSidebarState ? JSON.parse(storedSidebarState) : true);
+
     } catch (error) {
         console.error("Failed to load from localStorage", error);
         toast({
@@ -111,6 +116,7 @@ export default function Home() {
         setActiveCalendarId('cal1');
         setRoles(initialRoles);
         setColorMeanings(initialColorMeanings);
+        setIsSidebarOpen(true);
     }
   }, [toast]);
 
@@ -123,8 +129,9 @@ export default function Home() {
         localStorage.setItem('activeCalendarId', activeCalendarId);
         localStorage.setItem('roles', JSON.stringify(roles));
         localStorage.setItem('colorMeanings', JSON.stringify(colorMeanings));
+        localStorage.setItem('isSidebarOpen', JSON.stringify(isSidebarOpen));
     }
-  }, [currentDate, employees, calendars, activeCalendarId, roles, colorMeanings, isClient]);
+  }, [currentDate, employees, calendars, activeCalendarId, roles, colorMeanings, isSidebarOpen, isClient]);
 
 
   const activeCalendar = calendars.find(c => c.id === activeCalendarId) ?? calendars[0];
@@ -254,9 +261,11 @@ export default function Home() {
         onCalendarsChange={setCalendars}
         colorMeanings={colorMeanings}
         onColorMeaningsChange={setColorMeanings}
+        isSidebarOpen={isSidebarOpen}
+        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
       <div className="flex flex-1 overflow-hidden">
-        <EmployeeSidebar employees={employees} setEmployees={setEmployees} />
+        {isSidebarOpen && <EmployeeSidebar employees={employees} setEmployees={setEmployees} />}
         <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
           <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none">
             <CalendarView 
