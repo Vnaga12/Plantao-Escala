@@ -12,10 +12,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, Trash2, Plus, Loader2 } from "lucide-react";
+import { Sparkles, Trash2, Plus, Loader2, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import type { SuggestShiftAssignmentsInput, SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Link from "next/link";
 
 type SuggestShiftsDialogProps = {
   employees: Employee[];
@@ -172,14 +173,22 @@ export function SuggestShiftsDialog({ employees: initialEmployees, onApplySugges
                       <div key={field.id} className="p-4 border rounded-lg mb-4 bg-background">
                           <div className="flex justify-between items-center mb-2">
                              <Label className="font-semibold">Funcionário #{index + 1}</Label>
-                             <Button type="button" variant="ghost" size="icon" onClick={() => removeEmployee(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                             <div className="flex items-center">
+                               <Link href={`/employee/${field.id}`} target="_blank">
+                                <Button type="button" variant="outline" size="sm">
+                                  <User className="mr-2 h-4 w-4" />
+                                  Ver Perfil
+                                </Button>
+                               </Link>
+                               <Button type="button" variant="ghost" size="icon" onClick={() => removeEmployee(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                             </div>
                           </div>
                           <Input {...register(`employees.${index}.name`)} placeholder="Nome" className="mb-2" />
                           <Textarea {...register(`employees.${index}.preferences`)} placeholder="Preferências (ex: prefere turnos da manhã)" />
                           <EmployeeFormFields index={index} control={control} register={register} />
                       </div>
                   ))}
-                  <Button type="button" variant="outline" onClick={() => appendEmployee({ id: Date.now().toString(), name: '', availability: [], preferences: '' })}>
+                  <Button type="button" variant="outline" onClick={() => appendEmployee({ id: `emp-${Date.now()}`, name: '', availability: [], preferences: '' })}>
                       <Plus className="mr-2 h-4 w-4" /> Adicionar Funcionário
                   </Button>
               </TabsContent>
