@@ -50,17 +50,17 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: Su
     },
   });
   
-  // Keep form in sync with external changes
-  React.useEffect(() => {
-    if (isOpen) {
-        reset({
-            employees: employees,
-            shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: roles[0] || "" }],
-            scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
-        });
-        setSuggestions(null);
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (open) {
+      reset({
+          employees: employees,
+          shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: roles[0] || "" }],
+          scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
+      });
+      setSuggestions(null);
     }
-  }, [isOpen, employees, roles, reset]);
+  }
 
   const {
     fields: employeeFields,
@@ -106,8 +106,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: Su
   const handleApply = () => {
     if (suggestions) {
       onApplySuggestions(suggestions.assignments);
-      setIsOpen(false);
-      setSuggestions(null);
+      handleOpenChange(false);
     }
   };
 
@@ -165,7 +164,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: Su
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button>
           <Sparkles />
@@ -283,5 +282,3 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: Su
     </Dialog>
   );
 }
-
-    
