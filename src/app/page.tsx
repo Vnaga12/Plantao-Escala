@@ -3,6 +3,7 @@
 
 import * as React from "react";
 import { addMonths, subMonths, getDaysInMonth, getDay, format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import type { Shift, Employee, Calendar, ShiftColor } from "@/lib/types";
 import Header from "@/app/components/header";
 import CalendarView from "@/app/components/calendar-view";
@@ -302,6 +303,10 @@ export default function Home() {
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
+       <div className="hidden print:block p-4 text-center">
+            <h1 className="text-2xl font-bold capitalize">{format(currentDate, "MMMM yyyy", { locale: ptBR })}</h1>
+            <h2 className="text-lg">{activeCalendar.name}</h2>
+       </div>
       <div className="flex flex-1 overflow-hidden print:overflow-visible">
         {isSidebarOpen && <EmployeeSidebar 
             employees={employees} 
