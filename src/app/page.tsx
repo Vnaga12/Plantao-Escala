@@ -282,7 +282,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground">
+    <div className="flex flex-col h-screen bg-background text-foreground print:bg-transparent print:h-auto">
       <Header
         currentDate={currentDate}
         onPrevMonth={handlePrevMonth}
@@ -302,7 +302,7 @@ export default function Home() {
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden print:overflow-visible">
         {isSidebarOpen && <EmployeeSidebar 
             employees={employees} 
             onEmployeesChange={setEmployees}
@@ -314,7 +314,7 @@ export default function Home() {
             calendarName={activeCalendar.name}
             onAddDayEvent={handleAddDayEvent}
              />}
-        <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
+        <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0">
           <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none">
             <CalendarView 
               currentDate={currentDate} 
