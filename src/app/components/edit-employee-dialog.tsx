@@ -127,15 +127,15 @@ export function EditEmployeeDialog({
         {children}
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
-          <DialogHeader className="flex-shrink-0">
-              <DialogTitle>Editar Perfil: {employee.name}</DialogTitle>
-              <DialogDescription>
-                Atualize as informações, disponibilidade e gerencie os plantões atribuídos.
-              </DialogDescription>
-          </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-y-hidden">
-          <ScrollArea className="flex-1">
-              <div className="grid gap-6 py-4 pr-6">
+        <DialogHeader className="flex-shrink-0">
+            <DialogTitle>Editar Perfil: {employee.name}</DialogTitle>
+            <DialogDescription>
+              Atualize as informações, disponibilidade e gerencie os plantões atribuídos.
+            </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
+          <ScrollArea className="flex-1 -mr-6 pr-6">
+              <div className="grid gap-6 py-4">
                 <div>
                     <Label htmlFor="name" className="font-semibold">Nome</Label>
                     <Input id="name" {...register("name", { required: "O nome é obrigatório" })} className="mt-1" />
@@ -244,7 +244,7 @@ export function EditEmployeeDialog({
               </div>
           </ScrollArea>
 
-          <DialogFooter className="mt-auto pt-4 border-t sm:justify-between flex-shrink-0">
+          <DialogFooter className="flex-shrink-0 pt-4 border-t sm:justify-between">
              <AlertDialog>
                 <AlertDialogTrigger asChild>
                     <Button type="button" variant="destructive">
@@ -275,3 +275,5 @@ export function EditEmployeeDialog({
     </Dialog>
   );
 }
+
+    
