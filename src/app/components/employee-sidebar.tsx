@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 type EmployeeSidebarProps = {
   employees: Employee[];
   onEmployeesChange: (employees: Employee[]) => void;
+  onUpdateEmployee: (employee: Employee) => void;
   shifts: Shift[];
   currentDate: Date;
   onUpdateShift: (updatedShift: Shift) => void;
@@ -25,6 +26,7 @@ type EmployeeSidebarProps = {
 export default function EmployeeSidebar({ 
   employees, 
   onEmployeesChange,
+  onUpdateEmployee,
   shifts,
   currentDate,
   onUpdateShift,
@@ -42,13 +44,6 @@ export default function EmployeeSidebar({
       preferences: "",
     };
     onEmployeesChange([...employees, newEmployee]);
-  };
-
-  const handleUpdateEmployee = (updatedEmployee: Employee) => {
-    const newEmployees = employees.map(emp => 
-        emp.id === updatedEmployee.id ? updatedEmployee : emp
-    );
-    onEmployeesChange(newEmployees);
   };
   
   const handleDeleteEmployee = (employeeId: string) => {
@@ -77,7 +72,7 @@ export default function EmployeeSidebar({
                 <div className="flex items-center">
                   <EditEmployeeDialog 
                       employee={employee} 
-                      onUpdateEmployee={handleUpdateEmployee} 
+                      onUpdateEmployee={onUpdateEmployee} 
                       onDeleteEmployee={handleDeleteEmployee} 
                       shifts={shifts}
                       currentDate={currentDate}
@@ -110,3 +105,5 @@ export default function EmployeeSidebar({
     </aside>
   );
 }
+
+    

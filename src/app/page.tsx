@@ -174,6 +174,31 @@ export default function Home() {
     toast({ title: "Turno Atualizado", description: "O turno foi atualizado com sucesso." });
   };
 
+  const handleUpdateEmployee = (updatedEmployee: Employee) => {
+    const oldEmployee = employees.find(emp => emp.id === updatedEmployee.id);
+    if (!oldEmployee) return;
+
+    const oldName = oldEmployee.name;
+    const newName = updatedEmployee.name;
+
+    const newEmployees = employees.map(emp =>
+      emp.id === updatedEmployee.id ? updatedEmployee : emp
+    );
+    setEmployees(newEmployees);
+
+    if (oldName !== newName) {
+      const newCalendars = calendars.map(calendar => ({
+        ...calendar,
+        shifts: calendar.shifts.map(shift =>
+          shift.employeeName === oldName
+            ? { ...shift, employeeName: newName }
+            : shift
+        ),
+      }));
+      setCalendars(newCalendars);
+    }
+  };
+
   const handleDeleteShift = (shiftId: string) => {
     const newShifts = shifts.filter(s => s.id !== shiftId);
     updateActiveCalendarShifts(newShifts);
@@ -307,10 +332,11 @@ export default function Home() {
             <h1 className="text-2xl font-bold capitalize">{format(currentDate, "MMMM yyyy", { locale: ptBR })}</h1>
             <h2 className="text-lg">{activeCalendar.name}</h2>
        </div>
-      <div className="flex flex-1 overflow-hidden print:overflow-visible print:block">
+      <div className="flex flex-1 overflow-hidden print:block print:overflow-visible">
         {isSidebarOpen && <EmployeeSidebar 
             employees={employees} 
             onEmployeesChange={setEmployees}
+            onUpdateEmployee={handleUpdateEmployee}
             shifts={shifts}
             currentDate={currentDate}
             onUpdateShift={handleUpdateShift}
@@ -319,7 +345,7 @@ export default function Home() {
             calendarName={activeCalendar.name}
             onAddDayEvent={handleAddDayEvent}
              />}
-        <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0">
+        <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
           <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none flex-1 flex flex-col print:block">
             <CalendarView 
               currentDate={currentDate} 
@@ -344,3 +370,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
