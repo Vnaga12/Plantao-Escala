@@ -303,7 +303,7 @@ export default function Home() {
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
-       <div className="hidden print:block p-4 text-center">
+       <div className="hidden print:block p-4 text-center print:p-0 mb-4">
             <h1 className="text-2xl font-bold capitalize">{format(currentDate, "MMMM yyyy", { locale: ptBR })}</h1>
             <h2 className="text-lg">{activeCalendar.name}</h2>
        </div>
@@ -319,8 +319,8 @@ export default function Home() {
             calendarName={activeCalendar.name}
             onAddDayEvent={handleAddDayEvent}
              />}
-        <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0">
-          <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none">
+        <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:flex print:flex-col">
+          <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none flex-1">
             <CalendarView 
               currentDate={currentDate} 
               shifts={filteredShifts}
@@ -331,7 +331,10 @@ export default function Home() {
               roles={roles}
             />
           </div>
-          <div className="print:hidden">
+          <div className="print:block hidden mt-4">
+              <ColorLegend meanings={colorMeanings} />
+          </div>
+           <div className="print:hidden">
               <ColorLegend meanings={colorMeanings} />
           </div>
         </main>

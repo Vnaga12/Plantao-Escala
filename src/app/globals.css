@@ -92,6 +92,9 @@ body {
   .print\:flex {
     display: flex !important;
   }
+  .print\:flex-col {
+    flex-direction: column !important;
+  }
   .print\:bg-transparent {
     background-color: transparent !important;
   }
