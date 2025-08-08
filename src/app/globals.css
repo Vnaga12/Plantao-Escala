@@ -83,6 +83,9 @@ body {
     background-color: white !important;
     height: auto !important;
   }
+  main {
+    display: block !important;
+  }
   .print\:hidden {
     display: none !important;
   }
