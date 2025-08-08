@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Save, CalendarDays, Pencil, Hospital } from 'lucide-react';
+import { Plus, Trash2, Save, Hospital, Pencil } from 'lucide-react';
 import type { Employee, Shift } from "@/lib/types";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
@@ -114,7 +114,7 @@ export function EditEmployeeDialog({
     onDeleteEmployee(employee.id);
     toast({
       title: "Funcionário Excluído",
-      description: `${employee.name} foi removido da equipe.`,
+      description: `${employee.name} foi removido do grupo.`,
     });
     setIsOpen(false);
   }
@@ -127,15 +127,14 @@ export function EditEmployeeDialog({
         {children}
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
-            <DialogTitle>Editar Perfil: {employee.name}</DialogTitle>
-            <DialogDescription>
-              Atualize as informações, disponibilidade e gerencie os plantões atribuídos.
-            </DialogDescription>
-        </DialogHeader>
-        
-        <ScrollArea className="flex-1 pr-6 -mr-6">
-            <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogHeader>
+              <DialogTitle>Editar Perfil: {employee.name}</DialogTitle>
+              <DialogDescription>
+                Atualize as informações, disponibilidade e gerencie os plantões atribuídos.
+              </DialogDescription>
+          </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+          <ScrollArea className="flex-1 pr-6 -mr-6">
               <div className="grid gap-6 py-4">
                 <div>
                     <Label htmlFor="name" className="font-semibold">Nome</Label>
@@ -243,35 +242,35 @@ export function EditEmployeeDialog({
                     </div>
                 </div>
               </div>
+          </ScrollArea>
 
-              <DialogFooter className="mt-4 pt-4 border-t sm:justify-between sticky bottom-0 bg-background/95 py-3 -mx-6 px-6">
-                 <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button type="button" variant="destructive">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir Funcionário
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                               Esta ação não pode ser desfeita. Isso irá excluir permanentemente o funcionário e pode afetar plantões existentes.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                 </AlertDialog>
-                <Button type="submit">
-                    <Save className="mr-2 h-4 w-4" />
-                    Salvar Alterações
-                </Button>
-              </DialogFooter>
-            </form>
-        </ScrollArea>
+          <DialogFooter className="mt-auto pt-4 border-t sm:justify-between flex-shrink-0">
+             <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button type="button" variant="destructive">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Excluir Funcionário
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                           Esta ação não pode ser desfeita. Isso irá excluir permanentemente o funcionário e pode afetar plantões existentes.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+             </AlertDialog>
+            <Button type="submit">
+                <Save className="mr-2 h-4 w-4" />
+                Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
