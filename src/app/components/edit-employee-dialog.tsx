@@ -127,15 +127,15 @@ export function EditEmployeeDialog({
         {children}
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
-          <DialogHeader>
+          <DialogHeader className="flex-shrink-0">
               <DialogTitle>Editar Perfil: {employee.name}</DialogTitle>
               <DialogDescription>
                 Atualize as informações, disponibilidade e gerencie os plantões atribuídos.
               </DialogDescription>
           </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
-          <ScrollArea className="flex-1 pr-6 -mr-6">
-              <div className="grid gap-6 py-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-y-hidden">
+          <ScrollArea className="flex-1">
+              <div className="grid gap-6 py-4 pr-6">
                 <div>
                     <Label htmlFor="name" className="font-semibold">Nome</Label>
                     <Input id="name" {...register("name", { required: "O nome é obrigatório" })} className="mt-1" />
