@@ -307,7 +307,7 @@ export default function Home() {
             <h1 className="text-2xl font-bold capitalize">{format(currentDate, "MMMM yyyy", { locale: ptBR })}</h1>
             <h2 className="text-lg">{activeCalendar.name}</h2>
        </div>
-      <div className="flex flex-1 overflow-hidden print:overflow-visible">
+      <div className="flex flex-1 overflow-hidden print:overflow-visible print:block">
         {isSidebarOpen && <EmployeeSidebar 
             employees={employees} 
             onEmployeesChange={setEmployees}
@@ -319,8 +319,8 @@ export default function Home() {
             calendarName={activeCalendar.name}
             onAddDayEvent={handleAddDayEvent}
              />}
-        <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:flex print:flex-col">
-          <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none flex-1">
+        <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0">
+          <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none flex-1 flex flex-col print:block">
             <CalendarView 
               currentDate={currentDate} 
               shifts={filteredShifts}

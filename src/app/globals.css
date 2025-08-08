@@ -81,10 +81,12 @@ body {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     background-color: white !important;
-    height: auto !important;
+    height: 100% !important;
   }
   main {
     display: block !important;
+    flex: none !important;
+    overflow: visible !important;
   }
   .print\:hidden {
     display: none !important;
@@ -101,7 +103,7 @@ body {
   .print\:bg-transparent {
     background-color: transparent !important;
   }
-  main, .print\:p-0 {
+  .print\:p-0 {
     padding: 0 !important;
     margin: 0 !important;
   }
