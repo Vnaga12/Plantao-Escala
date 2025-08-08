@@ -331,13 +331,15 @@ export default function Home() {
               roles={roles}
             />
           </div>
-          <div className="print:block hidden mt-4">
-              <ColorLegend meanings={colorMeanings} />
-          </div>
-           <div className="print:hidden">
+          {/* Legend for Screen */}
+          <div className="print:hidden mt-4">
               <ColorLegend meanings={colorMeanings} />
           </div>
         </main>
+      </div>
+       {/* Legend for Print Only */}
+      <div className="hidden print:block mt-4">
+          <ColorLegend meanings={colorMeanings} />
       </div>
     </div>
   );
