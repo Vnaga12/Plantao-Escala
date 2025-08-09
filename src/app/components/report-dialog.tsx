@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Sheet, Calendar as CalendarIcon, Printer } from "lucide-react";
+import { Sheet, Calendar as CalendarIcon, Printer, ChevronLeft, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
@@ -50,6 +50,7 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
   const [reportDays, setReportDays] = React.useState<Date[]>([]);
   const { toast } = useToast();
   const reportContentRef = React.useRef<HTMLDivElement>(null);
+  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
 
   const availableMonths = Array.from({ length: 12 }, (_, i) => startOfMonth(new Date(new Date().getFullYear(), i, 1)));
 
@@ -75,7 +76,7 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
     const startDate = sortedMonths[0];
     const endDate = new Date(sortedMonths[sortedMonths.length - 1]);
     const lastDayOfMonth = getDaysInMonth(endDate);
-    const endOfInterval = new Date(endDate.setDate(lastDayOfMonth));
+    const endOfInterval = new Date(endDate.getFullYear(), endDate.getMonth(), lastDayOfMonth);
 
     const allDays = eachDayOfInterval({ start: startDate, end: endOfInterval });
     setReportDays(allDays);
@@ -126,6 +127,16 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
         }, 1000);
     }
   };
+  
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (scrollAreaRef.current) {
+      const scrollAmount = 300;
+      scrollAreaRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
 
   return (
@@ -142,7 +153,7 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
             Selecione os meses para gerar um relatório em formato de planilha.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex gap-4 items-center p-4 border-b">
+        <div className="flex gap-4 items-start p-4 border-b">
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline">
@@ -174,18 +185,26 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
             </PopoverContent>
           </Popover>
           <Button onClick={generateReport}>Gerar Relatório</Button>
-          {reportData && (
-              <Button variant="outline" onClick={handlePrint} className="ml-auto">
-                <Printer className="mr-2 h-4 w-4" /> Imprimir / Exportar PDF
-              </Button>
+            {reportData && (
+              <div className="ml-auto flex items-center gap-2">
+                 <Button variant="outline" size="icon" onClick={() => handleScroll('left')}>
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
+                 <Button variant="outline" size="icon" onClick={() => handleScroll('right')}>
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" onClick={handlePrint}>
+                    <Printer className="mr-2 h-4 w-4" /> Imprimir / Exportar PDF
+                </Button>
+              </div>
           )}
         </div>
 
-        <div className="flex-1 overflow-auto">
-          <div className="p-4" ref={reportContentRef}>
+        <div className="flex-1 overflow-hidden">
+          <div className="p-4 h-full" ref={reportContentRef}>
             {reportData ? (
               <>
-                <ScrollArea className="w-full whitespace-nowrap rounded-lg border">
+                <ScrollArea className="w-full h-full whitespace-nowrap rounded-lg border" ref={scrollAreaRef}>
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -257,3 +276,5 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
     </Dialog>
   );
 }
+
+    
