@@ -16,12 +16,13 @@ import {
 } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Sheet, Calendar as CalendarIcon, Printer, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sheet, Calendar as CalendarIcon, FileSpreadsheet, ChevronLeft, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import ColorLegend from "./color-legend";
 import { initialColorMeanings } from "@/app/page";
+import * as XLSX from 'xlsx';
 
 
 type ReportDialogProps = {
@@ -99,35 +100,37 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
     setReportData(data);
   };
 
-  const handlePrint = () => {
-    const printWindow = window.open('', '', 'height=800,width=1200');
-    if (printWindow && reportContentRef.current) {
-        printWindow.document.write('<html><head><title>Relatório de Plantões</title>');
-        
-        const styles = Array.from(document.styleSheets)
-            .map(s => {
-                try {
-                    return s.href ? `<link rel="stylesheet" href="${s.href}">` : `<style>${Array.from(s.cssRules).map(r => r.cssText).join('\\n')}</style>`;
-                } catch (e) {
-                    return '';
-                }
-            }).join('');
-        printWindow.document.write(styles);
-
-        printWindow.document.write('<style>body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid #ddd; padding: 4px; text-align: center; } th { background-color: #f2f2f2; } </style>');
-        printWindow.document.write('</head><body class="bg-white">');
-        printWindow.document.write(reportContentRef.current.innerHTML);
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        
-        setTimeout(() => { 
-            printWindow.focus();
-            printWindow.print();
-            printWindow.close();
-        }, 1000);
+  const handleExportToExcel = () => {
+    if (!reportData || !reportDays) {
+      toast({
+        variant: "destructive",
+        title: "Nenhum dado de relatório",
+        description: "Por favor, gere um relatório antes de exportar.",
+      });
+      return;
     }
+
+    const headers = ["Funcionário", ...reportDays.map(day => format(day, "dd/MM/yyyy"))];
+    
+    const data = reportData.map(({ employee, shiftsByDay }) => {
+      const row: (string | null)[] = [employee.name];
+      reportDays.forEach(day => {
+        const dayKey = format(day, "yyyy-MM-dd");
+        const shift = shiftsByDay[dayKey];
+        row.push(shift ? shift.role : null);
+      });
+      return row;
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Relatório de Plantões");
+
+    const monthNames = selectedMonths.map(m => format(m, "MMM", { locale: ptBR })).join('_');
+    const year = selectedMonths[0].getFullYear();
+    XLSX.writeFile(workbook, `Relatorio_de_Plantoes_${monthNames}_${year}.xlsx`);
   };
-  
+
   const handleScroll = (direction: 'left' | 'right') => {
     if (viewportRef.current) {
       const scrollAmount = 300;
@@ -187,8 +190,8 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
           <Button onClick={generateReport}>Gerar Relatório</Button>
             {reportData && (
               <div className="ml-auto flex items-center gap-2">
-                <Button variant="outline" onClick={handlePrint}>
-                    <Printer className="mr-2 h-4 w-4" /> Imprimir / Exportar PDF
+                <Button variant="outline" onClick={handleExportToExcel}>
+                    <FileSpreadsheet className="mr-2 h-4 w-4" /> Exportar para Excel
                 </Button>
               </div>
           )}
