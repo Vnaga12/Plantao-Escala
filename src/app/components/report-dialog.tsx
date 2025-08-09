@@ -109,20 +109,54 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
       });
       return;
     }
+    
+    const excelColorMap: Record<ShiftColor, string> = {
+        blue: "FF3B82F6",   // bg-blue-500
+        green: "FF22C55E",  // bg-green-500
+        purple: "FF8B5CF6", // bg-purple-500
+        red: "FFEF4444",    // bg-red-500
+        yellow: "FFEAB308", // bg-yellow-500
+        gray: "FF6B7280",   // bg-gray-500
+    };
 
     const headers = ["Funcionário", ...reportDays.map(day => format(day, "dd/MM/yyyy"))];
-    
-    const data = reportData.map(({ employee, shiftsByDay }) => {
-      const row: (string | null)[] = [employee.name];
-      reportDays.forEach(day => {
-        const dayKey = format(day, "yyyy-MM-dd");
-        const shift = shiftsByDay[dayKey];
-        row.push(shift ? shift.role : null);
-      });
-      return row;
-    });
+    const worksheet = XLSX.utils.aoa_to_sheet([headers]);
 
-    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    reportData.forEach(({ employee, shiftsByDay }, rowIndex) => {
+        const rowData = [employee.name];
+        
+        const employeeCellAddress = XLSX.utils.encode_cell({c: 0, r: rowIndex + 1});
+        worksheet[employeeCellAddress] = { v: employee.name, t: 's' };
+
+        reportDays.forEach((day, colIndex) => {
+            const dayKey = format(day, "yyyy-MM-dd");
+            const shift = shiftsByDay[dayKey];
+            const cellAddress = XLSX.utils.encode_cell({c: colIndex + 1, r: rowIndex + 1});
+            
+            if (shift) {
+                worksheet[cellAddress] = {
+                    v: shift.role,
+                    t: 's',
+                    s: {
+                        fill: {
+                            fgColor: { rgb: excelColorMap[shift.color] }
+                        },
+                        font: {
+                            color: { rgb: "FFFFFFFF" } // White text for better contrast
+                        }
+                    }
+                };
+            }
+        });
+    });
+    
+    // Set column widths
+    const colWidths = [
+        { wch: 30 }, // Employee name
+        ...reportDays.map(() => ({ wch: 12 })) // Dates
+    ];
+    worksheet['!cols'] = colWidths;
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Relatório de Plantões");
 
