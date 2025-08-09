@@ -65,7 +65,7 @@ const initialEmployees: Employee[] = [
 ];
 
 
-const initialColorMeanings: { color: ShiftColor, meaning: string }[] = [
+export const initialColorMeanings: { color: ShiftColor, meaning: string }[] = [
     { color: 'blue', meaning: 'Cirurgia Eletiva' },
     { color: 'green', meaning: 'Plantão' },
     { color: 'purple', meaning: 'Ambulatório' },

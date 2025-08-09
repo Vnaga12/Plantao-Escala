@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { format, startOfMonth, getDaysInMonth, eachDayOfInterval, addMonths, subMonths } from "date-fns";
+import { format, startOfMonth, getDaysInMonth, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Calendar, Employee, Shift, ShiftColor } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,6 +20,9 @@ import { Sheet, Calendar as CalendarIcon, Printer } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
+import ColorLegend from "./color-legend";
+import { initialColorMeanings } from "@/app/page";
+
 
 type ReportDialogProps = {
   employees: Employee[];
@@ -100,31 +102,24 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
     const printWindow = window.open('', '', 'height=800,width=1200');
     if (printWindow && reportContentRef.current) {
         printWindow.document.write('<html><head><title>Relatório de Plantões</title>');
-        // Inject tailwind styles
+        
         const styles = Array.from(document.styleSheets)
-            .map(s => s.href ? `<link rel="stylesheet" href="${s.href}">` : '')
-            .join('');
-        printWindow.document.write(styles);
-
-        const globalStyles = Array.from(document.styleSheets)
-            .filter(sheet => !sheet.href)
-            .map(sheet => {
+            .map(s => {
                 try {
-                    return Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
+                    return s.href ? `<link rel="stylesheet" href="${s.href}">` : `<style>${Array.from(s.cssRules).map(r => r.cssText).join('\n')}</style>`;
                 } catch (e) {
-                    // This can fail on cross-origin stylesheets
                     return '';
                 }
-            })
-            .join('\n');
+            }).join('');
+        printWindow.document.write(styles);
 
-        printWindow.document.write(`<style>${globalStyles}</style>`);
+        printWindow.document.write('<style>body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }</style>');
         printWindow.document.write('</head><body class="bg-white">');
         printWindow.document.write(reportContentRef.current.innerHTML);
         printWindow.document.write('</body></html>');
         printWindow.document.close();
         
-        setTimeout(() => { // Wait for content to load
+        setTimeout(() => { 
             printWindow.focus();
             printWindow.print();
             printWindow.close();
@@ -189,63 +184,68 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
         <ScrollArea className="flex-1">
           <div className="p-4" ref={reportContentRef}>
             {reportData ? (
-              <div className="border rounded-lg overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="sticky left-0 bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider z-10">
-                        Funcionário
-                      </th>
-                      {reportDays.map((day, index) => {
-                         const isFirstOfMonth = day.getDate() === 1;
-                         return (
-                            <th 
-                                key={day.toString()} 
-                                className={cn(
-                                    "px-2 py-2 text-center text-xs font-medium text-gray-500",
-                                    isFirstOfMonth && index > 0 && "border-l-2 border-primary"
-                                )}
-                            >
-                                {isFirstOfMonth && (
-                                    <div className="text-primary font-semibold capitalize pb-1">
-                                        {format(day, 'MMM', {locale: ptBR})}
-                                    </div>
-                                )}
-                                <div className="flex flex-col items-center">
-                                    <span className="text-gray-400">{format(day, 'EEE', {locale: ptBR})}</span>
-                                    <span>{format(day, 'd')}</span>
-                                </div>
-                            </th>
-                         )
-                      })}
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {reportData.map(({ employee, shiftsByDay }) => (
-                      <tr key={employee.id}>
-                        <td className="sticky left-0 bg-white px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 z-10">
-                          {employee.name}
-                        </td>
-                        {reportDays.map(day => {
-                          const dayKey = format(day, "yyyy-MM-dd");
-                          const shift = shiftsByDay[dayKey];
+              <>
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="sticky left-0 bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider z-10">
+                          Funcionário
+                        </th>
+                        {reportDays.map((day, index) => {
+                          const isFirstOfMonth = day.getDate() === 1;
                           return (
-                            <td key={dayKey} className="px-1 py-1 whitespace-nowrap text-xs text-white text-center h-12">
-                              {shift ? (
-                                <div className={cn("rounded-md h-full w-full flex items-center justify-center p-1", roleColorClasses[shift.color])}>
-                                  {shift.role}
-                                </div>
-                              ) : (
-                                ""
-                              )}
-                            </td>
-                          );
+                              <th 
+                                  key={day.toString()} 
+                                  className={cn(
+                                      "px-2 py-2 text-center text-xs font-medium text-gray-500",
+                                      isFirstOfMonth && index > 0 && "border-l-2 border-primary"
+                                  )}
+                              >
+                                  {isFirstOfMonth && (
+                                      <div className="text-primary font-semibold capitalize pb-1">
+                                          {format(day, 'MMM', {locale: ptBR})}
+                                      </div>
+                                  )}
+                                  <div className="flex flex-col items-center">
+                                      <span className="text-gray-400 capitalize">{format(day, 'EEE', {locale: ptBR})}</span>
+                                      <span>{format(day, 'd')}</span>
+                                  </div>
+                              </th>
+                          )
                         })}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {reportData.map(({ employee, shiftsByDay }) => (
+                        <tr key={employee.id}>
+                          <td className="sticky left-0 bg-white px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 z-10 border-r">
+                            {employee.name}
+                          </td>
+                          {reportDays.map(day => {
+                            const dayKey = format(day, "yyyy-MM-dd");
+                            const shift = shiftsByDay[dayKey];
+                            return (
+                              <td key={dayKey} className="px-1 py-1 whitespace-nowrap text-xs text-white text-center h-12">
+                                {shift ? (
+                                  <div className={cn("rounded-md h-full w-full flex items-center justify-center p-1", roleColorClasses[shift.color])}>
+                                    {/* Intentionally empty to only show color */}
+                                  </div>
+                                ) : (
+                                  ""
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                 <div className="mt-4">
+                    <ColorLegend meanings={initialColorMeanings} />
+                 </div>
+               </>
             ) : (
               <div className="text-center text-gray-500 py-16">
                 <p>Selecione os meses e clique em "Gerar Relatório" para começar.</p>
