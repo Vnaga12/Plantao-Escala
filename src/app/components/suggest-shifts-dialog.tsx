@@ -50,17 +50,20 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: Su
     },
   });
   
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
-    if (open) {
-      reset({
-          employees: employees,
-          shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: roles[0] || "" }],
-          scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
-      });
-      setSuggestions(null);
+  React.useEffect(() => {
+    if (isOpen) {
+        reset({
+            employees: employees,
+            shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: roles[0] || "" }],
+            scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
+        });
+        setSuggestions(null);
     }
-  }
+  }, [isOpen, reset, employees, roles]);
+
+  const handleOpenChange = React.useCallback((open: boolean) => {
+    setIsOpen(open);
+  }, []);
 
   const {
     fields: employeeFields,
