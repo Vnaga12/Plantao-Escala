@@ -187,12 +187,6 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
           <Button onClick={generateReport}>Gerar Relatório</Button>
             {reportData && (
               <div className="ml-auto flex items-center gap-2">
-                 <Button variant="outline" size="icon" onClick={() => handleScroll('left')}>
-                    <ChevronLeft className="h-4 w-4" />
-                </Button>
-                 <Button variant="outline" size="icon" onClick={() => handleScroll('right')}>
-                    <ChevronRight className="h-4 w-4" />
-                </Button>
                 <Button variant="outline" onClick={handlePrint}>
                     <Printer className="mr-2 h-4 w-4" /> Imprimir / Exportar PDF
                 </Button>
@@ -203,7 +197,7 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
         <div className="flex-1 overflow-hidden">
           <div className="p-4 h-full" ref={reportContentRef}>
             {reportData ? (
-              <>
+              <div className="relative h-full">
                 <ScrollArea className="w-full h-full whitespace-nowrap rounded-lg border" ref={scrollAreaRef}>
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -261,10 +255,20 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
                     </tbody>
                   </table>
                 </ScrollArea>
+                <div className="absolute top-0 right-0 p-1 bg-background/80 rounded-bl-lg">
+                    <div className="flex items-center gap-1">
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleScroll('left')}>
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleScroll('right')}>
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
                  <div className="mt-4">
                     <ColorLegend meanings={initialColorMeanings} />
                  </div>
-               </>
+               </div>
             ) : (
               <div className="text-center text-gray-500 py-16">
                 <p>Selecione os meses e clique em "Gerar Relatório" para começar.</p>
@@ -276,5 +280,3 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
     </Dialog>
   );
 }
-
-    
