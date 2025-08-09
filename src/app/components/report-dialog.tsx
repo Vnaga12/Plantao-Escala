@@ -106,14 +106,14 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
         const styles = Array.from(document.styleSheets)
             .map(s => {
                 try {
-                    return s.href ? `<link rel="stylesheet" href="${s.href}">` : `<style>${Array.from(s.cssRules).map(r => r.cssText).join('\n')}</style>`;
+                    return s.href ? `<link rel="stylesheet" href="${s.href}">` : `<style>${Array.from(s.cssRules).map(r => r.cssText).join('\\n')}</style>`;
                 } catch (e) {
                     return '';
                 }
             }).join('');
         printWindow.document.write(styles);
 
-        printWindow.document.write('<style>body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }</style>');
+        printWindow.document.write('<style>body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid #ddd; padding: 4px; text-align: center; } th { background-color: #f2f2f2; } </style>');
         printWindow.document.write('</head><body class="bg-white">');
         printWindow.document.write(reportContentRef.current.innerHTML);
         printWindow.document.write('</body></html>');
@@ -181,11 +181,11 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
           )}
         </div>
 
-        <ScrollArea className="flex-1">
+        <div className="flex-1 overflow-auto">
           <div className="p-4" ref={reportContentRef}>
             {reportData ? (
               <>
-                <div className="overflow-x-auto border rounded-lg">
+                <ScrollArea className="w-full whitespace-nowrap rounded-lg border">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -241,7 +241,7 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
                       ))}
                     </tbody>
                   </table>
-                </div>
+                </ScrollArea>
                  <div className="mt-4">
                     <ColorLegend meanings={initialColorMeanings} />
                  </div>
@@ -252,7 +252,7 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
