@@ -221,7 +221,7 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
                                       </div>
                                   )}
                                   <div className="flex flex-col items-center">
-                                      <span className="text-gray-400 capitalize">{format(day, 'EEE', {locale: ptBR})}</span>
+                                      <span className="text-gray-400 capitalize">{format(day, 'EEE', { locale: ptBR })}</span>
                                       <span>{format(day, 'd')}</span>
                                   </div>
                               </th>
