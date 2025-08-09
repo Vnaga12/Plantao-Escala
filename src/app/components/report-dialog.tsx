@@ -202,7 +202,7 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="sticky left-0 bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider z-10">
+                        <th className="sticky left-0 bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider z-10 border-r">
                           Funcionário
                         </th>
                         {reportDays.map((day, index) => {
@@ -211,7 +211,7 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
                               <th 
                                   key={day.toString()} 
                                   className={cn(
-                                      "px-2 py-2 text-center text-xs font-medium text-gray-500",
+                                      "px-2 py-2 text-center text-xs font-medium text-gray-500 border-r",
                                       isFirstOfMonth && index > 0 && "border-l-2 border-primary"
                                   )}
                               >
@@ -239,7 +239,7 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
                             const dayKey = format(day, "yyyy-MM-dd");
                             const shift = shiftsByDay[dayKey];
                             return (
-                              <td key={dayKey} className="px-1 py-1 whitespace-nowrap text-xs text-white text-center h-12">
+                              <td key={dayKey} className="px-1 py-1 whitespace-nowrap text-xs text-white text-center h-12 border-r">
                                 {shift ? (
                                   <div className={cn("rounded-md h-full w-full flex items-center justify-center p-1", roleColorClasses[shift.color])}>
                                     {/* Intentionally empty to only show color */}
