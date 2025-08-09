@@ -50,7 +50,7 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
   const [reportDays, setReportDays] = React.useState<Date[]>([]);
   const { toast } = useToast();
   const reportContentRef = React.useRef<HTMLDivElement>(null);
-  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+  const viewportRef = React.useRef<HTMLDivElement>(null);
 
   const availableMonths = Array.from({ length: 12 }, (_, i) => startOfMonth(new Date(new Date().getFullYear(), i, 1)));
 
@@ -129,9 +129,9 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
   };
   
   const handleScroll = (direction: 'left' | 'right') => {
-    if (scrollAreaRef.current) {
+    if (viewportRef.current) {
       const scrollAmount = 300;
-      scrollAreaRef.current.scrollBy({
+      viewportRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
       });
@@ -198,7 +198,7 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
           <div className="p-4 h-full" ref={reportContentRef}>
             {reportData ? (
               <div className="relative h-full">
-                <ScrollArea className="w-full h-full whitespace-nowrap rounded-lg border" ref={scrollAreaRef}>
+                <ScrollArea className="w-full h-full whitespace-nowrap rounded-lg border" viewportRef={viewportRef}>
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
