@@ -109,57 +109,64 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
       });
       return;
     }
-    
+  
     const excelColorMap: Record<ShiftColor, string> = {
-        blue: "FF3B82F6",   // bg-blue-500
-        green: "FF22C55E",  // bg-green-500
-        purple: "FF8B5CF6", // bg-purple-500
-        red: "FFEF4444",    // bg-red-500
-        yellow: "FFEAB308", // bg-yellow-500
-        gray: "FF6B7280",   // bg-gray-500
+      blue: "FF3B82F6",   // bg-blue-500
+      green: "FF22C55E",  // bg-green-500
+      purple: "FF8B5CF6", // bg-purple-500
+      red: "FFEF4444",    // bg-red-500
+      yellow: "FFEAB308", // bg-yellow-500
+      gray: "FF6B7280",   // bg-gray-500
     };
-
+  
+    // Create header row
     const headers = ["Funcionário", ...reportDays.map(day => format(day, "dd/MM/yyyy"))];
-    const worksheet = XLSX.utils.aoa_to_sheet([headers]);
-
-    reportData.forEach(({ employee, shiftsByDay }, rowIndex) => {
-        const rowData = [employee.name];
-        
-        const employeeCellAddress = XLSX.utils.encode_cell({c: 0, r: rowIndex + 1});
-        worksheet[employeeCellAddress] = { v: employee.name, t: 's' };
-
-        reportDays.forEach((day, colIndex) => {
-            const dayKey = format(day, "yyyy-MM-dd");
-            const shift = shiftsByDay[dayKey];
-            const cellAddress = XLSX.utils.encode_cell({c: colIndex + 1, r: rowIndex + 1});
-            
-            if (shift) {
-                worksheet[cellAddress] = {
-                    v: shift.role,
-                    t: 's',
-                    s: {
-                        fill: {
-                            fgColor: { rgb: excelColorMap[shift.color] }
-                        },
-                        font: {
-                            color: { rgb: "FFFFFFFF" } // White text for better contrast
-                        }
-                    }
-                };
-            }
-        });
-    });
     
+    // Create data rows
+    const dataRows = reportData.map(({ employee, shiftsByDay }) => {
+        const row = { 'Funcionário': employee.name } as Record<string, any>;
+        reportDays.forEach(day => {
+            const dayKey = format(day, "yyyy-MM-dd");
+            const dateHeader = format(day, "dd/MM/yyyy");
+            const shift = shiftsByDay[dayKey];
+            row[dateHeader] = shift ? shift.role : "";
+        });
+        return row;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(dataRows, { header: headers });
+  
+    // Apply styles cell by cell
+    reportData.forEach(({ shiftsByDay }, rowIndex) => {
+      reportDays.forEach((day, colIndex) => {
+        const dayKey = format(day, "yyyy-MM-dd");
+        const shift = shiftsByDay[dayKey];
+        if (shift) {
+          const cellAddress = XLSX.utils.encode_cell({ c: colIndex + 1, r: rowIndex + 1 });
+          if (worksheet[cellAddress]) {
+            worksheet[cellAddress].s = {
+              fill: {
+                fgColor: { rgb: excelColorMap[shift.color] }
+              },
+              font: {
+                color: { rgb: "FFFFFFFF" } // White text for better contrast
+              }
+            };
+          }
+        }
+      });
+    });
+  
     // Set column widths
     const colWidths = [
-        { wch: 30 }, // Employee name
-        ...reportDays.map(() => ({ wch: 12 })) // Dates
+      { wch: 30 }, // Employee name
+      ...reportDays.map(() => ({ wch: 12 })) // Dates
     ];
     worksheet['!cols'] = colWidths;
-
+  
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Relatório de Plantões");
-
+  
     const monthNames = selectedMonths.map(m => format(m, "MMM", { locale: ptBR })).join('_');
     const year = selectedMonths[0].getFullYear();
     XLSX.writeFile(workbook, `Relatorio_de_Plantoes_${monthNames}_${year}.xlsx`);
@@ -235,7 +242,7 @@ export function ReportDialog({ employees, calendars }: ReportDialogProps) {
           <div className="p-4 h-full" ref={reportContentRef}>
             {reportData ? (
               <div className="relative h-full">
-                <ScrollArea className="w-full h-full whitespace-nowrap rounded-lg border" viewportRef={viewportRef}>
+                 <ScrollArea className="w-full h-full whitespace-nowrap rounded-lg border" viewportRef={viewportRef}>
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
