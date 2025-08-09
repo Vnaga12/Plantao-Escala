@@ -314,7 +314,6 @@ export default function Home() {
         onPrevMonth={handlePrevMonth}
         onNextMonth={handleNextMonth}
         employees={employees}
-        onApplySuggestions={handleApplySuggestions}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         roles={roles}
@@ -364,11 +363,9 @@ export default function Home() {
         </main>
       </div>
        {/* Legend for Print Only */}
-      <div className="hidden print:block mt-4">
+       <div className="hidden print:block mt-4">
           <ColorLegend meanings={colorMeanings} />
-      </div>
+       </div>
     </div>
   );
 }
-
-    

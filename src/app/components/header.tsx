@@ -4,21 +4,18 @@
 import type { Employee, Calendar, ShiftColor } from "@/lib/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen, Sheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/app/components/icons/logo";
-import { SuggestShiftsDialog } from "./suggest-shifts-dialog";
 import { SettingsDialog } from "./settings-dialog";
 import CalendarSwitcher from "./calendar-switcher";
+import { ReportDialog } from "./report-dialog";
 
 type HeaderProps = {
   currentDate: Date;
   onPrevMonth: () => void;
   onNextMonth: () => void;
   employees: Employee[];
-  onApplySuggestions: (
-    suggestions: any[]
-  ) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   roles: string[];
@@ -38,7 +35,6 @@ export default function Header({
   onPrevMonth, 
   onNextMonth, 
   employees, 
-  onApplySuggestions, 
   searchQuery, 
   onSearchChange,
   roles,
@@ -102,6 +98,7 @@ export default function Header({
               colorMeanings={colorMeanings} 
               onColorMeaningsChange={onColorMeaningsChange} 
             />
+            <ReportDialog employees={employees} calendars={calendars} />
           <Button variant="outline" onClick={handlePrint}>
             <Download />
             Exportar PDF
