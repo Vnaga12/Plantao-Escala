@@ -10,6 +10,7 @@ import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
+import type { SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
 
 const initialCalendars: Calendar[] = [
   {
@@ -126,7 +127,7 @@ export default function Home() {
         setColorMeanings(initialColorMeanings);
         setIsSidebarOpen(true);
     }
-  }, []);
+  }, [toast]);
 
   // Save to localStorage whenever state changes
   React.useEffect(() => {
@@ -205,13 +206,7 @@ export default function Home() {
     toast({ title: "Turno Excluído", description: "O turno foi removido do calendário." });
   };
   
-  const handleApplySuggestions = (suggestedShifts: {
-      employeeId: string;
-      shiftDay: string;
-      shiftStartTime: string;
-      shiftEndTime: string;
-      role: string;
-  }[]) => {
+  const handleApplySuggestions = (suggestedShifts: SuggestShiftAssignmentsOutput['assignments']) => {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
       const daysInMonth = getDaysInMonth(currentDate);
@@ -326,6 +321,7 @@ export default function Home() {
         onColorMeaningsChange={setColorMeanings}
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        onApplySuggestions={handleApplySuggestions}
       />
        <div className="hidden print:block p-4 text-center print:p-0 mb-4">
             <h1 className="text-2xl font-bold capitalize">{format(currentDate, "MMMM yyyy", { locale: ptBR })}</h1>

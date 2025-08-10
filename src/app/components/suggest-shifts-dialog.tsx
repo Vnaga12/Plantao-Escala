@@ -61,9 +61,9 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: Su
     }
   }, [isOpen, reset, employees, roles]);
 
-  const handleOpenChange = React.useCallback((open: boolean) => {
+  const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
-  }, []);
+  };
 
   const {
     fields: employeeFields,

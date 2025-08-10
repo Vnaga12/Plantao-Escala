@@ -10,6 +10,9 @@ import Logo from "@/app/components/icons/logo";
 import { SettingsDialog } from "./settings-dialog";
 import CalendarSwitcher from "./calendar-switcher";
 import { ReportDialog } from "./report-dialog";
+import { SuggestShiftsDialog } from "./suggest-shifts-dialog";
+import type { SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
+
 
 type HeaderProps = {
   currentDate: Date;
@@ -28,6 +31,7 @@ type HeaderProps = {
   onColorMeaningsChange: (meanings: { color: ShiftColor, meaning: string }[]) => void;
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
+  onApplySuggestions: (suggestions: SuggestShiftAssignmentsOutput['assignments']) => void;
 };
 
 export default function Header({ 
@@ -47,6 +51,7 @@ export default function Header({
   onColorMeaningsChange,
   isSidebarOpen,
   onToggleSidebar,
+  onApplySuggestions
 }: HeaderProps) {
   
   const handlePrint = () => {
@@ -99,10 +104,11 @@ export default function Header({
               onColorMeaningsChange={onColorMeaningsChange} 
             />
             <ReportDialog employees={employees} calendars={calendars} />
-          <Button variant="outline" onClick={handlePrint}>
-            <Download />
-            Exportar PDF
-          </Button>
+             <SuggestShiftsDialog 
+                employees={employees} 
+                onApplySuggestions={onApplySuggestions} 
+                roles={roles}
+            />
         </div>
       </div>
     </header>
