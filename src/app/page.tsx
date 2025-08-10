@@ -126,7 +126,7 @@ export default function Home() {
         setColorMeanings(initialColorMeanings);
         setIsSidebarOpen(true);
     }
-  }, [toast]);
+  }, []);
 
   // Save to localStorage whenever state changes
   React.useEffect(() => {
