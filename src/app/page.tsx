@@ -10,6 +10,8 @@ import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
+import type { SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
+import { nanoid } from "nanoid";
 
 const initialCalendars: Calendar[] = [
   {
@@ -230,6 +232,62 @@ export default function Home() {
       description: `${name} foi adicionado a ${format(date, 'dd/MM/yyyy')} em todos os calendários.`,
     });
   };
+
+  const handleApplySuggestions = (suggestions: SuggestShiftAssignmentsOutput['assignments']) => {
+    const weekDayMap: { [key: string]: number } = {
+      'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3,
+      'Thursday': 4, 'Friday': 5, 'Saturday': 6
+    };
+    const portugueseToEnglishDayMap: { [key: string]: string } = {
+        'Domingo': 'Sunday', 'Segunda-feira': 'Monday', 'Terça-feira': 'Tuesday', 'Quarta-feira': 'Wednesday',
+        'Quinta-feira': 'Thursday', 'Sexta-feira': 'Friday', 'Sábado': 'Saturday'
+    };
+
+
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const firstDayOfWeek = getDay(firstDayOfMonth); // 0 for Sunday
+
+    const newShifts: Shift[] = suggestions.map(suggestion => {
+        const employee = employees.find(e => e.id === suggestion.employeeId);
+        
+        const englishDay = portugueseToEnglishDayMap[suggestion.shiftDay];
+        const targetDayOfWeek = weekDayMap[englishDay];
+
+        // Find the first occurrence of the target day in the current month
+        let dayOfMonth = -1;
+        for(let i=1; i<= getDaysInMonth(currentDate); i++) {
+            const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), i);
+            if(getDay(date) === targetDayOfWeek) {
+                dayOfMonth = i;
+                break;
+            }
+        }
+        
+        if (dayOfMonth === -1) {
+            // This should not happen if the day is valid.
+            // For now, let's just log an error and skip.
+            console.error(`Could not find day ${suggestion.shiftDay} in the current month.`);
+            return null;
+        }
+
+        return {
+            id: `suggested-${nanoid()}`,
+            day: dayOfMonth, // This logic needs to be more robust
+            role: suggestion.role,
+            employeeName: employee?.name || 'Unknown',
+            startTime: suggestion.shiftStartTime,
+            endTime: suggestion.shiftEndTime,
+            color: 'gray'
+        };
+    }).filter((shift): shift is Shift => shift !== null);
+    
+     updateActiveCalendarShifts([...shifts, ...newShifts]);
+     toast({
+        title: "Sugestões Aplicadas",
+        description: "Os turnos sugeridos pela IA foram adicionados ao calendário."
+     })
+  };
+
 
   const filteredShifts = shifts.filter(shift => {
     const query = searchQuery.toLowerCase();

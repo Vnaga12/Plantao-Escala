@@ -4,12 +4,11 @@
 import type { Employee, Calendar, ShiftColor } from "@/lib/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen, Sheet } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/app/components/icons/logo";
 import { SettingsDialog } from "./settings-dialog";
 import CalendarSwitcher from "./calendar-switcher";
-import { ReportDialog } from "./report-dialog";
 
 
 type HeaderProps = {
@@ -99,7 +98,10 @@ export default function Header({
               colorMeanings={colorMeanings} 
               onColorMeaningsChange={onColorMeaningsChange} 
             />
-            <ReportDialog employees={employees} calendars={calendars} />
+            <Button variant="outline" onClick={handlePrint}>
+              <Download className="mr-2 h-4 w-4" />
+              Exportar PDF
+            </Button>
         </div>
       </div>
     </header>
