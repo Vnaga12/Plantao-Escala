@@ -10,7 +10,6 @@ import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
-import type { SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
 
 const initialCalendars: Calendar[] = [
   {
@@ -115,11 +114,6 @@ export default function Home() {
 
     } catch (error) {
         console.error("Failed to load from localStorage", error);
-        toast({
-            variant: "destructive",
-            title: "Erro ao Carregar Dados",
-            description: "Não foi possível carregar os dados salvos. Usando valores padrão.",
-        });
         setCalendars(initialCalendars);
         setActiveCalendarId(initialCalendars[0]?.id || '');
         setEmployees(initialEmployees);
@@ -127,7 +121,7 @@ export default function Home() {
         setColorMeanings(initialColorMeanings);
         setIsSidebarOpen(true);
     }
-  }, [toast]);
+  }, []);
 
   // Save to localStorage whenever state changes
   React.useEffect(() => {
@@ -206,58 +200,6 @@ export default function Home() {
     toast({ title: "Turno Excluído", description: "O turno foi removido do calendário." });
   };
   
-  const handleApplySuggestions = (suggestedShifts: SuggestShiftAssignmentsOutput['assignments']) => {
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      const daysInMonth = getDaysInMonth(currentDate);
-
-      const weekdayMap: { [key: string]: number } = {
-          'sunday': 0, 'domingo': 0,
-          'monday': 1, 'segunda-feira': 1,
-          'tuesday': 2, 'terça-feira': 2,
-          'wednesday': 3, 'quarta-feira': 3,
-          'thursday': 4, 'quinta-feira': 4,
-          'friday': 5, 'sexta-feira': 5,
-          'saturday': 6, 'sábado': 6,
-      };
-
-      const newShifts: Shift[] = [];
-      const roleColors: Record<string, ShiftColor> = {
-        'Cirurgia Eletiva': 'blue',
-        'Plantão': 'green',
-        'Ambulatório': 'purple',
-        'Emergência': 'red',
-        'Técnico(a)': 'gray',
-      };
-
-      for (let day = 1; day <= daysInMonth; day++) {
-          const dateForDay = new Date(year, month, day);
-          const dayOfWeek = getDay(dateForDay);
-
-          const matchingSuggestions = suggestedShifts.filter(suggestion => {
-              const suggestionDay = suggestion.shiftDay.toLowerCase().replace('-feira', '');
-              return weekdayMap[suggestionDay] === dayOfWeek;
-          });
-
-          matchingSuggestions.forEach((suggestion, index) => {
-              const employee = employees.find(e => e.id === suggestion.employeeId);
-              
-              if (suggestion.role) {
-                newShifts.push({
-                    id: `suggested-${dateForDay.getTime()}-${index}`,
-                    day: day,
-                    role: suggestion.role,
-                    employeeName: employee?.name || 'Desconhecido',
-                    startTime: suggestion.shiftStartTime,
-                    endTime: suggestion.shiftEndTime,
-                    color: roleColors[suggestion.role] || 'gray',
-                });
-              }
-          });
-      }
-      updateActiveCalendarShifts(newShifts);
-  };
-  
   const handleAddDayEvent = (event: { date: Date; name: string; color: ShiftColor }) => {
     const { date, name, color } = event;
     const day = date.getDate();
@@ -321,7 +263,6 @@ export default function Home() {
         onColorMeaningsChange={setColorMeanings}
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        onApplySuggestions={handleApplySuggestions}
       />
        <div className="hidden print:block p-4 text-center print:p-0 mb-4">
             <h1 className="text-2xl font-bold capitalize">{format(currentDate, "MMMM yyyy", { locale: ptBR })}</h1>
