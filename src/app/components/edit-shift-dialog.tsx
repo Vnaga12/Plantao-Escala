@@ -154,5 +154,3 @@ export function EditShiftDialog({ onUpdateShift, shift, roles }: EditShiftDialog
     </Dialog>
   );
 }
-
-    
