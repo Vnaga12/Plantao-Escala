@@ -10,7 +10,6 @@ import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
-import { SuggestShiftsDialog } from "./components/suggest-shifts-dialog";
 import type { SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
 
 const initialCalendars: Calendar[] = [
@@ -291,6 +290,15 @@ export default function Home() {
     );
   });
   
+  const handlePdfUpload = (file: File) => {
+    // Logic for handling the PDF file will go here.
+    // For now, we just show a toast.
+    toast({
+      title: "Recurso em Desenvolvimento",
+      description: `O processamento do arquivo '${file.name}' ainda não foi implementado.`,
+    });
+  };
+
   if (!isClient || !activeCalendar) {
     // You can render a loader or null here to avoid hydration mismatch
     return null;
@@ -315,6 +323,7 @@ export default function Home() {
         onColorMeaningsChange={setColorMeanings}
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        onPdfUpload={handlePdfUpload}
       />
        <div className="hidden print:block p-4 text-center print:p-0 mb-4">
             <h1 className="text-2xl font-bold capitalize">{format(currentDate, "MMMM yyyy", { locale: ptBR })}</h1>
@@ -338,7 +347,7 @@ export default function Home() {
         <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
           <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none flex-1 flex flex-col print:block">
             <div className="flex justify-end p-2 print:hidden">
-              <SuggestShiftsDialog employees={employees} onApplySuggestions={handleApplySuggestions} roles={roles} />
+              {/* <SuggestShiftsDialog employees={employees} onApplySuggestions={handleApplySuggestions} roles={roles} /> */}
             </div>
             <CalendarView 
               currentDate={currentDate} 

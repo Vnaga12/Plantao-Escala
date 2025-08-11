@@ -1,10 +1,11 @@
 
 "use client";
 
+import * as React from "react";
 import type { Employee, Calendar, ShiftColor } from "@/lib/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen, ClipboardList } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen, ClipboardList, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/app/components/icons/logo";
 import { SettingsDialog } from "./settings-dialog";
@@ -29,6 +30,7 @@ type HeaderProps = {
   onColorMeaningsChange: (meanings: { color: ShiftColor, meaning: string }[]) => void;
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
+  onPdfUpload: (file: File) => void;
 };
 
 export default function Header({ 
@@ -47,9 +49,25 @@ export default function Header({
   colorMeanings,
   onColorMeaningsChange,
   isSidebarOpen,
-  onToggleSidebar
+  onToggleSidebar,
+  onPdfUpload,
 }: HeaderProps) {
   
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      onPdfUpload(file);
+      // Reset the input value to allow uploading the same file again
+      event.target.value = '';
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -91,6 +109,19 @@ export default function Header({
               className="pl-9 h-10 w-[250px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             />
           </div>
+           <div>
+             <Button variant="outline" onClick={handleImportClick}>
+                <Upload className="mr-2 h-4 w-4" />
+                Importar de PDF
+              </Button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                onChange={handleFileChange}
+                accept="application/pdf"
+              />
+           </div>
         </div>
         <div className="flex items-center gap-2">
            <SettingsDialog 
