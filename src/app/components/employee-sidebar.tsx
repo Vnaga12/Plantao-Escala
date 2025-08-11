@@ -18,10 +18,11 @@ type EmployeeSidebarProps = {
   currentDate: Date;
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
-  onAddShift: (newShift: Omit<Shift, 'id'>) => void;
+  onAddShift: (newShift: Omit<Shift, 'id' | 'color'>) => void;
   roles: string[];
   calendarName: string;
   onAddDayEvent: (event: { date: Date; name: string; color: ShiftColor }) => void;
+  colorMeanings: { color: ShiftColor, meaning: string }[];
 };
 
 export default function EmployeeSidebar({
@@ -35,7 +36,8 @@ export default function EmployeeSidebar({
   onAddShift,
   roles,
   calendarName,
-  onAddDayEvent
+  onAddDayEvent,
+  colorMeanings
 }: EmployeeSidebarProps) {
 
   const handleAddEmployee = () => {
@@ -84,6 +86,7 @@ export default function EmployeeSidebar({
                       onAddShift={onAddShift}
                       roles={roles}
                       calendarName={calendarName}
+                      colorMeanings={colorMeanings}
                   >
                       <Button variant="ghost" size="icon" className="h-7 w-7">
                           <User className="h-4 w-4" />

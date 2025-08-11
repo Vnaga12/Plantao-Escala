@@ -29,7 +29,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, Save, Hospital, Pencil, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
-import type { Employee, Shift } from "@/lib/types";
+import type { Employee, Shift, ShiftColor } from "@/lib/types";
 import { useToast } from "@/components/ui/use-toast";
 import { format, addMonths, subMonths, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -61,9 +61,10 @@ type EditEmployeeDialogProps = {
   currentDate: Date;
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
-  onAddShift: (newShift: Omit<Shift, 'id'>) => void;
+  onAddShift: (newShift: Omit<Shift, 'id' | 'color'>) => void;
   roles: string[];
   calendarName: string;
+  colorMeanings: { color: ShiftColor, meaning: string }[];
 };
 
 export function EditEmployeeDialog({ 
@@ -78,7 +79,8 @@ export function EditEmployeeDialog({
     onDeleteShift,
     onAddShift,
     roles,
-    calendarName
+    calendarName,
+    colorMeanings
 }: EditEmployeeDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [viewedMonth, setViewedMonth] = React.useState(currentDate);
@@ -239,6 +241,7 @@ export function EditEmployeeDialog({
                                     onDeleteShift={onDeleteShift}
                                     roles={roles}
                                     currentDate={viewedMonth}
+                                    colorMeanings={colorMeanings}
                                 >
                                     <Button type="button" variant="outline" size="sm">
                                         <Settings2 className="mr-2 h-4 w-4" />
@@ -262,7 +265,7 @@ export function EditEmployeeDialog({
                                     </div>
                                 </div>
                                 <div className="flex items-center">
-                                    <EditShiftDialog shift={shift} onUpdateShift={onUpdateShift} roles={roles} />
+                                    <EditShiftDialog shift={shift} onUpdateShift={onUpdateShift} roles={roles} colorMeanings={colorMeanings} />
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>

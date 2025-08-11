@@ -25,6 +25,7 @@ type ShiftCardProps = {
   roles: string[];
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
+  colorMeanings: { color: ShiftColor, meaning: string }[];
 };
 
 const roleColorClasses: Record<ShiftColor, string> = {
@@ -36,7 +37,7 @@ const roleColorClasses: Record<ShiftColor, string> = {
   gray: "bg-gray-100 border-gray-400 text-gray-800 print:bg-gray-100 print:border-gray-400 print:text-black",
 };
 
-export default function ShiftCard({ shift, employees, onUpdateShift, onDeleteShift, roles }: ShiftCardProps) {
+export default function ShiftCard({ shift, employees, onUpdateShift, onDeleteShift, roles, colorMeanings }: ShiftCardProps) {
   return (
     <div className={cn("rounded-lg border-l-4 p-2 text-xs shadow-sm print:shadow-none print:border", roleColorClasses[shift.color])}>
       <div className="flex justify-between items-start">
@@ -49,7 +50,7 @@ export default function ShiftCard({ shift, employees, onUpdateShift, onDeleteShi
           </div>
         </div>
         <div className="flex items-center print:hidden">
-            <EditShiftDialog shift={shift} roles={roles} onUpdateShift={onUpdateShift} />
+            <EditShiftDialog shift={shift} roles={roles} onUpdateShift={onUpdateShift} colorMeanings={colorMeanings} />
             <SwapShiftDialog shift={shift} employees={employees} onUpdateShift={onUpdateShift} />
             <AlertDialog>
               <AlertDialogTrigger asChild>

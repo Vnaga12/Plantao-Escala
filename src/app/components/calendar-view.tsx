@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Employee, Shift } from "@/lib/types";
+import type { Employee, Shift, ShiftColor } from "@/lib/types";
 import { format, getDaysInMonth, startOfMonth, getDay, isToday, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ type CalendarViewProps = {
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
   roles: string[];
+  colorMeanings: { color: ShiftColor, meaning: string }[];
 };
 
 export default function CalendarView({ 
@@ -25,7 +26,8 @@ export default function CalendarView({
     employees, 
     onUpdateShift, 
     onDeleteShift, 
-    roles 
+    roles,
+    colorMeanings
 }: CalendarViewProps) {
   const firstDayOfMonth = startOfMonth(currentDate);
   const daysInMonth = getDaysInMonth(currentDate);
@@ -75,7 +77,7 @@ export default function CalendarView({
                   {day}
                 </span>
                 <div className="print:hidden">
-                    <AddShiftDialog onAddShift={onAddShift} day={day} roles={roles} />
+                    <AddShiftDialog onAddShift={onAddShift} day={day} roles={roles} colorMeanings={colorMeanings} />
                 </div>
               </div>
               <div className="flex flex-col gap-1 overflow-y-auto print:overflow-visible">
@@ -87,6 +89,7 @@ export default function CalendarView({
                     onUpdateShift={onUpdateShift}
                     onDeleteShift={onDeleteShift}
                     roles={roles}
+                    colorMeanings={colorMeanings}
                   />
                 ))}
               </div>

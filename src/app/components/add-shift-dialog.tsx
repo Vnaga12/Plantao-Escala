@@ -29,25 +29,29 @@ const availableColors: { name: ShiftColor, class: string }[] = [
   { name: 'gray', class: 'bg-gray-500' },
 ];
 
-type AddShiftFormValues = Omit<Shift, 'id' | 'day'>;
+type AddShiftFormValues = Omit<Shift, 'id' | 'day' | 'color'>;
 
 type AddShiftDialogProps = {
-  onAddShift: (shift: Omit<Shift, 'id'>) => void;
+  onAddShift: (shift: Omit<Shift, 'id' | 'color'>) => void;
   day: number;
   roles: string[];
+  colorMeanings: { color: ShiftColor, meaning: string }[];
 };
 
-export function AddShiftDialog({ onAddShift, day, roles }: AddShiftDialogProps) {
+export function AddShiftDialog({ onAddShift, day, roles, colorMeanings }: AddShiftDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { register, handleSubmit, control, reset, formState: { errors } } = useForm<AddShiftFormValues>({
+  const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<AddShiftFormValues>({
     defaultValues: {
       employeeName: "",
       startTime: "09:00",
       endTime: "17:00",
       role: roles[0] || "",
-      color: 'blue'
     }
   });
+
+  const roleToColorMap = React.useMemo(() => new Map(colorMeanings.map(m => [m.meaning, m.color])), [colorMeanings]);
+  const selectedRole = watch("role");
+  const selectedColor = roleToColorMap.get(selectedRole) || 'gray';
 
   const onSubmit: SubmitHandler<AddShiftFormValues> = (data) => {
     onAddShift({ ...data, day });
@@ -105,27 +109,21 @@ export function AddShiftDialog({ onAddShift, day, roles }: AddShiftDialogProps) 
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="color" className="text-right">Cor</Label>
-               <Controller
-                name="color"
-                control={control}
-                render={({ field }) => (
-                  <div className="col-span-3 flex gap-2">
-                    {availableColors.map(color => (
-                      <button
-                        key={color.name}
-                        type="button"
-                        onClick={() => field.onChange(color.name)}
-                        className={cn(
-                          "h-6 w-6 rounded-full border-2",
-                          color.class,
-                          field.value === color.name ? 'border-primary' : 'border-transparent'
-                        )}
-                        aria-label={`Select ${color.name} color`}
-                      />
-                    ))}
-                  </div>
-                )}
-              />
+              <div className="col-span-3 flex gap-2">
+                {availableColors.map(color => (
+                  <button
+                    key={color.name}
+                    type="button"
+                    disabled
+                    className={cn(
+                      "h-6 w-6 rounded-full border-2",
+                      color.class,
+                      selectedColor === color.name ? 'border-primary ring-2 ring-primary ring-offset-2' : 'border-transparent opacity-50'
+                    )}
+                    aria-label={`Select ${color.name} color`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
           <DialogFooter>

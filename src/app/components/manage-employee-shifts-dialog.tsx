@@ -38,11 +38,12 @@ type ManageShiftsDialogProps = {
     employee: Employee;
     allEmployees: Employee[];
     assignedShifts: Shift[];
-    onAddShift: (newShift: Omit<Shift, 'id'>) => void;
+    onAddShift: (newShift: Omit<Shift, 'id' | 'color'>) => void;
     onUpdateShift: (updatedShift: Shift) => void;
     onDeleteShift: (shiftId: string) => void;
     roles: string[];
     currentDate: Date;
+    colorMeanings: { color: ShiftColor, meaning: string }[];
 };
 
 type AddShiftFormValues = Omit<Shift, 'id' | 'employeeName' | 'color'> & { date: Date };
@@ -57,6 +58,7 @@ export function ManageEmployeeShiftsDialog({
     onUpdateShift,
     roles,
     currentDate,
+    colorMeanings
 }: ManageShiftsDialogProps) {
     const [isOpen, setIsOpen] = React.useState(false);
     const { toast } = useToast();
@@ -74,14 +76,15 @@ export function ManageEmployeeShiftsDialog({
     // Form for swapping a shift
     const swapForm = useForm<SwapShiftFormValues>();
     
+    const roleToColorMap = React.useMemo(() => new Map(colorMeanings.map(m => [m.meaning, m.color])), [colorMeanings]);
+    
     const onAddSubmit: SubmitHandler<AddShiftFormValues> = (data) => {
-        const newShift: Omit<Shift, 'id'> = {
+        const newShift: Omit<Shift, 'id' | 'color'> = {
             day: data.date.getDate(),
             role: data.role,
             startTime: data.startTime,
             endTime: data.endTime,
             employeeName: employee.name,
-            color: 'blue', // Default color for new shifts
         };
         onAddShift(newShift);
         toast({ title: "Plantão Adicionado", description: `Novo plantão para ${employee.name} foi adicionado.` });

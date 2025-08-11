@@ -10,7 +10,6 @@ import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
-import { nanoid } from "nanoid";
 
 const initialCalendars: Calendar[] = [
   {
@@ -73,6 +72,7 @@ export const initialColorMeanings: { color: ShiftColor, meaning: string }[] = [
     { color: 'red', meaning: 'Emergência' },
     { color: 'yellow', meaning: 'Aviso' },
     { color: 'gray', meaning: 'Outro' },
+    { color: 'blue', meaning: 'Técnico(a)' },
 ];
 
 const initialRoles = ['Cirurgia Eletiva', 'Plantão', 'Ambulatório', 'Emergência', 'Técnico(a)'];
@@ -154,11 +154,14 @@ export default function Home() {
       cal.id === activeCalendarId ? { ...cal, shifts: newShifts } : cal
     ));
   };
+  
+  const roleToColorMap = new Map(colorMeanings.map(m => [m.meaning, m.color]));
 
-  const handleAddShift = (newShift: Omit<Shift, 'id'>) => {
+  const handleAddShift = (newShift: Omit<Shift, 'id' | 'color'>) => {
     const shiftWithId: Shift = {
       ...newShift,
       id: Date.now().toString(),
+      color: roleToColorMap.get(newShift.role) || 'gray'
     };
     updateActiveCalendarShifts([...shifts, shiftWithId]);
     toast({ title: "Turno Adicionado", description: "O novo turno foi adicionado ao calendário." });
@@ -284,8 +287,6 @@ export default function Home() {
             onAddDayEvent={handleAddDayEvent}
              />}
         <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
-         <div className="flex justify-end mb-4">
-         </div>
           <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none flex-1 flex flex-col print:block">
             <CalendarView 
               currentDate={currentDate} 
@@ -295,6 +296,7 @@ export default function Home() {
               onUpdateShift={handleUpdateShift}
               onDeleteShift={handleDeleteShift}
               roles={roles}
+              colorMeanings={colorMeanings}
             />
           </div>
           {/* Legend for Screen */}
