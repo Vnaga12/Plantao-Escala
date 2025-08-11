@@ -58,14 +58,14 @@ const SuggestShiftAssignmentsOutputSchema = z.object({
     .array(
       z.object({
         employeeId: z.string().describe('The ID of the employee assigned to the shift.'),
-        shiftDay: z.string().describe('Day of the week for the assigned shift. Use Portuguese, e.g. Segunda-feira, Terça-feira.'),
+        shiftDay: z.string().describe('Day of the week for the assigned shift. MUST be in English (e.g., Monday, Tuesday).'),
         shiftStartTime: z.string().describe('Start time of the assigned shift.'),
         shiftEndTime: z.string().describe('End time of the assigned shift.'),
         role: z.string().describe('The role that the employee will fulfill'),
       })
     )
     .describe('List of suggested shift assignments.'),
-  summary: z.string().describe('A summary of the shift assignment process.'),
+  summary: z.string().describe('A summary of the shift assignment process, in Portuguese.'),
 });
 
 export type SuggestShiftAssignmentsOutput = z.infer<typeof SuggestShiftAssignmentsOutputSchema>;
@@ -78,7 +78,7 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
   name: 'suggestShiftAssignmentsPrompt',
   input: {schema: SuggestShiftAssignmentsInputSchema},
   output: {schema: SuggestShiftAssignmentsOutputSchema},
-  prompt: `Você é um assistente de IA que ajuda a criar atribuições de turno ideais para uma equipe médica. A resposta deve ser em português.
+  prompt: `Você é um assistente de IA que ajuda a criar atribuições de turno ideais para uma equipe médica. A resposta deve ser em português, EXCETO pelo campo shiftDay.
 
   Com base na disponibilidade dos funcionários, preferências, requisitos de turno e restrições de horário, sugira atribuições de turno.
 
@@ -90,7 +90,7 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
   Retorne as atribuições de turno como um objeto JSON.
   Certifique-se de que sua resposta corresponda exatamente ao esquema de saída, incluindo todos os campos.
   Pense passo a passo e explique seu raciocínio no resumo.
-  Os dias da semana em shiftDay devem estar em português (ex: Segunda-feira, Terça-feira, etc.).
+  IMPORTANTE: Os dias da semana no campo shiftDay DEVEM estar em inglês (ex: Monday, Tuesday, etc.). O resumo deve estar em português.
   `,config: {
     safetySettings: [
       {

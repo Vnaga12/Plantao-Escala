@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { addMonths, subMonths, getDaysInMonth, getDay, format } from "date-fns";
+import { addMonths, subMonths, getDaysInMonth, getDay, format, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Shift, Employee, Calendar, ShiftColor } from "@/lib/types";
 import Header from "@/app/components/header";
@@ -239,21 +239,17 @@ export default function Home() {
   const handleApplySuggestions = (suggestions: SuggestShiftAssignmentsOutput['assignments']) => {
     const newShifts: Shift[] = suggestions.map((suggestion, index) => {
       const employee = employees.find(e => e.id === suggestion.employeeId);
-      const dayMapping: { [key: string]: number } = {
-        'Segunda-feira': 1, 'Terça-feira': 2, 'Quarta-feira': 3, 'Quinta-feira': 4,
-        'Sexta-feira': 5, 'Sábado': 6, 'Domingo': 0
-      };
-
-      const dayOfWeekName = suggestion.shiftDay;
-      const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const dayOfWeekOfFirst = getDay(firstDayOfMonth);
       
-      let dayOfMonth = -1;
+      // Map English day name to a number (0=Sun, 1=Mon, ...)
+      const dayOfWeekName = suggestion.shiftDay;
+      const dayOfWeekNumber = parse(dayOfWeekName, 'EEEE', new Date()).getDay();
 
-      // Find the first occurrence of the day of the week in the month
-      for (let i = 1; i <= getDaysInMonth(currentDate); i++) {
+      // Find the first occurrence of that day of the week in the current month
+      let dayOfMonth = -1;
+      const daysInMonth = getDaysInMonth(currentDate);
+      for (let i = 1; i <= daysInMonth; i++) {
           const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), i);
-          if (format(date, 'EEEE', { locale: ptBR }).toLowerCase() === dayOfWeekName.toLowerCase()) {
+          if (getDay(date) === dayOfWeekNumber) {
               dayOfMonth = i;
               break;
           }
