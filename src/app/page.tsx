@@ -242,21 +242,28 @@ export default function Home() {
       
       // Map English day name to a number (0=Sun, 1=Mon, ...)
       const dayOfWeekName = suggestion.shiftDay;
-      const dayOfWeekNumber = parse(dayOfWeekName, 'EEEE', new Date()).getDay();
+      const dayOfWeekNumber = parse(dayOfWeekName, 'EEEE', new Date(), { locale: ptBR }).getDay();
 
-      // Find the first occurrence of that day of the week in the current month
-      let dayOfMonth = -1;
+
+      // Find all occurrences of that day of the week in the current month
       const daysInMonth = getDaysInMonth(currentDate);
+      const matchingDays = [];
       for (let i = 1; i <= daysInMonth; i++) {
           const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), i);
           if (getDay(date) === dayOfWeekNumber) {
-              dayOfMonth = i;
-              break;
+              matchingDays.push(i);
           }
       }
+      
+      // Naive distribution: assign to the first available day not already assigned to this person
+      // This is a simplistic approach and could be improved.
+      const dayOfMonth = matchingDays.find(day => 
+        !shifts.some(s => s.day === day && s.employeeName === employee?.name)
+      );
 
-      if (dayOfMonth === -1) {
-          console.warn(`Could not find a matching day for ${dayOfWeekName}`);
+
+      if (dayOfMonth === undefined) {
+          console.warn(`Could not find an available day for ${employee?.name} on a ${dayOfWeekName}`);
           return null;
       }
       

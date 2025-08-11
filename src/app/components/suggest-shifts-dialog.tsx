@@ -20,7 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 type SuggestShiftsDialogProps = {
   employees: Employee[];
-  onApplySuggestions: (suggestions: SuggestShiftAssignmentsOutput['assignments']) => void;
+  onApplySuggestions?: (suggestions: SuggestShiftAssignmentsOutput['assignments']) => void;
   roles: string[];
 };
 
@@ -36,7 +36,7 @@ const weekdays = [
     { value: "Sunday", label: "Domingo" },
 ];
 
-export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: SuggestShiftsDialogProps) {
+export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, roles }: SuggestShiftsDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isPending, setIsPending] = React.useState(false);
   const [suggestions, setSuggestions] = React.useState<SuggestShiftAssignmentsOutput | null>(null);
@@ -44,7 +44,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: Su
 
   const { register, control, handleSubmit, reset, watch } = useForm<FormValues>({
     defaultValues: {
-      employees: [],
+      employees: employees,
       shifts: [],
       scheduleConstraints: "",
     },
@@ -60,6 +60,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: Su
         setSuggestions(null);
     }
   }, [isOpen, reset, employees, roles]);
+
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
