@@ -10,6 +10,7 @@ import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
+import { SuggestShiftsDialog } from "./components/suggest-shifts-dialog";
 import type { SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
 import { nanoid } from "nanoid";
 
@@ -340,6 +341,13 @@ export default function Home() {
             onAddDayEvent={handleAddDayEvent}
              />}
         <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
+         <div className="flex justify-end mb-4">
+          <SuggestShiftsDialog 
+            employees={employees} 
+            onApplySuggestions={handleApplySuggestions}
+            roles={roles}
+          />
+         </div>
           <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none flex-1 flex flex-col print:block">
             <CalendarView 
               currentDate={currentDate} 
