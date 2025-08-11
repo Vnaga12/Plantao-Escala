@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Save, Hospital, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Save, Hospital, Pencil, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
 import type { Employee, Shift } from "@/lib/types";
 import { useToast } from "@/components/ui/use-toast";
 import { format, addMonths, subMonths, isSameMonth } from "date-fns";
@@ -37,6 +37,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { EditShiftDialog } from "./edit-shift-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ManageEmployeeShiftsDialog } from "./manage-employee-shifts-dialog";
 
 const weekdays = [
     { value: "Monday", label: "Segunda-feira" },
@@ -52,6 +53,7 @@ type FormValues = Omit<Employee, 'id'>;
 
 type EditEmployeeDialogProps = {
   employee: Employee;
+  allEmployees: Employee[];
   onUpdateEmployee: (employee: Employee) => void;
   onDeleteEmployee: (employeeId: string) => void;
   children: React.ReactNode;
@@ -59,12 +61,14 @@ type EditEmployeeDialogProps = {
   currentDate: Date;
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
+  onAddShift: (newShift: Omit<Shift, 'id'>) => void;
   roles: string[];
   calendarName: string;
 };
 
 export function EditEmployeeDialog({ 
-    employee, 
+    employee,
+    allEmployees, 
     onUpdateEmployee, 
     onDeleteEmployee, 
     children,
@@ -72,6 +76,7 @@ export function EditEmployeeDialog({
     currentDate,
     onUpdateShift,
     onDeleteShift,
+    onAddShift,
     roles,
     calendarName
 }: EditEmployeeDialogProps) {
@@ -225,6 +230,21 @@ export function EditEmployeeDialog({
                                 <Button type="button" variant="ghost" size="icon" onClick={() => setViewedMonth(prev => addMonths(prev, 1))}>
                                     <ChevronRight className="h-5 w-5" />
                                 </Button>
+                                <ManageEmployeeShiftsDialog
+                                    employee={employee}
+                                    allEmployees={allEmployees}
+                                    assignedShifts={assignedShiftsForMonth}
+                                    onUpdateShift={onUpdateShift}
+                                    onAddShift={onAddShift}
+                                    onDeleteShift={onDeleteShift}
+                                    roles={roles}
+                                    currentDate={viewedMonth}
+                                >
+                                    <Button type="button" variant="outline" size="sm">
+                                        <Settings2 className="mr-2 h-4 w-4" />
+                                        Gerenciar Plantões
+                                    </Button>
+                                </ManageEmployeeShiftsDialog>
                            </div>
 
                             <div className="space-y-3">
@@ -286,7 +306,7 @@ export function EditEmployeeDialog({
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+                            <AlertDialogAction onClick={handleDelete}>Excluir Funcionário</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
@@ -300,5 +320,3 @@ export function EditEmployeeDialog({
     </Dialog>
   );
 }
-
-    
