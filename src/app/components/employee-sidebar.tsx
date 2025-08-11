@@ -18,24 +18,26 @@ type EmployeeSidebarProps = {
   currentDate: Date;
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
+  onAddShift: (newShift: Omit<Shift, 'id'>) => void;
   roles: string[];
   calendarName: string;
   onAddDayEvent: (event: { date: Date; name: string; color: ShiftColor }) => void;
 };
 
-export default function EmployeeSidebar({ 
-  employees, 
+export default function EmployeeSidebar({
+  employees,
   onEmployeesChange,
   onUpdateEmployee,
   shifts,
   currentDate,
   onUpdateShift,
   onDeleteShift,
+  onAddShift,
   roles,
   calendarName,
   onAddDayEvent
 }: EmployeeSidebarProps) {
-  
+
   const handleAddEmployee = () => {
     const newEmployee: Employee = {
       id: `emp-${Date.now()}`,
@@ -45,7 +47,7 @@ export default function EmployeeSidebar({
     };
     onEmployeesChange([...employees, newEmployee]);
   };
-  
+
   const handleDeleteEmployee = (employeeId: string) => {
     const newEmployees = employees.filter(emp => emp.id !== employeeId);
     onEmployeesChange(newEmployees);
@@ -70,14 +72,16 @@ export default function EmployeeSidebar({
               >
                 <span className="font-medium text-sm text-gray-700">{employee.name}</span>
                 <div className="flex items-center">
-                  <EditEmployeeDialog 
-                      employee={employee} 
-                      onUpdateEmployee={onUpdateEmployee} 
-                      onDeleteEmployee={handleDeleteEmployee} 
+                  <EditEmployeeDialog
+                      employee={employee}
+                      allEmployees={employees}
+                      onUpdateEmployee={onUpdateEmployee}
+                      onDeleteEmployee={handleDeleteEmployee}
                       shifts={shifts}
                       currentDate={currentDate}
                       onUpdateShift={onUpdateShift}
                       onDeleteShift={onDeleteShift}
+                      onAddShift={onAddShift}
                       roles={roles}
                       calendarName={calendarName}
                   >
@@ -105,5 +109,3 @@ export default function EmployeeSidebar({
     </aside>
   );
 }
-
-    

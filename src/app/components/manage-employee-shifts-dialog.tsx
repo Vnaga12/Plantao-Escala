@@ -224,7 +224,7 @@ export function ManageEmployeeShiftsDialog({
                                          <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <SelectTrigger><SelectValue placeholder="Selecione o funcionário"/></SelectTrigger>
                                             <SelectContent>
-                                                {allEmployees.filter(e => e.id !== employee.id).map(e => (
+                                                {(allEmployees || []).filter(e => e.id !== employee.id).map(e => (
                                                     <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -245,4 +245,3 @@ export function ManageEmployeeShiftsDialog({
         </Dialog>
     );
 }
-
