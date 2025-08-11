@@ -290,14 +290,38 @@ export default function Home() {
     );
   });
   
-  const handlePdfUpload = (file: File) => {
-    // Logic for handling the PDF file will go here.
-    // For now, we just show a toast.
-    toast({
-      title: "Recurso em Desenvolvimento",
-      description: `O processamento do arquivo '${file.name}' ainda não foi implementado.`,
-    });
+  const handleBulkAddEmployees = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      const input = event.currentTarget;
+      const namesString = input.value.trim();
+      if (namesString === "") return;
+
+      const names = namesString.split(',').map(name => name.trim()).filter(Boolean);
+      
+      const newEmployees = names.map(name => {
+         const formattedName = name
+            .toLowerCase()
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        
+        return {
+          id: `emp-${Date.now()}-${Math.random()}`,
+          name: formattedName,
+          availability: [],
+          preferences: "",
+        };
+      });
+
+      setEmployees(prev => [...prev, ...newEmployees]);
+      input.value = ""; // Clear the input
+      toast({
+        title: "Funcionários Adicionados",
+        description: `${newEmployees.length} novos funcionários foram adicionados ao grupo.`,
+      });
+    }
   };
+
 
   if (!isClient || !activeCalendar) {
     // You can render a loader or null here to avoid hydration mismatch
@@ -323,7 +347,7 @@ export default function Home() {
         onColorMeaningsChange={setColorMeanings}
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        onPdfUpload={handlePdfUpload}
+        onBulkAddEmployees={handleBulkAddEmployees}
       />
        <div className="hidden print:block p-4 text-center print:p-0 mb-4">
             <h1 className="text-2xl font-bold capitalize">{format(currentDate, "MMMM yyyy", { locale: ptBR })}</h1>
