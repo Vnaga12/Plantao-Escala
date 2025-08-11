@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { addMonths, subMonths, getDaysInMonth, getDay, format, parse } from "date-fns";
+import { addMonths, subMonths, getDaysInMonth, getDay, format, parse, isSameMonth, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Shift, Employee, Calendar, ShiftColor } from "@/lib/types";
 import Header from "@/app/components/header";
@@ -16,17 +16,17 @@ const initialCalendars: Calendar[] = [
     id: 'cal1',
     name: 'Hospital Principal',
     shifts: [
-      { id: '1', day: 5, role: 'Cirurgia Eletiva', employeeName: 'Dra. Alice', startTime: '08:00', endTime: '16:00', color: 'blue' },
-      { id: '2', day: 5, role: 'Plantão', employeeName: 'Beto', startTime: '14:00', endTime: '22:00', color: 'green' },
-      { id: '3', day: 12, role: 'Ambulatório', employeeName: 'Carlos', startTime: '09:00', endTime: '17:00', color: 'purple' },
-      { id: '4', day: 21, role: 'Emergência', employeeName: 'Dr. David', startTime: '20:00', endTime: '04:00', color: 'red' },
+      { id: '1', date: '2024-07-05', role: 'Cirurgia Eletiva', employeeName: 'Dra. Alice', startTime: '08:00', endTime: '16:00', color: 'blue' },
+      { id: '2', date: '2024-07-05', role: 'Plantão', employeeName: 'Beto', startTime: '14:00', endTime: '22:00', color: 'green' },
+      { id: '3', date: '2024-07-12', role: 'Ambulatório', employeeName: 'Carlos', startTime: '09:00', endTime: '17:00', color: 'purple' },
+      { id: '4', date: '2024-07-21', role: 'Emergência', employeeName: 'Dr. David', startTime: '20:00', endTime: '04:00', color: 'red' },
     ],
   },
   {
     id: 'cal2',
     name: 'Clínica Secundária',
     shifts: [
-        { id: '5', day: 10, role: 'Cirurgia Eletiva', employeeName: 'Dr. David', startTime: '09:00', endTime: '17:00', color: 'blue' },
+        { id: '5', date: '2024-07-10', role: 'Cirurgia Eletiva', employeeName: 'Dr. David', startTime: '09:00', endTime: '17:00', color: 'blue' },
     ],
   }
 ];
@@ -105,8 +105,26 @@ export default function Home() {
 
         if (storedDate) setCurrentDate(new Date(storedDate));
         const loadedCalendars = storedCalendars ? JSON.parse(storedCalendars) : initialCalendars;
-        setCalendars(loadedCalendars);
-        setActiveCalendarId(storedActiveId || loadedCalendars[0]?.id || '');
+        
+        // Data migration: old day:number to new date:string
+        const migratedCalendars = loadedCalendars.map(cal => ({
+            ...cal,
+            shifts: cal.shifts.map(shift => {
+                if (typeof (shift as any).day === 'number') {
+                    const year = new Date().getFullYear(); // Assume current year for migration
+                    const month = new Date().getMonth(); // Assume current month for migration
+                    return {
+                        ...shift,
+                        date: format(new Date(year, month, (shift as any).day), 'yyyy-MM-dd'),
+                        day: undefined,
+                    }
+                }
+                return shift;
+            })
+        }));
+
+        setCalendars(migratedCalendars);
+        setActiveCalendarId(storedActiveId || migratedCalendars[0]?.id || '');
         setEmployees(storedEmployees ? JSON.parse(storedEmployees) : initialEmployees);
         setRoles(storedRoles ? JSON.parse(storedRoles) : initialRoles);
         setColorMeanings(storedColorMeanings ? JSON.parse(storedColorMeanings) : initialColorMeanings);
@@ -205,16 +223,15 @@ export default function Home() {
   
   const handleAddDayEvent = (event: { date: Date; name: string; color: ShiftColor }) => {
     const { date, name, color } = event;
-    const day = date.getDate();
+    const eventDate = format(date, 'yyyy-MM-dd');
 
     const newCalendars = calendars.map(cal => {
       // Check if event for this day already exists in this calendar
-      const eventExists = cal.shifts.some(s => s.day === day && s.role === name);
-      if (cal.shifts.some(s => s.day === day && s.role === 'Feriado')) return cal;
+      if (cal.shifts.some(s => s.date === eventDate && s.role === 'Feriado')) return cal;
 
       const newShift: Shift = {
         id: `event-${date.getTime()}-${cal.id}`,
-        day: day,
+        date: eventDate,
         role: name,
         employeeName: '', // Unassigned
         startTime: '00:00',
@@ -223,7 +240,7 @@ export default function Home() {
       };
       
       // Add the new shift, replacing any other shifts on that day if needed
-      const otherShifts = cal.shifts.filter(s => s.day !== day);
+      const otherShifts = cal.shifts.filter(s => s.date !== eventDate);
       return { ...cal, shifts: [...otherShifts, newShift] };
     });
 
@@ -236,9 +253,12 @@ export default function Home() {
 
   const filteredShifts = shifts.filter(shift => {
     const query = searchQuery.toLowerCase();
+    const shiftDate = parseISO(shift.date);
+
     return (
-      shift.employeeName.toLowerCase().includes(query) ||
-      shift.role.toLowerCase().includes(query)
+      (shift.employeeName.toLowerCase().includes(query) ||
+      shift.role.toLowerCase().includes(query)) &&
+      isSameMonth(shiftDate, currentDate)
     );
   });
   

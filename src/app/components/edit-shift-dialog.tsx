@@ -29,7 +29,7 @@ const availableColors: { name: ShiftColor, class: string }[] = [
   { name: 'gray', class: 'bg-gray-500' },
 ];
 
-type EditShiftFormValues = Omit<Shift, 'id' | 'day'>;
+type EditShiftFormValues = Omit<Shift, 'id' | 'date'>;
 
 type EditShiftDialogProps = {
   shift: Shift;
@@ -60,7 +60,7 @@ export function EditShiftDialog({ onUpdateShift, shift, roles, colorMeanings }: 
 
 
   const onSubmit: SubmitHandler<EditShiftFormValues> = (data) => {
-    onUpdateShift({ ...data, id: shift.id, day: shift.day });
+    onUpdateShift({ ...data, id: shift.id, date: shift.date });
     setIsOpen(false);
   };
   

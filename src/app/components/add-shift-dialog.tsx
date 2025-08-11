@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PlusCircle } from "lucide-react";
 import type { Shift, ShiftColor } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 const availableColors: { name: ShiftColor, class: string }[] = [
   { name: 'blue', class: 'bg-blue-500' },
@@ -29,16 +30,16 @@ const availableColors: { name: ShiftColor, class: string }[] = [
   { name: 'gray', class: 'bg-gray-500' },
 ];
 
-type AddShiftFormValues = Omit<Shift, 'id' | 'day' | 'color'>;
+type AddShiftFormValues = Omit<Shift, 'id' | 'date' | 'color'>;
 
 type AddShiftDialogProps = {
   onAddShift: (shift: Omit<Shift, 'id' | 'color'>) => void;
-  day: number;
+  date: Date;
   roles: string[];
   colorMeanings: { color: ShiftColor, meaning: string }[];
 };
 
-export function AddShiftDialog({ onAddShift, day, roles, colorMeanings }: AddShiftDialogProps) {
+export function AddShiftDialog({ onAddShift, date, roles, colorMeanings }: AddShiftDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<AddShiftFormValues>({
     defaultValues: {
@@ -54,7 +55,8 @@ export function AddShiftDialog({ onAddShift, day, roles, colorMeanings }: AddShi
   const selectedColor = roleToColorMap.get(selectedRole) || 'gray';
 
   const onSubmit: SubmitHandler<AddShiftFormValues> = (data) => {
-    onAddShift({ ...data, day });
+    const shiftDate = format(date, 'yyyy-MM-dd');
+    onAddShift({ ...data, date: shiftDate });
     setIsOpen(false);
     reset();
   };
@@ -71,7 +73,7 @@ export function AddShiftDialog({ onAddShift, day, roles, colorMeanings }: AddShi
           <DialogHeader>
             <DialogTitle>Adicionar Novo Turno</DialogTitle>
             <DialogDescription>
-              Preencha os detalhes para o novo turno no dia {day}.
+              Preencha os detalhes para o novo turno em {format(date, "dd/MM/yyyy")}.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

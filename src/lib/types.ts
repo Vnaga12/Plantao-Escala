@@ -3,7 +3,7 @@ export type ShiftColor = 'blue' | 'green' | 'purple' | 'red' | 'yellow' | 'gray'
 
 export type Shift = {
   id: string;
-  day: number;
+  date: string; // YYYY-MM-DD
   role: string;
   employeeName: string;
   startTime: string;

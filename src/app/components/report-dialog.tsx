@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { ClipboardList, FileSpreadsheet, ChevronLeft, ChevronRight } from "lucide-react";
-import { format, getDaysInMonth, addMonths, subMonths, eachDayOfInterval, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns";
+import { format, getDaysInMonth, addMonths, subMonths, eachDayOfInterval, startOfMonth, endOfMonth, startOfWeek, endOfWeek, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
@@ -89,14 +89,15 @@ export function ReportDialog({ employees, calendars, currentDate, roles }: Repor
     });
 
     const reportData = employees.map(employee => {
-        const shiftsByDay: { [key: number]: Shift[] } = {};
+        const shiftsByDay: { [key: string]: Shift[] } = {};
         shifts.forEach(shift => {
-            const shiftDate = new Date(viewedMonth.getFullYear(), viewedMonth.getMonth(), shift.day);
-            if (shift.employeeName === employee.name && format(shiftDate, 'yyyy-MM') === format(viewedMonth, 'yyyy-MM')) {
-                if (!shiftsByDay[shift.day]) {
-                    shiftsByDay[shift.day] = [];
+            const shiftDate = parseISO(shift.date);
+            if (employee.name === employee.name && format(shiftDate, 'yyyy-MM') === format(viewedMonth, 'yyyy-MM')) {
+                const dateKey = format(shiftDate, 'yyyy-MM-dd');
+                if (!shiftsByDay[dateKey]) {
+                    shiftsByDay[dateKey] = [];
                 }
-                shiftsByDay[shift.day].push(shift);
+                shiftsByDay[dateKey].push(shift);
             }
         });
         return {
@@ -114,7 +115,8 @@ export function ReportDialog({ employees, calendars, currentDate, roles }: Repor
         const body = reportData.map(({ employee, shiftsByDay }) => {
             const row: (string | null)[] = [employee.name];
             daysInMonth.forEach(day => {
-                const dayShifts = shiftsByDay[day.getDate()];
+                const dateKey = format(day, 'yyyy-MM-dd');
+                const dayShifts = shiftsByDay[dateKey];
                 if (dayShifts && dayShifts.length > 0) {
                     row.push(dayShifts.map(s => s.role).join(', '));
                 } else {
@@ -130,7 +132,8 @@ export function ReportDialog({ employees, calendars, currentDate, roles }: Repor
         // Apply styles
         reportData.forEach(({ employee, shiftsByDay }, rowIndex) => {
             daysInMonth.forEach((day, colIndex) => {
-                const dayShifts = shiftsByDay[day.getDate()];
+                const dateKey = format(day, 'yyyy-MM-dd');
+                const dayShifts = shiftsByDay[dateKey];
                 if (dayShifts && dayShifts.length > 0) {
                     const shift = dayShifts[0]; // Use the first shift's color for simplicity
                     const cellAddress = XLSX.utils.encode_cell({ r: rowIndex + 2, c: colIndex + 1 });
@@ -235,7 +238,8 @@ export function ReportDialog({ employees, calendars, currentDate, roles }: Repor
                     <TableRow key={employee.id}>
                       <TableCell className="sticky left-0 bg-background z-10 border-r font-medium">{employee.name}</TableCell>
                       {daysInMonth.map((day, index) => {
-                        const dayShifts = shiftsByDay[day.getDate()];
+                        const dateKey = format(day, 'yyyy-MM-dd');
+                        const dayShifts = shiftsByDay[dateKey];
                         const cellContent = dayShifts ? dayShifts.map(s => s.role).join(", ") : "";
                         const cellColor = dayShifts ? dayShifts[0].color : undefined;
                         

@@ -31,7 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, Save, Hospital, Pencil, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
 import type { Employee, Shift, ShiftColor } from "@/lib/types";
 import { useToast } from "@/components/ui/use-toast";
-import { format, addMonths, subMonths, isSameMonth } from "date-fns";
+import { format, addMonths, subMonths, isSameMonth, parseISO, getDate } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -131,7 +131,7 @@ export function EditEmployeeDialog({
 
   const allAssignedShifts = shifts.filter(s => s.employeeName === employee.name);
   const assignedShiftsForMonth = allAssignedShifts.filter(s => {
-    const shiftDate = new Date(viewedMonth.getFullYear(), viewedMonth.getMonth(), s.day);
+    const shiftDate = parseISO(s.date);
     return isSameMonth(shiftDate, viewedMonth);
   });
   
@@ -251,11 +251,13 @@ export function EditEmployeeDialog({
                            </div>
 
                             <div className="space-y-3">
-                            {assignedShiftsForMonth.length > 0 ? assignedShiftsForMonth.map((shift) => (
+                            {assignedShiftsForMonth.length > 0 ? assignedShiftsForMonth.map((shift) => {
+                                const shiftDate = parseISO(shift.date);
+                                return (
                                 <div key={shift.id} className="grid grid-cols-[auto,1fr,auto] items-center gap-4 p-3 border rounded-md bg-gray-50/50">
                                 <div className="font-semibold text-center">
-                                    <div className="text-2xl">{shift.day}</div>
-                                    <div className="text-xs uppercase">{format(new Date(viewedMonth.getFullYear(), viewedMonth.getMonth(), shift.day), 'EEE', { locale: ptBR })}</div>
+                                    <div className="text-2xl">{getDate(shiftDate)}</div>
+                                    <div className="text-xs uppercase">{format(shiftDate, 'EEE', { locale: ptBR })}</div>
                                 </div>
                                 <div>
                                     <div className="font-medium">{shift.role}</div>
@@ -283,7 +285,7 @@ export function EditEmployeeDialog({
                                     </AlertDialog>
                                 </div>
                                 </div>
-                            )) : (
+                            )}) : (
                                 <p className="text-sm text-muted-foreground text-center py-4">Nenhum plantão atribuído neste mês.</p>
                             )}
                             </div>
@@ -323,5 +325,3 @@ export function EditEmployeeDialog({
     </Dialog>
   );
 }
-
-    

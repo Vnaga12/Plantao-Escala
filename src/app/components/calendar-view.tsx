@@ -2,7 +2,7 @@
 "use client";
 
 import type { Employee, Shift, ShiftColor } from "@/lib/types";
-import { format, getDaysInMonth, startOfMonth, getDay, isToday, isSameMonth } from "date-fns";
+import { format, getDaysInMonth, startOfMonth, getDay, isToday, isSameMonth, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import ShiftCard from "./shift-card";
@@ -53,8 +53,10 @@ export default function CalendarView({
         ))}
         {days.map((day, index) => {
           const dateForDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+          const dateForDayString = format(dateForDay, 'yyyy-MM-dd');
+
           const shiftsForDay = shifts.filter(
-            (shift) => shift.day === day && isSameMonth(dateForDay, currentDate)
+            (shift) => shift.date === dateForDayString
           );
 
           return (
@@ -77,7 +79,7 @@ export default function CalendarView({
                   {day}
                 </span>
                 <div className="print:hidden">
-                    <AddShiftDialog onAddShift={onAddShift} day={day} roles={roles} colorMeanings={colorMeanings} />
+                    <AddShiftDialog onAddShift={onAddShift} date={dateForDay} roles={roles} colorMeanings={colorMeanings} />
                 </div>
               </div>
               <div className="flex flex-col gap-1 overflow-y-auto print:overflow-visible">

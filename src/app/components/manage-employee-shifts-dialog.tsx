@@ -28,7 +28,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarIcon, ArrowRightLeft } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +46,7 @@ type ManageShiftsDialogProps = {
     colorMeanings: { color: ShiftColor, meaning: string }[];
 };
 
-type AddShiftFormValues = Omit<Shift, 'id' | 'employeeName' | 'color'> & { date: Date };
+type AddShiftFormValues = Omit<Shift, 'id' | 'employeeName' | 'color' | 'date'> & { date: Date };
 type SwapShiftFormValues = { fromShiftId: string; toEmployeeId: string };
 
 export function ManageEmployeeShiftsDialog({
@@ -80,7 +80,7 @@ export function ManageEmployeeShiftsDialog({
     
     const onAddSubmit: SubmitHandler<AddShiftFormValues> = (data) => {
         const newShift: Omit<Shift, 'id' | 'color'> = {
-            day: data.date.getDate(),
+            date: format(data.date, 'yyyy-MM-dd'),
             role: data.role,
             startTime: data.startTime,
             endTime: data.endTime,
@@ -208,7 +208,7 @@ export function ManageEmployeeShiftsDialog({
                                             <SelectContent>
                                                 {assignedShifts.map(s => (
                                                     <SelectItem key={s.id} value={s.id}>
-                                                        {s.day}/{format(currentDate, 'MM')} - {s.role} ({s.startTime}-{s.endTime})
+                                                        {format(parseISO(s.date), 'dd/MM')} - {s.role} ({s.startTime}-{s.endTime})
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
