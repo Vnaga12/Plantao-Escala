@@ -11,6 +11,7 @@ import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
 import type { SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
+import { SuggestShiftsDialog } from "./components/suggest-shifts-dialog";
 
 const initialCalendars: Calendar[] = [
   {
@@ -395,5 +396,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
