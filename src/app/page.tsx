@@ -10,8 +10,6 @@ import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
-import type { SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
-import { SuggestShiftsDialog } from "./components/suggest-shifts-dialog";
 
 const initialCalendars: Calendar[] = [
   {
@@ -236,55 +234,6 @@ export default function Home() {
     });
   };
 
-  const handleApplySuggestions = (suggestions: SuggestShiftAssignmentsOutput['assignments']) => {
-    const newShifts: Shift[] = suggestions.map((suggestion, index) => {
-      const employee = employees.find(e => e.id === suggestion.employeeId);
-      
-      // Map English day name to a number (0=Sun, 1=Mon, ...)
-      const dayOfWeekName = suggestion.shiftDay;
-      const dayOfWeekNumber = parse(dayOfWeekName, 'EEEE', new Date(), { locale: ptBR }).getDay();
-
-
-      // Find all occurrences of that day of the week in the current month
-      const daysInMonth = getDaysInMonth(currentDate);
-      const matchingDays = [];
-      for (let i = 1; i <= daysInMonth; i++) {
-          const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), i);
-          if (getDay(date) === dayOfWeekNumber) {
-              matchingDays.push(i);
-          }
-      }
-      
-      // Naive distribution: assign to the first available day not already assigned to this person
-      // This is a simplistic approach and could be improved.
-      const dayOfMonth = matchingDays.find(day => 
-        !shifts.some(s => s.day === day && s.employeeName === employee?.name)
-      );
-
-
-      if (dayOfMonth === undefined) {
-          console.warn(`Could not find an available day for ${employee?.name} on a ${dayOfWeekName}`);
-          return null;
-      }
-      
-      return {
-        id: `suggested-${Date.now()}-${index}`,
-        day: dayOfMonth, 
-        role: suggestion.role,
-        employeeName: employee?.name || 'Não atribuído',
-        startTime: suggestion.shiftStartTime,
-        endTime: suggestion.shiftEndTime,
-        color: roleToColorMap.get(suggestion.role) || 'gray',
-      };
-    }).filter((s): s is Shift => s !== null);
-
-    updateActiveCalendarShifts([...shifts, ...newShifts]);
-    toast({
-      title: "Sugestões Aplicadas",
-      description: "Os turnos sugeridos pela IA foram adicionados ao calendário."
-    });
-  };
-
   const filteredShifts = shifts.filter(shift => {
     const query = searchQuery.toLowerCase();
     return (
@@ -372,9 +321,6 @@ export default function Home() {
             />}
         <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
           <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none flex-1 flex flex-col print:block">
-            <div className="flex justify-end p-2 print:hidden">
-               <SuggestShiftsDialog employees={employees} onApplySuggestions={handleApplySuggestions} roles={roles} />
-            </div>
             <CalendarView 
               currentDate={currentDate} 
               shifts={filteredShifts}
