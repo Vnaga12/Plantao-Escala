@@ -226,22 +226,22 @@ export default function Home() {
     const eventDate = format(date, 'yyyy-MM-dd');
 
     const newCalendars = calendars.map(cal => {
-      // Check if event for this day already exists in this calendar
-      if (cal.shifts.some(s => s.date === eventDate && s.role === 'Feriado')) return cal;
-
-      const newShift: Shift = {
+      // Create the new event shift
+      const newEventShift: Shift = {
         id: `event-${date.getTime()}-${cal.id}`,
         date: eventDate,
         role: name,
-        employeeName: '', // Unassigned
+        employeeName: '', // Unassigned, applies to all
         startTime: '00:00',
         endTime: '23:59',
         color: color
       };
+
+      // Filter out any existing shifts on the event date
+      const shiftsOnOtherDays = cal.shifts.filter(s => s.date !== eventDate);
       
-      // Add the new shift, replacing any other shifts on that day if needed
-      const otherShifts = cal.shifts.filter(s => s.date !== eventDate);
-      return { ...cal, shifts: [...otherShifts, newShift] };
+      // Add the new event shift
+      return { ...cal, shifts: [...shiftsOnOtherDays, newEventShift] };
     });
 
     setCalendars(newCalendars);
