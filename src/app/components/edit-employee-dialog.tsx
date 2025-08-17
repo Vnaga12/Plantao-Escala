@@ -29,7 +29,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, Save, Hospital, Pencil, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
-import type { Employee, Shift, ShiftColor } from "@/lib/types";
+import type { Employee, Shift, ShiftColor, Role } from "@/lib/types";
 import { useToast } from "@/components/ui/use-toast";
 import { format, addMonths, subMonths, isSameMonth, parseISO, getDate } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -62,7 +62,8 @@ type EditEmployeeDialogProps = {
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
   onAddShift: (newShift: Omit<Shift, 'id' | 'color'>) => void;
-  roles: string[];
+  roles: Role[];
+  allShiftRoles: string[];
   calendarName: string;
   colorMeanings: { color: ShiftColor, meaning: string }[];
 };
@@ -79,6 +80,7 @@ export function EditEmployeeDialog({
     onDeleteShift,
     onAddShift,
     roles,
+    allShiftRoles,
     calendarName,
     colorMeanings
 }: EditEmployeeDialogProps) {
@@ -91,6 +93,7 @@ export function EditEmployeeDialog({
       name: employee.name,
       preferences: employee.preferences,
       availability: employee.availability,
+      roleId: employee.roleId,
     }
   });
 
@@ -105,6 +108,7 @@ export function EditEmployeeDialog({
         name: employee.name,
         preferences: employee.preferences,
         availability: employee.availability,
+        roleId: employee.roleId,
       });
       setViewedMonth(currentDate);
     }
@@ -159,9 +163,31 @@ export function EditEmployeeDialog({
                     <div className="flex-1 min-h-0 overflow-y-auto mt-4 pr-2">
                         <TabsContent value="profile">
                             <div className="space-y-6">
-                                <div>
-                                    <Label htmlFor="name" className="font-semibold">Nome</Label>
-                                    <Input id="name" {...register("name", { required: "O nome é obrigatório" })} className="mt-1" />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="name" className="font-semibold">Nome</Label>
+                                        <Input id="name" {...register("name", { required: "O nome é obrigatório" })} className="mt-1" />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="roleId" className="font-semibold">Função</Label>
+                                        <Controller
+                                            name="roleId"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <Select onValueChange={field.onChange} value={field.value || ""}>
+                                                    <SelectTrigger className="mt-1">
+                                                        <SelectValue placeholder="Selecione uma função" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="null">Nenhuma</SelectItem>
+                                                        {roles.map(role => (
+                                                            <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                        />
+                                    </div>
                                 </div>
                                 <div>
                                     <Label htmlFor="preferences" className="font-semibold">Preferências</Label>
@@ -239,7 +265,7 @@ export function EditEmployeeDialog({
                                     onUpdateShift={onUpdateShift}
                                     onAddShift={onAddShift}
                                     onDeleteShift={onDeleteShift}
-                                    roles={roles}
+                                    roles={allShiftRoles}
                                     currentDate={viewedMonth}
                                     colorMeanings={colorMeanings}
                                 >
@@ -267,7 +293,7 @@ export function EditEmployeeDialog({
                                     </div>
                                 </div>
                                 <div className="flex items-center">
-                                    <EditShiftDialog shift={shift} onUpdateShift={onUpdateShift} roles={roles} colorMeanings={colorMeanings} />
+                                    <EditShiftDialog shift={shift} onUpdateShift={onUpdateShift} roles={allShiftRoles} colorMeanings={colorMeanings} />
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>

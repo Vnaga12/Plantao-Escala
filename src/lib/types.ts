@@ -11,15 +11,30 @@ export type Shift = {
   color: ShiftColor;
 };
 
+export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+
 export type EmployeeAvailability = {
-  day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday' | string;
+  day: DayOfWeek | string;
   startTime: string;
   endTime: string;
 };
 
+export type RoleUnavailability = {
+  day: DayOfWeek | string;
+  startTime: string;
+  endTime: string;
+}
+
+export type Role = {
+    id: string;
+    name: string;
+    unavailabilityRules: RoleUnavailability[];
+}
+
 export type Employee = {
   id: string;
   name: string;
+  roleId: string | null;
   availability: EmployeeAvailability[];
   preferences: string;
 };

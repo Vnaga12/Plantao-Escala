@@ -14,11 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, Trash2, Plus } from "lucide-react";
+import { Settings, Trash2, Plus, Clock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import type { ShiftColor } from "@/lib/types";
+import type { ShiftColor, Role, DayOfWeek } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 const availableColors: { name: ShiftColor, class: string }[] = [
   { name: 'blue', class: 'bg-blue-500' },
@@ -35,9 +37,19 @@ const availableColors: { name: ShiftColor, class: string }[] = [
   { name: 'lime', class: 'bg-lime-500' },
 ];
 
+const weekdays: { value: DayOfWeek; label: string }[] = [
+    { value: "Monday", label: "Segunda-feira" },
+    { value: "Tuesday", label: "Terça-feira" },
+    { value: "Wednesday", label: "Quarta-feira" },
+    { value: "Thursday", label: "Quinta-feira" },
+    { value: "Friday", label: "Sexta-feira" },
+    { value: "Saturday", label: "Sábado" },
+    { value: "Sunday", label: "Domingo" },
+];
+
 type SettingsDialogProps = {
-  roles: string[];
-  onRolesChange: (roles: string[]) => void;
+  roles: Role[];
+  onRolesChange: (roles: Role[]) => void;
   colorMeanings: { color: ShiftColor; meaning: string }[];
   onColorMeaningsChange: (meanings: { color: ShiftColor; meaning: string }[]) => void;
 };
@@ -49,7 +61,7 @@ export function SettingsDialog({
   onColorMeaningsChange
 }: SettingsDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [internalRoles, setInternalRoles] = React.useState(roles);
+  const [internalRoles, setInternalRoles] = React.useState<Role[]>([]);
   const [internalColorMeanings, setInternalColorMeanings] = React.useState(colorMeanings);
   const [newMeaning, setNewMeaning] = React.useState("");
   const [newMeaningColor, setNewMeaningColor] = React.useState<ShiftColor>('blue');
@@ -57,8 +69,8 @@ export function SettingsDialog({
 
   React.useEffect(() => {
     if (isOpen) {
-      setInternalRoles(roles);
-      setInternalColorMeanings(colorMeanings);
+      setInternalRoles(JSON.parse(JSON.stringify(roles)));
+      setInternalColorMeanings(JSON.parse(JSON.stringify(colorMeanings)));
       setNewMeaning("");
       setNewMeaningColor("blue");
     }
@@ -66,18 +78,46 @@ export function SettingsDialog({
 
   const handleRoleChange = (index: number, value: string) => {
     const newRoles = [...internalRoles];
-    newRoles[index] = value;
+    newRoles[index].name = value;
     setInternalRoles(newRoles);
   };
-
+  
   const handleAddRole = () => {
-    setInternalRoles([...internalRoles, `Nova Função ${internalRoles.length + 1}`]);
+    const newRole: Role = {
+        id: `role-${Date.now()}`,
+        name: `Nova Função ${internalRoles.length + 1}`,
+        unavailabilityRules: []
+    }
+    setInternalRoles([...internalRoles, newRole]);
   };
 
   const handleRemoveRole = (index: number) => {
     const newRoles = internalRoles.filter((_, i) => i !== index);
     setInternalRoles(newRoles);
   };
+
+  const handleAddUnavailability = (roleIndex: number) => {
+    const newRoles = [...internalRoles];
+    newRoles[roleIndex].unavailabilityRules.push({
+        day: 'Monday',
+        startTime: '00:00',
+        endTime: '23:59'
+    });
+    setInternalRoles(newRoles);
+  };
+
+  const handleRemoveUnavailability = (roleIndex: number, ruleIndex: number) => {
+    const newRoles = [...internalRoles];
+    newRoles[roleIndex].unavailabilityRules.splice(ruleIndex, 1);
+    setInternalRoles(newRoles);
+  };
+  
+  const handleUnavailabilityChange = (roleIndex: number, ruleIndex: number, field: 'day' | 'startTime' | 'endTime', value: string) => {
+    const newRoles = [...internalRoles];
+    newRoles[roleIndex].unavailabilityRules[ruleIndex][field] = value;
+    setInternalRoles(newRoles);
+  };
+
 
   const handleColorMeaningChange = (index: number, value: string) => {
     const newMeanings = [...internalColorMeanings];
@@ -126,18 +166,50 @@ export function SettingsDialog({
         <div className="py-4 space-y-6">
           <div>
             <Label className="text-base font-semibold">Funções do Grupo</Label>
-            <p className="text-sm text-muted-foreground mb-2">Adicione, edite ou remova as funções disponíveis.</p>
-            <div className="space-y-2">
-              {internalRoles.map((role, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Input
-                    value={role}
-                    onChange={(e) => handleRoleChange(index, e.target.value)}
-                    placeholder="Nome da Função"
-                  />
-                  <Button variant="ghost" size="icon" onClick={() => handleRemoveRole(index)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+            <p className="text-sm text-muted-foreground mb-2">Adicione ou remova funções e defina regras de indisponibilidade.</p>
+            <div className="space-y-4">
+              {internalRoles.map((role, roleIndex) => (
+                <div key={role.id} className="p-4 border rounded-lg space-y-3 bg-gray-50/50">
+                    <div className="flex items-center gap-2">
+                        <Input
+                        value={role.name}
+                        onChange={(e) => handleRoleChange(roleIndex, e.target.value)}
+                        placeholder="Nome da Função"
+                        className="font-semibold"
+                        />
+                        <Button variant="ghost" size="icon" onClick={() => handleRemoveRole(roleIndex)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                    </div>
+                    
+                    <div>
+                        <div className="flex justify-between items-center mb-1">
+                            <Label className="text-xs font-medium">Regras de Indisponibilidade</Label>
+                             <Button size="xs" variant="outline" onClick={() => handleAddUnavailability(roleIndex)}>
+                                <Plus className="mr-1 h-3 w-3" /> Adicionar
+                            </Button>
+                        </div>
+                        <div className="space-y-2">
+                            {role.unavailabilityRules.map((rule, ruleIndex) => (
+                                <div key={ruleIndex} className="grid grid-cols-[1fr,auto,auto,auto] gap-2 items-center">
+                                    <Select value={rule.day} onValueChange={(val) => handleUnavailabilityChange(roleIndex, ruleIndex, 'day', val)}>
+                                        <SelectTrigger><SelectValue/></SelectTrigger>
+                                        <SelectContent>
+                                            {weekdays.map(wd => <SelectItem key={wd.value} value={wd.value}>{wd.label}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                    <Input type="time" value={rule.startTime} onChange={e => handleUnavailabilityChange(roleIndex, ruleIndex, 'startTime', e.target.value)} />
+                                    <Input type="time" value={rule.endTime} onChange={e => handleUnavailabilityChange(roleIndex, ruleIndex, 'endTime', e.target.value)} />
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleRemoveUnavailability(roleIndex, ruleIndex)}>
+                                        <Trash2 className="h-4 w-4 text-destructive"/>
+                                    </Button>
+                                </div>
+                            ))}
+                            {role.unavailabilityRules.length === 0 && (
+                                <p className="text-xs text-muted-foreground italic text-center py-1">Nenhuma regra definida.</p>
+                            )}
+                        </div>
+                    </div>
                 </div>
               ))}
             </div>

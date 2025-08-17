@@ -1,7 +1,8 @@
+
 "use client";
 
 import * as React from "react";
-import type { Employee, Calendar, ShiftColor } from "@/lib/types";
+import type { Employee, Calendar, ShiftColor, Role } from "@/lib/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen, ClipboardList, UserPlus } from "lucide-react";
@@ -21,7 +22,7 @@ type HeaderProps = {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   roles: string[];
-  onRolesChange: (roles: string[]) => void;
+  onRolesChange: (roles: Role[]) => void;
   calendars: Calendar[];
   activeCalendarId: string;
   onCalendarChange: (id: string) => void;
