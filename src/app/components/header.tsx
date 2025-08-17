@@ -5,13 +5,14 @@ import * as React from "react";
 import type { Employee, Calendar, ShiftColor, Role } from "@/lib/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen, ClipboardList, UserPlus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen, ClipboardList, UserPlus, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/app/components/icons/logo";
 import { SettingsDialog } from "./settings-dialog";
 import CalendarSwitcher from "./calendar-switcher";
 import { ReportDialog } from "./report-dialog";
 import { Input } from "@/components/ui/input";
+import { SuggestShiftsDialog } from "./suggest-shifts-dialog";
 
 
 type HeaderProps = {
@@ -32,6 +33,7 @@ type HeaderProps = {
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
   onBulkAddEmployees: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  onApplySuggestions: (suggestions: any[]) => void;
 };
 
 export default function Header({ 
@@ -51,7 +53,8 @@ export default function Header({
   onColorMeaningsChange,
   isSidebarOpen,
   onToggleSidebar,
-  onBulkAddEmployees
+  onBulkAddEmployees,
+  onApplySuggestions
 }: HeaderProps) {
   
   const handlePrint = () => {
@@ -89,23 +92,24 @@ export default function Header({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por funcionário ou função..."
+              placeholder="Buscar por funcionário..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-9 h-10 w-[250px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="pl-9 h-10 w-[200px]"
             />
           </div>
            <div className="relative">
               <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Adicionar funcionários em massa..."
-                className="w-[250px] pl-9"
+                placeholder="Adicionar em massa..."
+                className="w-[200px] pl-9"
                 onKeyDown={onBulkAddEmployees}
                 aria-label="Adicionar funcionários em massa. Digite os nomes separados por vírgula e pressione Enter."
               />
            </div>
         </div>
         <div className="flex items-center gap-2">
+           <SuggestShiftsDialog employees={employees} onApplySuggestions={onApplySuggestions} roles={roles} />
            <SettingsDialog 
               roles={roles} 
               onRolesChange={onRolesChange} 
