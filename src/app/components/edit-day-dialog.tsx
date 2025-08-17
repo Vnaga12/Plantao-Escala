@@ -28,10 +28,12 @@ type EditDayDialogProps = {
 };
 
 const availableColors: { name: ShiftColor; class: string }[] = [
-  { name: 'yellow', class: 'bg-yellow-500' },
-  { name: 'purple', class: 'bg-purple-500' },
-  { name: 'gray', class: 'bg-gray-500' },
-  { name: 'red', class: 'bg-red-500' },
+    { name: 'yellow', class: 'bg-yellow-500' },
+    { name: 'purple', class: 'bg-purple-500' },
+    { name: 'gray', class: 'bg-gray-500' },
+    { name: 'red', class: 'bg-red-500' },
+    { name: 'pink', class: 'bg-pink-500' },
+    { name: 'orange', class: 'bg-orange-500' },
 ];
 
 export function EditDayDialog({ children, onAddDayEvent }: EditDayDialogProps) {

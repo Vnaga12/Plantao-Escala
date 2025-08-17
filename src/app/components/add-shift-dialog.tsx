@@ -28,6 +28,12 @@ const availableColors: { name: ShiftColor, class: string }[] = [
   { name: 'red', class: 'bg-red-500' },
   { name: 'yellow', class: 'bg-yellow-500' },
   { name: 'gray', class: 'bg-gray-500' },
+  { name: 'pink', class: 'bg-pink-500' },
+  { name: 'cyan', class: 'bg-cyan-500' },
+  { name: 'orange', class: 'bg-orange-500' },
+  { name: 'indigo', class: 'bg-indigo-500' },
+  { name: 'teal', class: 'bg-teal-500' },
+  { name: 'lime', class: 'bg-lime-500' },
 ];
 
 type AddShiftFormValues = Omit<Shift, 'id' | 'date' | 'color'>;

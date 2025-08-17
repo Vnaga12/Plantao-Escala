@@ -72,6 +72,12 @@ export const initialColorMeanings: { color: ShiftColor, meaning: string }[] = [
     { color: 'red', meaning: 'Emergência' },
     { color: 'yellow', meaning: 'Aviso' },
     { color: 'gray', meaning: 'Outro' },
+    { color: 'pink', meaning: 'Consulta' },
+    { color: 'cyan', meaning: 'Procedimento' },
+    { color: 'orange', meaning: 'Sobreaviso' },
+    { color: 'indigo', meaning: 'Administrativo' },
+    { color: 'teal', meaning: 'Treinamento' },
+    { color: 'lime', meaning: 'Reunião' },
 ];
 
 const initialRoles = ['Cirurgia Eletiva', 'Plantão', 'Ambulatório', 'Emergência', 'Técnico(a)'];

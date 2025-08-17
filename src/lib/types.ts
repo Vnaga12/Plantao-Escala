@@ -1,5 +1,5 @@
 
-export type ShiftColor = 'blue' | 'green' | 'purple' | 'red' | 'yellow' | 'gray';
+export type ShiftColor = 'blue' | 'green' | 'purple' | 'red' | 'yellow' | 'gray' | 'pink' | 'cyan' | 'orange' | 'indigo' | 'teal' | 'lime';
 
 export type Shift = {
   id: string;

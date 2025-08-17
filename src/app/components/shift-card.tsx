@@ -35,6 +35,12 @@ const roleColorClasses: Record<ShiftColor, string> = {
   red: "bg-red-100 border-red-400 text-red-800 print:bg-red-100 print:border-red-400 print:text-black",
   yellow: "bg-yellow-100 border-yellow-400 text-yellow-800 print:bg-yellow-100 print:border-yellow-400 print:text-black",
   gray: "bg-gray-100 border-gray-400 text-gray-800 print:bg-gray-100 print:border-gray-400 print:text-black",
+  pink: "bg-pink-100 border-pink-400 text-pink-800 print:bg-pink-100 print:border-pink-400 print:text-black",
+  cyan: "bg-cyan-100 border-cyan-400 text-cyan-800 print:bg-cyan-100 print:border-cyan-400 print:text-black",
+  orange: "bg-orange-100 border-orange-400 text-orange-800 print:bg-orange-100 print:border-orange-400 print:text-black",
+  indigo: "bg-indigo-100 border-indigo-400 text-indigo-800 print:bg-indigo-100 print:border-indigo-400 print:text-black",
+  teal: "bg-teal-100 border-teal-400 text-teal-800 print:bg-teal-100 print:border-teal-400 print:text-black",
+  lime: "bg-lime-100 border-lime-400 text-lime-800 print:bg-lime-100 print:border-lime-400 print:text-black",
 };
 
 export default function ShiftCard({ shift, employees, onUpdateShift, onDeleteShift, roles, colorMeanings }: ShiftCardProps) {

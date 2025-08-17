@@ -51,6 +51,12 @@ const roleColorMap: Record<ShiftColor, string> = {
   red: "FFEF4444", // bg-red-500
   yellow: "FFEAB308", // bg-yellow-500
   gray: "FF6B7280", // bg-gray-500
+  pink: "FFEC4899", // bg-pink-500
+  cyan: "FF06B6D4", // bg-cyan-500
+  orange: "FFF97316", // bg-orange-500
+  indigo: "FF6366F1", // bg-indigo-500
+  teal: "FF14B8A6", // bg-teal-500
+  lime: "FF84CC16", // bg-lime-500
 };
 
 
