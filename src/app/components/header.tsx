@@ -5,14 +5,13 @@ import * as React from "react";
 import type { Employee, Calendar, ShiftColor, Role } from "@/lib/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen, ClipboardList, UserPlus, Wand2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/app/components/icons/logo";
 import { SettingsDialog } from "./settings-dialog";
 import CalendarSwitcher from "./calendar-switcher";
 import { ReportDialog } from "./report-dialog";
 import { Input } from "@/components/ui/input";
-import { SuggestShiftsDialog } from "./suggest-shifts-dialog";
 
 
 type HeaderProps = {
@@ -32,7 +31,6 @@ type HeaderProps = {
   onColorMeaningsChange: (meanings: { color: ShiftColor, meaning: string }[]) => void;
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
-  onBulkAddEmployees: (event: React.KeyboardEvent<HTMLInputElement>) => void;
 };
 
 export default function Header({ 
@@ -52,7 +50,6 @@ export default function Header({
   onColorMeaningsChange,
   isSidebarOpen,
   onToggleSidebar,
-  onBulkAddEmployees,
 }: HeaderProps) {
   
   const handlePrint = () => {
@@ -96,15 +93,6 @@ export default function Header({
               className="pl-9 h-10 w-[200px]"
             />
           </div>
-           <div className="relative">
-              <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Adicionar em massa..."
-                className="w-[200px] pl-9"
-                onKeyDown={onBulkAddEmployees}
-                aria-label="Adicionar funcionários em massa. Digite os nomes separados por vírgula e pressione Enter."
-              />
-           </div>
         </div>
         <div className="flex items-center gap-2">
            <SettingsDialog 

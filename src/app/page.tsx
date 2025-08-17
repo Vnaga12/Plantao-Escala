@@ -10,7 +10,6 @@ import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
-import { SuggestShiftsDialog } from "./components/suggest-shifts-dialog";
 
 const initialCalendars: Calendar[] = [
   {
@@ -302,29 +301,6 @@ export default function Home() {
     }
   };
 
-  const handleApplySuggestions = (suggestions: Shift[]) => {
-    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday
-    const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
-    
-    const dayNameToDateMap: Record<string, Date> = {};
-    eachDayOfInterval({ start: weekStart, end: weekEnd }).forEach(day => {
-        const dayName = format(day, 'EEEE'); // Full day name in English e.g., "Monday"
-        dayNameToDateMap[dayName] = day;
-    });
-
-    const newShifts = suggestions.map(suggestion => {
-        const date = dayNameToDateMap[suggestion.date];
-        if (!date) return null; // Should not happen if AI returns correct day names
-        
-        return {
-            ...suggestion,
-            date: format(date, 'yyyy-MM-dd')
-        }
-    }).filter((s): s is Shift => s !== null);
-
-    updateActiveCalendarShifts([...shifts, ...newShifts]);
-  };
-
 
   if (!isClient || !activeCalendar) {
     return null;
@@ -352,7 +328,6 @@ export default function Home() {
         onColorMeaningsChange={setColorMeanings}
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        onBulkAddEmployees={handleBulkAddEmployees}
       />
        <div className="hidden print:block p-4 text-center print:p-0 mb-4">
             <h1 className="text-2xl font-bold capitalize">{format(currentDate, "MMMM yyyy", { locale: ptBR })}</h1>
@@ -401,5 +376,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
