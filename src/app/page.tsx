@@ -121,7 +121,7 @@ export default function Home() {
         if (storedDate) setCurrentDate(new Date(storedDate));
         const loadedCalendars = storedCalendars ? JSON.parse(storedCalendars) : initialCalendars;
         
-        const migratedCalendars = loadedCalendars.map(cal => ({
+        const migratedCalendars = loadedCalendars.map((cal: Calendar) => ({
             ...cal,
             shifts: cal.shifts.map(shift => {
                 if (typeof (shift as any).day === 'number') {
@@ -281,7 +281,7 @@ export default function Home() {
 
       const names = namesString.split(',').map(name => name.trim()).filter(Boolean);
       
-      const newEmployees = names.map(name => {
+      const newEmployees: Employee[] = names.map(name => {
          const formattedName = name
             .split(' ')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -309,8 +309,9 @@ export default function Home() {
   if (!isClient || !activeCalendar) {
     return null;
   }
+  
+  const allShiftRoles = [...new Set(calendars.flatMap(c => c.shifts).map(s => s.role))];
 
-  const allShiftRoles = [...new Set(calendars.flatMap(c => c.shifts.map(s => s.role)))];
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground print:bg-transparent print:h-auto">
@@ -322,7 +323,7 @@ export default function Home() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         roles={allShiftRoles}
-        onRolesChange={() => {}} // This is now managed by settings
+        onRolesChange={setRoles}
         calendars={calendars}
         activeCalendarId={activeCalendarId}
         onCalendarChange={setActiveCalendarId}

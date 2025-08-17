@@ -112,7 +112,7 @@ export default function EmployeeSidebar({
                                             roles={roles}
                                             calendarName={calendarName}
                                             colorMeanings={colorMeanings}
-                                            allShiftRoles={[...new Set(shifts.map(s => s.role))]}
+                                            allShiftRoles={[...new Set(calendars.flatMap(c => c.shifts).map(s => s.role))]}
                                         >
                                             <Button variant="ghost" size="icon" className="h-7 w-7"><User className="h-4 w-4" /></Button>
                                         </EditEmployeeDialog>
@@ -146,7 +146,7 @@ export default function EmployeeSidebar({
                                             roles={roles}
                                             calendarName={calendarName}
                                             colorMeanings={colorMeanings}
-                                            allShiftRoles={[...new Set(shifts.map(s => s.role))]}
+                                            allShiftRoles={[...new Set(calendars.flatMap(c => c.shifts).map(s => s.role))]}
                                         >
                                             <Button variant="ghost" size="icon" className="h-7 w-7"><User className="h-4 w-4" /></Button>
                                         </EditEmployeeDialog>
