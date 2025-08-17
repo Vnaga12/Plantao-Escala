@@ -45,12 +45,16 @@ export function SettingsDialog({
   const [isOpen, setIsOpen] = React.useState(false);
   const [internalRoles, setInternalRoles] = React.useState(roles);
   const [internalColorMeanings, setInternalColorMeanings] = React.useState(colorMeanings);
+  const [newMeaning, setNewMeaning] = React.useState("");
+  const [newMeaningColor, setNewMeaningColor] = React.useState<ShiftColor>('blue');
   const { toast } = useToast();
 
   React.useEffect(() => {
     if (isOpen) {
       setInternalRoles(roles);
       setInternalColorMeanings(colorMeanings);
+      setNewMeaning("");
+      setNewMeaningColor("blue");
     }
   }, [roles, colorMeanings, isOpen]);
 
@@ -69,11 +73,27 @@ export function SettingsDialog({
     setInternalRoles(newRoles);
   };
 
-  const handleColorMeaningChange = (colorName: ShiftColor, meaning: string) => {
-    const newMeanings = internalColorMeanings.map(m => 
-      m.color === colorName ? { ...m, meaning } : m
-    );
+  const handleColorMeaningChange = (index: number, value: string) => {
+    const newMeanings = [...internalColorMeanings];
+    newMeanings[index].meaning = value;
     setInternalColorMeanings(newMeanings);
+  };
+
+  const handleRemoveColorMeaning = (index: number) => {
+    const newMeanings = internalColorMeanings.filter((_, i) => i !== index);
+    setInternalColorMeanings(newMeanings);
+  };
+
+  const handleAddColorMeaning = () => {
+    if (newMeaning.trim() === "") {
+        toast({variant: "destructive", title: "Erro", description: "O significado não pode estar vazio."})
+        return;
+    }
+    setInternalColorMeanings([
+        ...internalColorMeanings,
+        { color: newMeaningColor, meaning: newMeaning }
+    ]);
+    setNewMeaning("");
   };
 
   const handleSaveChanges = () => {
@@ -124,21 +144,56 @@ export function SettingsDialog({
           
           <div>
             <Label className="text-base font-semibold">Legendas de Cores</Label>
-            <p className="text-sm text-muted-foreground mb-2">Edite o significado de cada cor de plantão.</p>
-            <div className="space-y-3">
-              {internalColorMeanings.map(({ color, meaning }) => {
+            <p className="text-sm text-muted-foreground mb-2">Adicione, edite ou remova os significados das cores de plantão.</p>
+            <div className="space-y-2">
+              {internalColorMeanings.map(({ color, meaning }, index) => {
                 const colorInfo = availableColors.find(c => c.name === color);
                 return (
-                  <div key={color} className="flex items-center gap-3">
+                  <div key={index} className="flex items-center gap-2">
                     <div className={cn("h-6 w-6 rounded-full flex-shrink-0", colorInfo?.class)} />
                     <Input
                       value={meaning}
-                      onChange={(e) => handleColorMeaningChange(color, e.target.value)}
+                      onChange={(e) => handleColorMeaningChange(index, e.target.value)}
                       placeholder="Significado da cor"
                     />
+                    <Button variant="ghost" size="icon" onClick={() => handleRemoveColorMeaning(index)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
                   </div>
                 );
               })}
+            </div>
+            
+            <Separator className="my-4"/>
+
+            <div className="p-4 border-dashed border-2 rounded-lg space-y-3">
+                <h4 className="text-sm font-semibold">Nova Legenda</h4>
+                 <div className="flex items-center gap-2">
+                    <Input
+                      value={newMeaning}
+                      onChange={(e) => setNewMeaning(e.target.value)}
+                      placeholder="Significado (ex: Feriado)"
+                    />
+                    <Button onClick={handleAddColorMeaning}>Adicionar Legenda</Button>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Label className="text-xs">Cor:</Label>
+                    <div className="flex gap-2">
+                        {availableColors.map(c => (
+                            <button
+                            key={c.name}
+                            type="button"
+                            onClick={() => setNewMeaningColor(c.name)}
+                            className={cn(
+                                "h-6 w-6 rounded-full border-2",
+                                c.class,
+                                newMeaningColor === c.name ? 'border-primary ring-2 ring-primary ring-offset-2' : 'border-transparent'
+                            )}
+                            aria-label={`Select ${c.name} color`}
+                            />
+                        ))}
+                    </div>
+                </div>
             </div>
           </div>
         </div>
