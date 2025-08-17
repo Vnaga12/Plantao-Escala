@@ -1,288 +1,62 @@
-
-"use client";
-
-import * as React from "react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
-import type { Employee } from "@/lib/types";
-import { getShiftSuggestions } from "@/lib/actions";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, Trash2, Plus, Loader2, User } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import type { SuggestShiftAssignmentsInput, SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
-import { ScrollArea } from "@/components/ui/scroll-area";
-
-
-type SuggestShiftsDialogProps = {
-  employees: Employee[];
-  onApplySuggestions?: (suggestions: SuggestShiftAssignmentsOutput['assignments']) => void;
-  roles: string[];
-};
-
-type FormValues = SuggestShiftAssignmentsInput;
-
-const weekdays = [
-    { value: "Monday", label: "Segunda-feira" },
-    { value: "Tuesday", label: "Terça-feira" },
-    { value: "Wednesday", label: "Quarta-feira" },
-    { value: "Thursday", label: "Quinta-feira" },
-    { value: "Friday", label: "Sexta-feira" },
-    { value: "Saturday", label: "Sábado" },
-    { value: "Sunday", label: "Domingo" },
-];
-
-export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, roles }: SuggestShiftsDialogProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [isPending, setIsPending] = React.useState(false);
-  const [suggestions, setSuggestions] = React.useState<SuggestShiftAssignmentsOutput | null>(null);
-  const { toast } = useToast();
-
-  const { register, control, handleSubmit, reset, watch } = useForm<FormValues>({
-    defaultValues: {
-      employees: employees,
-      shifts: [],
-      scheduleConstraints: "",
-    },
-  });
-  
-  React.useEffect(() => {
-    if (isOpen) {
-        reset({
-            employees: employees,
-            shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: roles[0] || "" }],
-            scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
-        });
-        setSuggestions(null);
-    }
-  }, [isOpen, reset, employees, roles]);
-
-
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
-  };
-
-  const {
-    fields: employeeFields,
-  } = useFieldArray({ control, name: "employees" });
-  
-  const {
-    fields: shiftFields,
-    append: appendShift,
-    remove: removeShift,
-  } = useFieldArray({ control, name: "shifts" });
-
-  const currentEmployees = watch("employees");
-
-
-  const handleFormSubmit = async (data: FormValues) => {
-    setIsPending(true);
-    setSuggestions(null);
-    
-    // Ensure all employees have IDs for the AI flow
-    const processedData = {
-        ...data,
-        employees: data.employees.map(emp => ({...emp, id: emp.id || `temp-${Math.random()}`}))
-    }
-
-    const result = await getShiftSuggestions(processedData);
-    setIsPending(false);
-
-    if (result.success && result.data) {
-      setSuggestions(result.data);
-      toast({
-        title: "Sugestões Prontas",
-        description: "A IA gerou sugestões de turnos.",
-      });
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: result.error,
-      });
-    }
-  };
-  
-  const handleApply = () => {
-    if (suggestions) {
-      onApplySuggestions(suggestions.assignments);
-      handleOpenChange(false);
-    }
-  };
-
-  const EmployeeFormFields = ({ index, control, register }: { index: number; control: any; register: any }) => {
-    const { fields, append, remove } = useFieldArray({
-      control,
-      name: `employees.${index}.availability`,
-    });
-  
-    return (
-      <div className="mt-4 space-y-2">
-        <div className="flex justify-between items-center">
-          <Label className="text-sm font-medium">Disponibilidade</Label>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => append({ day: 'Monday', startTime: '09:00', endTime: '17:00' })}
-          >
-            <Plus className="mr-2 h-3 w-3" /> Adicionar
-          </Button>
-        </div>
-        <div className="space-y-2 pl-2">
-          {fields.map((item, k) => (
-            <div key={item.id} className="grid grid-cols-[1fr,1fr,auto] items-center gap-2">
-                <Controller
-                  control={control}
-                  name={`employees.${index}.availability.${k}.day`}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {weekdays.map(day => <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              <Input type="time" {...register(`employees.${index}.availability.${k}.startTime`)} />
-              <div className="flex items-center gap-1">
-                <Input type="time" {...register(`employees.${index}.availability.${k}.endTime`)} />
-                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => remove(k)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            </div>
-          ))}
-          {fields.length === 0 && <p className="text-xs text-muted-foreground pt-2">Nenhuma disponibilidade especificada.</p>}
-        </div>
-      </div>
-    );
-  };
-
-  const getDayLabel = (dayValue: string) => {
-    return weekdays.find(d => d.value === dayValue)?.label || dayValue;
+{
+  "name": "nextn",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack -p 9002",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^4.1.3",
+    "@radix-ui/react-accordion": "^1.2.3",
+    "@radix-ui/react-alert-dialog": "^1.1.6",
+    "@radix-ui/react-avatar": "^1.1.3",
+    "@radix-ui/react-checkbox": "^1.1.4",
+    "@radix-ui/react-collapsible": "^1.1.11",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-menubar": "^1.1.6",
+    "@radix-ui/react-popover": "^1.1.6",
+    "@radix-ui/react-progress": "^1.1.2",
+    "@radix-ui/react-radio-group": "^1.2.3",
+    "@radix-ui/react-scroll-area": "^1.2.3",
+    "@radix-ui/react-select": "^2.1.6",
+    "@radix-ui/react-separator": "^1.1.2",
+    "@radix-ui/react-slider": "^1.2.3",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.1.3",
+    "@radix-ui/react-tabs": "^1.1.3",
+    "@radix-ui/react-toast": "^1.2.6",
+    "@radix-ui/react-tooltip": "^1.1.8",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.5.0",
+    "embla-carousel-react": "^8.6.0",
+    "firebase": "^11.9.1",
+    "lucide-react": "^0.475.0",
+    "next": "15.3.3",
+    "patch-package": "^8.0.0",
+    "react": "^18.3.1",
+    "react-day-picker": "^8.10.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.2",
+    "recharts": "^2.15.1",
+    "tailwind-merge": "^3.0.1",
+    "tailwindcss-animate": "^1.0.7",
+    "xlsx": "^0.18.5",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
-
-  return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button>
-          <Sparkles />
-          Sugerir Turnos
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Sugestões de Turnos com IA</DialogTitle>
-          <DialogDescription>
-            Defina seu grupo e os turnos necessários, e deixe a IA construir o cronograma ideal.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="flex-1 overflow-y-auto">
-          <Tabs defaultValue="employees" className="h-full flex flex-col">
-            <TabsList className="flex-shrink-0">
-              <TabsTrigger value="employees">Grupo ({currentEmployees.length})</TabsTrigger>
-              <TabsTrigger value="shifts">Turnos a Preencher</TabsTrigger>
-              <TabsTrigger value="constraints">Restrições</TabsTrigger>
-              {suggestions && <TabsTrigger value="suggestions">Sugestões</TabsTrigger>}
-            </TabsList>
-            <ScrollArea className="flex-1 p-1">
-              <TabsContent value="employees" className="mt-2">
-                  <p className="text-sm text-muted-foreground mb-4">Ajuste as preferências e disponibilidade do grupo para esta sugestão específica.</p>
-                  {employeeFields.map((field, index) => (
-                      <div key={field.id} className="p-4 border rounded-lg mb-4 bg-background">
-                          <div className="flex justify-between items-center mb-2">
-                             <Label className="font-semibold">{currentEmployees[index]?.name || `Funcionário #${index + 1}`}</Label>
-                             <div className="flex items-center gap-2">
-                               {/* EditEmployeeDialog expects a lot of props that we don't have here. 
-                                   A simpler approach is to edit the details inline for now.
-                                */}
-                             </div>
-                          </div>
-                          <Input {...register(`employees.${index}.name`)} placeholder="Nome" className="mb-2" />
-                          <Textarea {...register(`employees.${index}.preferences`)} placeholder="Preferências (ex: prefere turnos da manhã)" />
-                          <EmployeeFormFields index={index} control={control} register={register} />
-                      </div>
-                  ))}
-                   {employeeFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum funcionário neste grupo. Adicione funcionários na barra lateral.</p>}
-              </TabsContent>
-              <TabsContent value="shifts" className="mt-2">
-                  {shiftFields.map((field, index) => (
-                      <div key={field.id} className="p-4 border rounded-lg mb-4 grid grid-cols-1 md:grid-cols-4 gap-2 bg-background">
-                           <Controller
-                              control={control}
-                              name={`shifts.${index}.day`}
-                              render={({ field }) => (
-                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                  <SelectTrigger><SelectValue placeholder="Selecione o dia" /></SelectTrigger>
-                                  <SelectContent>
-                                    {weekdays.map(day => <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>)}
-                                  </SelectContent>
-                                  </Select>
-                              )}
-                          />
-                          <Input {...register(`shifts.${index}.startTime`)} type="time" />
-                          <Input {...register(`shifts.${index}.endTime`)} type="time" />
-                          <div className="flex items-center gap-2">
-                            <Controller
-                                control={control}
-                                name={`shifts.${index}.role`}
-                                render={({ field }) => (
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                      {roles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
-                                    </SelectContent>
-                                    </Select>
-                                )}
-                            />
-                            <Button type="button" variant="ghost" size="icon" onClick={() => removeShift(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                          </div>
-                      </div>
-                  ))}
-                  <Button type="button" variant="outline" onClick={() => appendShift({ day: 'Tuesday', startTime: '09:00', endTime: '17:00', role: roles[0] || '' })}>
-                      <Plus className="mr-2 h-4 w-4" /> Adicionar Turno
-                  </Button>
-              </TabsContent>
-              <TabsContent value="constraints" className="mt-2">
-                 <Textarea {...register('scheduleConstraints')} rows={10} placeholder="ex: Garantir justiça nos turnos de fim de semana." />
-              </TabsContent>
-              <TabsContent value="suggestions" className="mt-2">
-                  {isPending && <div className="flex items-center justify-center p-8"><Loader2 className="animate-spin mr-2"/> Gerando...</div>}
-                  {suggestions && (
-                      <div className="bg-background rounded-lg p-4">
-                          <h3 className="font-bold mb-2 text-lg">Resumo e Justificativa da IA</h3>
-                          <p className="text-sm bg-muted p-3 rounded-md mb-4">{suggestions.summary}</p>
-                          <h3 className="font-bold mb-2 text-lg">Atribuições Sugeridas</h3>
-                          <div className="space-y-2">
-                          {suggestions.assignments.map((a, i) => (
-                              <div key={i} className="text-sm p-3 border rounded-lg grid grid-cols-1 sm:grid-cols-3 gap-2 bg-white">
-                                  <span className="font-semibold">{currentEmployees.find(e => e.id === a.employeeId)?.name}</span>
-                                  <span>{a.role} na {getDayLabel(a.shiftDay)}</span>
-                                  <span className="font-mono">{a.shiftStartTime} - {a.shiftEndTime}</span>
-                              </div>
-                          ))}
-                          </div>
-                      </div>
-                  )}
-              </TabsContent>
-            </ScrollArea>
-            <div className="mt-auto pt-4 border-t flex justify-end gap-2 flex-shrink-0">
-              {suggestions ? (
-                 <Button type="button" onClick={handleApply}>Aplicar ao Calendário</Button>
-              ) : (
-                <Button type="submit" disabled={isPending || currentEmployees.length === 0}>
-                  {isPending ? <><Loader2 className="animate-spin mr-2"/> Pensando...</> : "Gerar Sugestões"}
-                </Button>
-              )}
-            </div>
-          </Tabs>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
 }
