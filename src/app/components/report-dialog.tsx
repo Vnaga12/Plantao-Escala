@@ -92,7 +92,7 @@ export function ReportDialog({ employees, calendars, currentDate, roles }: Repor
         const shiftsByDay: { [key: string]: Shift[] } = {};
         shifts.forEach(shift => {
             const shiftDate = parseISO(shift.date);
-            if (employee.name === employee.name && format(shiftDate, 'yyyy-MM') === format(viewedMonth, 'yyyy-MM')) {
+            if (shift.employeeName === employee.name && format(shiftDate, 'yyyy-MM') === format(viewedMonth, 'yyyy-MM')) {
                 const dateKey = format(shiftDate, 'yyyy-MM-dd');
                 if (!shiftsByDay[dateKey]) {
                     shiftsByDay[dateKey] = [];
