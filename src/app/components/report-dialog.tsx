@@ -91,13 +91,15 @@ export function ReportDialog({ employees, calendars, currentDate, roles }: Repor
     const reportData = employees.map(employee => {
         const shiftsByDay: { [key: string]: Shift[] } = {};
         shifts.forEach(shift => {
-            const shiftDate = parseISO(shift.date);
-            if (shift.employeeName === employee.name && format(shiftDate, 'yyyy-MM') === format(viewedMonth, 'yyyy-MM')) {
-                const dateKey = format(shiftDate, 'yyyy-MM-dd');
-                if (!shiftsByDay[dateKey]) {
-                    shiftsByDay[dateKey] = [];
+            if (shift.employeeName === employee.name) {
+                const shiftDate = parseISO(shift.date);
+                if (format(shiftDate, 'yyyy-MM') === format(viewedMonth, 'yyyy-MM')) {
+                    const dateKey = format(shiftDate, 'yyyy-MM-dd');
+                    if (!shiftsByDay[dateKey]) {
+                        shiftsByDay[dateKey] = [];
+                    }
+                    shiftsByDay[dateKey].push(shift);
                 }
-                shiftsByDay[dateKey].push(shift);
             }
         });
         return {
@@ -247,7 +249,7 @@ export function ReportDialog({ employees, calendars, currentDate, roles }: Repor
                           <TableCell
                             key={index}
                             className={cn(
-                                "text-center p-1 text-xs border-r h-16",
+                                "text-center p-1 text-xs border-l h-16",
                                 cellColor && `bg-${cellColor}-100`
                             )}
                           >
