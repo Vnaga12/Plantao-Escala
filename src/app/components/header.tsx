@@ -33,7 +33,6 @@ type HeaderProps = {
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
   onBulkAddEmployees: (event: React.KeyboardEvent<HTMLInputElement>) => void;
-  onApplySuggestions: (suggestions: any[]) => void;
 };
 
 export default function Header({ 
@@ -54,7 +53,6 @@ export default function Header({
   isSidebarOpen,
   onToggleSidebar,
   onBulkAddEmployees,
-  onApplySuggestions
 }: HeaderProps) {
   
   const handlePrint = () => {
@@ -109,7 +107,6 @@ export default function Header({
            </div>
         </div>
         <div className="flex items-center gap-2">
-           <SuggestShiftsDialog employees={employees} onApplySuggestions={onApplySuggestions} roles={roles} />
            <SettingsDialog 
               roles={roles} 
               onRolesChange={onRolesChange} 

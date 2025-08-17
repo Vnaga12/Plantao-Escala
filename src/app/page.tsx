@@ -376,7 +376,6 @@ export default function Home() {
         <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
           <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none flex-1 flex flex-col print:block">
             <div className="flex justify-end p-2 print:hidden">
-               <SuggestShiftsDialog employees={employees} onApplySuggestions={handleApplySuggestions} roles={allShiftRoles} />
             </div>
             <CalendarView 
               currentDate={currentDate} 
