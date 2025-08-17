@@ -10,6 +10,7 @@ import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
+import { SuggestShiftsDialog } from "./components/suggest-shifts-dialog";
 
 const initialCalendars: Calendar[] = [
   {
@@ -305,6 +306,29 @@ export default function Home() {
     }
   };
 
+  const handleApplySuggestions = (suggestions: Shift[]) => {
+    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday
+    const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
+    
+    const dayNameToDateMap: Record<string, Date> = {};
+    eachDayOfInterval({ start: weekStart, end: weekEnd }).forEach(day => {
+        const dayName = format(day, 'EEEE'); // Full day name in English e.g., "Monday"
+        dayNameToDateMap[dayName] = day;
+    });
+
+    const newShifts = suggestions.map(suggestion => {
+        const date = dayNameToDateMap[suggestion.date];
+        if (!date) return null; // Should not happen if AI returns correct day names
+        
+        return {
+            ...suggestion,
+            date: format(date, 'yyyy-MM-dd')
+        }
+    }).filter((s): s is Shift => s !== null);
+
+    updateActiveCalendarShifts([...shifts, ...newShifts]);
+  };
+
 
   if (!isClient || !activeCalendar) {
     return null;
@@ -356,6 +380,9 @@ export default function Home() {
             />}
         <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
           <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none flex-1 flex flex-col print:block">
+            <div className="flex justify-end p-2 print:hidden">
+               <SuggestShiftsDialog employees={employees} onApplySuggestions={handleApplySuggestions} roles={allShiftRoles} />
+            </div>
             <CalendarView 
               currentDate={currentDate} 
               shifts={filteredShifts}
