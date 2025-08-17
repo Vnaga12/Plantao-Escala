@@ -33,7 +33,7 @@ import type { Employee, Role, Shift, ShiftColor } from "@/lib/types";
 import { suggestShiftAssignments } from "@/ai/flows/suggest-shifts";
 import type { SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
 import { useToast } from "@/components/ui/use-toast";
-import { ScrollArea } from "../ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { EditShiftDialog } from "./edit-shift-dialog";
 
 type SuggestShiftsDialogProps = {

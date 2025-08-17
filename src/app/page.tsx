@@ -4,7 +4,7 @@
 import * as React from "react";
 import { addMonths, subMonths, getDaysInMonth, getDay, format, parse, isSameMonth, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, getDayOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { Shift, Employee, Calendar, ShiftColor, Role } from "@/lib/types";
+import type { Shift, Employee, Calendar, ShiftColor } from "@/lib/types";
 import Header from "@/app/components/header";
 import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
@@ -36,35 +36,35 @@ const initialEmployees: Employee[] = [
     {
         id: '1',
         name: 'Dra. Alice',
-        roleId: 'doc',
+        role: 'Médica',
         availability: [{ day: 'Monday', startTime: '08:00', endTime: '17:00' }],
         preferences: 'Prefere turnos da manhã.'
     },
     {
         id: '2',
         name: 'Beto',
-        roleId: 'nurse',
+        role: 'Enfermeiro',
         availability: [{ day: 'Tuesday', startTime: '12:00', endTime: '20:00' }],
         preferences: 'Não pode trabalhar nos fins de semana.'
     },
     {
         id: '3',
         name: 'Carlos',
-        roleId: 'doc',
+        role: 'Médico',
         availability: [],
         preferences: 'Disponível para cobrir turnos.'
     },
     {
         id: '4',
         name: 'Dr. David',
-        roleId: 'doc',
+        role: 'Médico',
         availability: [],
         preferences: 'Prefere turnos da noite.'
     },
      {
         id: '5',
         name: 'Dra. Elisa',
-        roleId: null,
+        role: 'Técnica',
         availability: [],
         preferences: ''
     }
@@ -86,11 +86,7 @@ export const initialColorMeanings: { color: ShiftColor, meaning: string }[] = [
     { color: 'lime', meaning: 'Reunião' },
 ];
 
-const initialRoles: Role[] = [
-    { id: 'doc', name: 'Médico(a)', unavailabilityRules: [] },
-    { id: 'nurse', name: 'Enfermeiro(a)', unavailabilityRules: [] },
-    { id: 'tech', name: 'Técnico(a)', unavailabilityRules: [] }
-];
+const initialRoles: string[] = ['Médico(a)', 'Enfermeiro(a)', 'Técnico(a)'];
 
 
 export default function Home() {
@@ -101,7 +97,7 @@ export default function Home() {
   const [calendars, setCalendars] = React.useState<Calendar[]>([]);
   const [activeCalendarId, setActiveCalendarId] = React.useState<string>('');
   const [employees, setEmployees] = React.useState<Employee[]>([]);
-  const [roles, setRoles] = React.useState<Role[]>([]);
+  const [roles, setRoles] = React.useState<string[]>([]);
   const [colorMeanings, setColorMeanings] = React.useState<{ color: ShiftColor, meaning: string }[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   
@@ -291,7 +287,7 @@ export default function Home() {
         return {
           id: `emp-${Date.now()}-${Math.random()}`,
           name: formattedName,
-          roleId: null,
+          role: "Nova Função",
           availability: [],
           preferences: "",
         };
@@ -346,7 +342,7 @@ export default function Home() {
         employees={employees}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        roles={allShiftRoles}
+        roles={roles}
         onRolesChange={setRoles}
         calendars={calendars}
         activeCalendarId={activeCalendarId}
@@ -372,8 +368,7 @@ export default function Home() {
             onUpdateShift={handleUpdateShift}
             onDeleteShift={handleDeleteShift}
             onAddShift={handleAddShift}
-            roles={roles}
-            onRolesChange={setRoles}
+            roles={allShiftRoles}
             calendarName={activeCalendar.name}
             onAddDayEvent={handleAddDayEvent}
             colorMeanings={colorMeanings}
@@ -407,3 +402,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

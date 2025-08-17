@@ -14,27 +14,17 @@ export type Shift = {
 export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 
 export type EmployeeAvailability = {
-  day: DayOfWeek | string;
+  day: DayOfWeek;
   startTime: string;
   endTime: string;
 };
 
-export type RoleUnavailability = {
-  day: DayOfWeek | string;
-  startTime: string;
-  endTime: string;
-}
-
-export type Role = {
-    id: string;
-    name: string;
-    unavailabilityRules: RoleUnavailability[];
-}
+export type Role = string;
 
 export type Employee = {
   id: string;
   name: string;
-  roleId: string | null;
+  role: string;
   availability: EmployeeAvailability[];
   preferences: string;
 };
@@ -44,3 +34,5 @@ export type Calendar = {
   name: string;
   shifts: Shift[];
 };
+
+    

@@ -49,7 +49,7 @@ const weekdays = [
     { value: "Sunday", label: "Domingo" },
 ];
 
-type FormValues = Omit<Employee, 'id'>;
+type FormValues = Employee;
 
 type EditEmployeeDialogProps = {
   employee: Employee;
@@ -62,8 +62,7 @@ type EditEmployeeDialogProps = {
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
   onAddShift: (newShift: Omit<Shift, 'id' | 'color'>) => void;
-  roles: Role[];
-  allShiftRoles: string[];
+  roles: string[];
   calendarName: string;
   colorMeanings: { color: ShiftColor, meaning: string }[];
 };
@@ -80,7 +79,6 @@ export function EditEmployeeDialog({
     onDeleteShift,
     onAddShift,
     roles,
-    allShiftRoles,
     calendarName,
     colorMeanings
 }: EditEmployeeDialogProps) {
@@ -90,10 +88,7 @@ export function EditEmployeeDialog({
 
   const { register, control, handleSubmit, reset } = useForm<FormValues>({
     defaultValues: {
-      name: employee.name,
-      preferences: employee.preferences,
-      availability: employee.availability,
-      roleId: employee.roleId,
+      ...employee
     }
   });
 
@@ -104,19 +99,14 @@ export function EditEmployeeDialog({
 
   React.useEffect(() => {
     if (isOpen) {
-      reset({
-        name: employee.name,
-        preferences: employee.preferences,
-        availability: employee.availability,
-        roleId: employee.roleId,
-      });
+      reset(employee);
       setViewedMonth(currentDate);
     }
   }, [isOpen, employee, reset, currentDate]);
 
 
   const onSubmit: SubmitHandler<FormValues> = (data) => {
-    onUpdateEmployee({ ...data, id: employee.id });
+    onUpdateEmployee(data);
     toast({
       title: "Perfil Atualizado",
       description: "As informações do funcionário foram salvas com sucesso.",
@@ -169,24 +159,8 @@ export function EditEmployeeDialog({
                                         <Input id="name" {...register("name", { required: "O nome é obrigatório" })} className="mt-1" />
                                     </div>
                                     <div>
-                                        <Label htmlFor="roleId" className="font-semibold">Função</Label>
-                                        <Controller
-                                            name="roleId"
-                                            control={control}
-                                            render={({ field }) => (
-                                                <Select onValueChange={field.onChange} value={field.value || ""}>
-                                                    <SelectTrigger className="mt-1">
-                                                        <SelectValue placeholder="Selecione uma função" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="null">Nenhuma</SelectItem>
-                                                        {roles.map(role => (
-                                                            <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            )}
-                                        />
+                                        <Label htmlFor="role" className="font-semibold">Função</Label>
+                                        <Input id="role" {...register("role")} className="mt-1" placeholder="Ex: Médico, Enfermeira"/>
                                     </div>
                                 </div>
                                 <div>
@@ -265,7 +239,7 @@ export function EditEmployeeDialog({
                                     onUpdateShift={onUpdateShift}
                                     onAddShift={onAddShift}
                                     onDeleteShift={onDeleteShift}
-                                    roles={allShiftRoles}
+                                    roles={roles}
                                     currentDate={viewedMonth}
                                     colorMeanings={colorMeanings}
                                 >
@@ -293,7 +267,7 @@ export function EditEmployeeDialog({
                                     </div>
                                 </div>
                                 <div className="flex items-center">
-                                    <EditShiftDialog shift={shift} onUpdateShift={onUpdateShift} roles={allShiftRoles} colorMeanings={colorMeanings} />
+                                    <EditShiftDialog shift={shift} onUpdateShift={onUpdateShift} roles={roles} colorMeanings={colorMeanings} />
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
@@ -351,3 +325,5 @@ export function EditEmployeeDialog({
     </Dialog>
   );
 }
+
+    
