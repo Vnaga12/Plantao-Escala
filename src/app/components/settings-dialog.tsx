@@ -114,6 +114,9 @@ export function SettingsDialog({
 
   const handleAddRule = (roleIndex: number) => {
     const newRoles = [...internalRoles];
+    if (!newRoles[roleIndex].unavailabilityRules) {
+        newRoles[roleIndex].unavailabilityRules = [];
+    }
     newRoles[roleIndex].unavailabilityRules.push({ day: 'Monday', startTime: '00:00', endTime: '23:59' });
     setInternalRoles(newRoles);
   };
@@ -190,7 +193,7 @@ export function SettingsDialog({
                   
                   <div className="space-y-2">
                       <Label className="text-sm font-medium">Regras de Indisponibilidade</Label>
-                      {role.unavailabilityRules.map((rule, ruleIndex) => (
+                      {role.unavailabilityRules?.map((rule, ruleIndex) => (
                           <div key={ruleIndex} className="grid grid-cols-[1fr,1fr,1fr,auto] gap-2 items-end">
                               <div className="space-y-1">
                                   <Label className="text-xs">Dia</Label>
@@ -299,3 +302,5 @@ export function SettingsDialog({
     </Dialog>
   );
 }
+
+    
