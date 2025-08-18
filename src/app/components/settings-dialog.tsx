@@ -121,14 +121,14 @@ export function SettingsDialog({
           <Settings />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent>
+        <DialogHeader>
           <DialogTitle>Configurações</DialogTitle>
           <DialogDescription>
             Gerencie as configurações da sua aplicação aqui.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-1 -mr-6 pr-6">
+        <ScrollArea className="max-h-[60vh] pr-6 -mr-6">
             <div className="space-y-6">
             <div>
                 <Label className="text-base font-semibold">Funções do Grupo</Label>
@@ -216,7 +216,7 @@ export function SettingsDialog({
             </div>
             </div>
         </ScrollArea>
-        <DialogFooter className="flex-shrink-0 pt-6">
+        <DialogFooter className="pt-6">
           <Button variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
           <Button onClick={handleSaveChanges}>Salvar Alterações</Button>
         </DialogFooter>
