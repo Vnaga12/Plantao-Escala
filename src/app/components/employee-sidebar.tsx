@@ -93,7 +93,7 @@ export default function EmployeeSidebar({
               const role = roles.find(r => r.id === roleId);
               if (!role || employeesByRole.grouped[roleId].length === 0) return null;
               return (
-                <div key={role.id}>
+                <React.Fragment key={role.id}>
                     <h3 className="text-sm font-semibold text-gray-500 px-2 mb-2 uppercase tracking-wider">{role.name}</h3>
                     <div className="space-y-1">
                         {employeesByRole.grouped[roleId].map(employee => (
@@ -123,7 +123,7 @@ export default function EmployeeSidebar({
                            </div>
                         ))}
                     </div>
-                </div>
+                </React.Fragment>
               )
             })}
           </div>
