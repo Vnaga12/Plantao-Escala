@@ -10,6 +10,7 @@ import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
+import { SuggestShiftsDialog } from "@/app/components/suggest-shifts-dialog";
 
 const initialCalendars: Calendar[] = [
   {
@@ -371,5 +372,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
