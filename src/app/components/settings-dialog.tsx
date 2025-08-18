@@ -19,6 +19,7 @@ import { useToast } from "@/components/ui/use-toast";
 import type { ShiftColor } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const availableColors: { name: ShiftColor, class: string }[] = [
   { name: 'blue', class: 'bg-blue-500' },
@@ -120,100 +121,102 @@ export function SettingsDialog({
           <Settings />
         </Button>
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Configurações</DialogTitle>
           <DialogDescription>
             Gerencie as configurações da sua aplicação aqui.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-6">
-          <div>
-            <Label className="text-base font-semibold">Funções do Grupo</Label>
-            <p className="text-sm text-muted-foreground mb-2">Adicione ou remova as funções que seus funcionários podem ter.</p>
-            <div className="space-y-2">
-              {internalRoles.map((role, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Input
-                    value={role}
-                    onChange={(e) => handleRoleChange(index, e.target.value)}
-                  />
-                  <Button variant="ghost" size="icon" onClick={() => handleRemoveRole(index)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center gap-2 mt-4">
-              <Input
-                value={newRoleName}
-                onChange={(e) => setNewRoleName(e.target.value)}
-                placeholder="Nova Função"
-              />
-              <Button onClick={handleAddRole}>
-                <Plus className="mr-2 h-4 w-4" /> Adicionar
-              </Button>
-            </div>
-          </div>
-
-          <Separator />
-          
-          <div>
-            <Label className="text-base font-semibold">Legendas de Cores</Label>
-            <p className="text-sm text-muted-foreground mb-2">Adicione, edite ou remova os significados das cores de plantão.</p>
-            <div className="space-y-2">
-              {internalColorMeanings.map(({ color, meaning }, index) => {
-                const colorInfo = availableColors.find(c => c.name === color);
-                return (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className={cn("h-6 w-6 rounded-full flex-shrink-0", colorInfo?.class)} />
+        <ScrollArea className="flex-1 -mr-6 pr-6">
+            <div className="space-y-6">
+            <div>
+                <Label className="text-base font-semibold">Funções do Grupo</Label>
+                <p className="text-sm text-muted-foreground mb-2">Adicione ou remova as funções que seus funcionários podem ter.</p>
+                <div className="space-y-2">
+                {internalRoles.map((role, index) => (
+                    <div key={index} className="flex items-center gap-2">
                     <Input
-                      value={meaning}
-                      onChange={(e) => handleColorMeaningChange(index, e.target.value)}
-                      placeholder="Significado da cor"
+                        value={role}
+                        onChange={(e) => handleRoleChange(index, e.target.value)}
                     />
-                    <Button variant="ghost" size="icon" onClick={() => handleRemoveColorMeaning(index)}>
+                    <Button variant="ghost" size="icon" onClick={() => handleRemoveRole(index)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
-                  </div>
-                );
-              })}
-            </div>
-            
-            <Separator className="my-4"/>
-
-            <div className="p-4 border-dashed border-2 rounded-lg space-y-3">
-                <h4 className="text-sm font-semibold">Nova Legenda</h4>
-                 <div className="flex items-center gap-2">
-                    <Input
-                      value={newMeaning}
-                      onChange={(e) => setNewMeaning(e.target.value)}
-                      placeholder="Significado (ex: Feriado)"
-                    />
-                    <Button onClick={handleAddColorMeaning}>Adicionar Legenda</Button>
+                    </div>
+                ))}
                 </div>
-                <div className="flex items-center gap-2">
-                    <Label className="text-xs">Cor:</Label>
-                    <div className="flex flex-wrap gap-2">
-                        {availableColors.map(c => (
-                            <button
-                            key={c.name}
-                            type="button"
-                            onClick={() => setNewMeaningColor(c.name)}
-                            className={cn(
-                                "h-6 w-6 rounded-full border-2",
-                                c.class,
-                                newMeaningColor === c.name ? 'border-primary ring-2 ring-primary ring-offset-2' : 'border-transparent'
-                            )}
-                            aria-label={`Select ${c.name} color`}
-                            />
-                        ))}
+                <div className="flex items-center gap-2 mt-4">
+                <Input
+                    value={newRoleName}
+                    onChange={(e) => setNewRoleName(e.target.value)}
+                    placeholder="Nova Função"
+                />
+                <Button onClick={handleAddRole}>
+                    <Plus className="mr-2 h-4 w-4" /> Adicionar
+                </Button>
+                </div>
+            </div>
+
+            <Separator />
+            
+            <div>
+                <Label className="text-base font-semibold">Legendas de Cores</Label>
+                <p className="text-sm text-muted-foreground mb-2">Adicione, edite ou remova os significados das cores de plantão.</p>
+                <div className="space-y-2">
+                {internalColorMeanings.map(({ color, meaning }, index) => {
+                    const colorInfo = availableColors.find(c => c.name === color);
+                    return (
+                    <div key={index} className="flex items-center gap-2">
+                        <div className={cn("h-6 w-6 rounded-full flex-shrink-0", colorInfo?.class)} />
+                        <Input
+                        value={meaning}
+                        onChange={(e) => handleColorMeaningChange(index, e.target.value)}
+                        placeholder="Significado da cor"
+                        />
+                        <Button variant="ghost" size="icon" onClick={() => handleRemoveColorMeaning(index)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                    </div>
+                    );
+                })}
+                </div>
+                
+                <Separator className="my-4"/>
+
+                <div className="p-4 border-dashed border-2 rounded-lg space-y-3">
+                    <h4 className="text-sm font-semibold">Nova Legenda</h4>
+                    <div className="flex items-center gap-2">
+                        <Input
+                        value={newMeaning}
+                        onChange={(e) => setNewMeaning(e.target.value)}
+                        placeholder="Significado (ex: Feriado)"
+                        />
+                        <Button onClick={handleAddColorMeaning}>Adicionar Legenda</Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Label className="text-xs">Cor:</Label>
+                        <div className="flex flex-wrap gap-2">
+                            {availableColors.map(c => (
+                                <button
+                                key={c.name}
+                                type="button"
+                                onClick={() => setNewMeaningColor(c.name)}
+                                className={cn(
+                                    "h-6 w-6 rounded-full border-2",
+                                    c.class,
+                                    newMeaningColor === c.name ? 'border-primary ring-2 ring-primary ring-offset-2' : 'border-transparent'
+                                )}
+                                aria-label={`Select ${c.name} color`}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
-          </div>
-        </div>
-        <DialogFooter>
+            </div>
+        </ScrollArea>
+        <DialogFooter className="flex-shrink-0 pt-6">
           <Button variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
           <Button onClick={handleSaveChanges}>Salvar Alterações</Button>
         </DialogFooter>
