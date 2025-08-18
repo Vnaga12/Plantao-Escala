@@ -21,7 +21,7 @@ type HeaderProps = {
   employees: Employee[];
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  roles: string[];
+  roles: Role[];
   onRolesChange: (roles: Role[]) => void;
   calendars: Calendar[];
   activeCalendarId: string;
@@ -105,7 +105,7 @@ export default function Header({
               employees={employees}
               calendars={calendars}
               currentDate={currentDate}
-              roles={roles}
+              roles={roles.map(r => r.name)}
             />
             <Button variant="outline" onClick={handlePrint}>
               <Download className="mr-2 h-4 w-4" />

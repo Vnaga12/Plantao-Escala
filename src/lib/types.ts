@@ -1,4 +1,5 @@
 
+
 export type ShiftColor = 'blue' | 'green' | 'purple' | 'red' | 'yellow' | 'gray' | 'pink' | 'cyan' | 'orange' | 'indigo' | 'teal' | 'lime';
 
 export type Shift = {
@@ -19,12 +20,17 @@ export type EmployeeAvailability = {
   endTime: string;
 };
 
-export type Role = string;
+export type Role = {
+  id: string;
+  name: string;
+  unavailabilityRules: EmployeeAvailability[];
+};
+
 
 export type Employee = {
   id: string;
   name: string;
-  role: string;
+  roleId: string;
   availability: EmployeeAvailability[];
   preferences: string;
 };

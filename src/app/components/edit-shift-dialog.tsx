@@ -108,14 +108,14 @@ export function EditShiftDialog({ onUpdateShift, shift, roles, colorMeanings }: 
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="role" className="text-right">Função</Label>
+              <Label htmlFor="role" className="text-right">Tipo</Label>
               <Controller
                   name="role"
                   control={control}
                   render={({ field }) => (
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Selecione uma função" />
+                        <SelectValue placeholder="Selecione um tipo" />
                         </SelectTrigger>
                         <SelectContent>
                         {roles.map(role => (

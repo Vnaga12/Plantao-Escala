@@ -4,7 +4,7 @@
 import * as React from "react";
 import { addMonths, subMonths, getDaysInMonth, getDay, format, parse, isSameMonth, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, getDayOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { Shift, Employee, Calendar, ShiftColor } from "@/lib/types";
+import type { Shift, Employee, Calendar, ShiftColor, Role } from "@/lib/types";
 import Header from "@/app/components/header";
 import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
@@ -31,39 +31,46 @@ const initialCalendars: Calendar[] = [
   }
 ];
 
+const initialRoles: Role[] = [
+    { id: 'role-1', name: 'Médico(a)', unavailabilityRules: [] },
+    { id: 'role-2', name: 'Enfermeiro(a)', unavailabilityRules: [] },
+    { id: 'role-3', name: 'Técnico(a)', unavailabilityRules: [] },
+    { id: 'role-unassigned', name: 'Sem Função', unavailabilityRules: [] }
+];
+
 const initialEmployees: Employee[] = [
     {
         id: '1',
         name: 'Dra. Alice',
-        role: 'Médica',
+        roleId: 'role-1',
         availability: [{ day: 'Monday', startTime: '08:00', endTime: '17:00' }],
         preferences: 'Prefere turnos da manhã.'
     },
     {
         id: '2',
         name: 'Beto',
-        role: 'Enfermeiro',
+        roleId: 'role-2',
         availability: [{ day: 'Tuesday', startTime: '12:00', endTime: '20:00' }],
         preferences: 'Não pode trabalhar nos fins de semana.'
     },
     {
         id: '3',
         name: 'Carlos',
-        role: 'Médico',
+        roleId: 'role-1',
         availability: [],
         preferences: 'Disponível para cobrir turnos.'
     },
     {
         id: '4',
         name: 'Dr. David',
-        role: 'Médico',
+        roleId: 'role-1',
         availability: [],
         preferences: 'Prefere turnos da noite.'
     },
      {
         id: '5',
         name: 'Dra. Elisa',
-        role: 'Técnica',
+        roleId: 'role-unassigned',
         availability: [],
         preferences: ''
     }
@@ -85,9 +92,6 @@ export const initialColorMeanings: { color: ShiftColor, meaning: string }[] = [
     { color: 'lime', meaning: 'Reunião' },
 ];
 
-const initialRoles: string[] = ['Médico(a)', 'Enfermeiro(a)', 'Técnico(a)'];
-
-
 export default function Home() {
   const { toast } = useToast();
   
@@ -96,7 +100,7 @@ export default function Home() {
   const [calendars, setCalendars] = React.useState<Calendar[]>([]);
   const [activeCalendarId, setActiveCalendarId] = React.useState<string>('');
   const [employees, setEmployees] = React.useState<Employee[]>([]);
-  const [roles, setRoles] = React.useState<string[]>([]);
+  const [roles, setRoles] = React.useState<Role[]>([]);
   const [colorMeanings, setColorMeanings] = React.useState<{ color: ShiftColor, meaning: string }[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   
@@ -132,11 +136,30 @@ export default function Home() {
                 return shift;
             })
         }));
+        
+        const loadedRoles = storedRoles ? JSON.parse(storedRoles) : initialRoles;
+        const loadedEmployees = storedEmployees ? JSON.parse(storedEmployees) : initialEmployees;
+
+        // Migration for employees from old role string to new roleId
+        const migratedEmployees = loadedEmployees.map((emp: any) => {
+            if (typeof emp.role === 'string') {
+                let role = loadedRoles.find((r: Role) => r.name === emp.role);
+                if (!role) {
+                    role = loadedRoles.find((r: Role) => r.id === 'role-unassigned');
+                }
+                return { ...emp, role: undefined, roleId: role.id };
+            }
+            if (!emp.roleId) {
+                return { ...emp, roleId: 'role-unassigned' };
+            }
+            return emp;
+        });
+
 
         setCalendars(migratedCalendars);
         setActiveCalendarId(storedActiveId || migratedCalendars[0]?.id || '');
-        setEmployees(storedEmployees ? JSON.parse(storedEmployees) : initialEmployees);
-        setRoles(storedRoles ? JSON.parse(storedRoles) : initialRoles);
+        setEmployees(migratedEmployees);
+        setRoles(loadedRoles);
         setColorMeanings(storedColorMeanings ? JSON.parse(storedColorMeanings) : initialColorMeanings);
         setIsSidebarOpen(storedSidebarState ? JSON.parse(storedSidebarState) : true);
 
@@ -236,27 +259,28 @@ export default function Home() {
     const eventDate = format(date, 'yyyy-MM-dd');
 
     const newCalendars = calendars.map(cal => {
-      const shiftsOnOtherDays = cal.shifts.filter(s => s.date !== eventDate);
-      
-      const newEventShift: Shift = {
-        id: `event-${date.getTime()}-${cal.id}`,
-        date: eventDate,
-        role: name,
-        employeeName: '', 
-        startTime: '00:00',
-        endTime: '23:59',
-        color: color
-      };
-      
-      return { ...cal, shifts: [...shiftsOnOtherDays, newEventShift] };
+        const shiftsOnOtherDays = cal.shifts.filter(s => s.date !== eventDate);
+
+        const newEventShift: Shift = {
+            id: `event-${date.getTime()}-${cal.id}`,
+            date: eventDate,
+            role: name,
+            employeeName: '',
+            startTime: '00:00',
+            endTime: '23:59',
+            color: color
+        };
+
+        return { ...cal, shifts: [...shiftsOnOtherDays, newEventShift] };
     });
 
     setCalendars(newCalendars);
     toast({
-      title: "Evento de Dia Inteiro Adicionado",
-      description: `${name} foi adicionado a ${format(date, 'dd/MM/yyyy')} em todos os calendários.`,
+        title: "Evento de Dia Inteiro Adicionado",
+        description: `${name} foi adicionado a ${format(date, 'dd/MM/yyyy')} em todos os calendários.`,
     });
-  };
+};
+
 
   const filteredShifts = shifts.filter(shift => {
     const query = searchQuery.toLowerCase();
@@ -269,46 +293,13 @@ export default function Home() {
     );
   });
   
-  const handleBulkAddEmployees = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      const input = event.currentTarget;
-      const namesString = input.value.trim();
-      if (namesString === "") return;
-
-      const names = namesString.split(',').map(name => name.trim()).filter(Boolean);
-      
-      const newEmployees: Employee[] = names.map(name => {
-         const formattedName = name
-            .split(' ')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-            .join(' ');
-        
-        return {
-          id: `emp-${Date.now()}-${Math.random()}`,
-          name: formattedName,
-          role: "Nova Função",
-          availability: [],
-          preferences: "",
-        };
-      });
-
-      setEmployees(prev => [...prev, ...newEmployees]);
-      input.value = ""; // Clear the input
-      toast({
-        title: "Funcionários Adicionados",
-        description: `${newEmployees.length} novos funcionários foram adicionados ao grupo.`,
-      });
-    }
-  };
+  const allShiftRoles = [...new Set(calendars.flatMap(c => c.shifts).map(s => s.role))];
 
 
   if (!isClient || !activeCalendar) {
     return null;
   }
   
-  const allShiftRoles = [...new Set(calendars.flatMap(c => c.shifts).map(s => s.role))];
-
-
   return (
     <div className="flex flex-col h-screen bg-background text-foreground print:bg-transparent print:h-auto">
       <Header
@@ -343,7 +334,7 @@ export default function Home() {
             onUpdateShift={handleUpdateShift}
             onDeleteShift={handleDeleteShift}
             onAddShift={handleAddShift}
-            roles={allShiftRoles}
+            roles={roles}
             calendarName={activeCalendar.name}
             onAddDayEvent={handleAddDayEvent}
             colorMeanings={colorMeanings}
@@ -376,3 +367,4 @@ export default function Home() {
     </div>
   );
 }
+

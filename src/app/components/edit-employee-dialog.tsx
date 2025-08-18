@@ -49,7 +49,7 @@ const weekdays = [
     { value: "Sunday", label: "Domingo" },
 ];
 
-type FormValues = Employee;
+type FormValues = Omit<Employee, 'role'>;
 
 type EditEmployeeDialogProps = {
   employee: Employee;
@@ -62,7 +62,8 @@ type EditEmployeeDialogProps = {
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
   onAddShift: (newShift: Omit<Shift, 'id' | 'color'>) => void;
-  roles: string[];
+  roles: Role[];
+  allShiftRoles: string[];
   calendarName: string;
   colorMeanings: { color: ShiftColor, meaning: string }[];
 };
@@ -79,6 +80,7 @@ export function EditEmployeeDialog({
     onDeleteShift,
     onAddShift,
     roles,
+    allShiftRoles,
     calendarName,
     colorMeanings
 }: EditEmployeeDialogProps) {
@@ -159,8 +161,23 @@ export function EditEmployeeDialog({
                                         <Input id="name" {...register("name", { required: "O nome é obrigatório" })} className="mt-1" />
                                     </div>
                                     <div>
-                                        <Label htmlFor="role" className="font-semibold">Função</Label>
-                                        <Input id="role" {...register("role")} className="mt-1" placeholder="Ex: Médico, Enfermeira"/>
+                                        <Label htmlFor="roleId" className="font-semibold">Função</Label>
+                                        <Controller
+                                            name="roleId"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <SelectTrigger className="mt-1">
+                                                        <SelectValue placeholder="Selecione uma função" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {roles.map(role => (
+                                                            <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                        />
                                     </div>
                                 </div>
                                 <div>
@@ -177,11 +194,12 @@ export function EditEmployeeDialog({
 
                                 <div>
                                     <div className="flex justify-between items-center mb-4">
-                                        <h3 className="font-semibold text-lg text-gray-700">Disponibilidade Padrão</h3>
+                                        <h3 className="font-semibold text-lg text-gray-700">Disponibilidade Pessoal</h3>
                                         <Button type="button" size="sm" variant="outline" onClick={() => append({ day: 'Monday', startTime: '09:00', endTime: '17:00' })}>
                                             <Plus className="mr-2 h-4 w-4" /> Adicionar
                                         </Button>
                                     </div>
+                                     <p className="text-sm text-muted-foreground mb-4 -mt-2">Indisponibilidades específicas para este funcionário, além das regras da sua função.</p>
                                     <div className="space-y-3">
                                     {fields.map((item, index) => (
                                         <div key={item.id} className="grid grid-cols-[1fr,1fr,1fr,auto] items-center gap-2 p-2 border rounded-md bg-gray-50/50">
@@ -214,7 +232,7 @@ export function EditEmployeeDialog({
                                         </div>
                                     ))}
                                     {fields.length === 0 && (
-                                            <p className="text-sm text-muted-foreground text-center py-4">Nenhuma disponibilidade padrão definida.</p>
+                                            <p className="text-sm text-muted-foreground text-center py-4">Nenhuma disponibilidade pessoal definida.</p>
                                     )}
                                     </div>
                                 </div>
@@ -239,7 +257,7 @@ export function EditEmployeeDialog({
                                     onUpdateShift={onUpdateShift}
                                     onAddShift={onAddShift}
                                     onDeleteShift={onDeleteShift}
-                                    roles={roles}
+                                    roles={allShiftRoles}
                                     currentDate={viewedMonth}
                                     colorMeanings={colorMeanings}
                                 >
@@ -267,7 +285,7 @@ export function EditEmployeeDialog({
                                     </div>
                                 </div>
                                 <div className="flex items-center">
-                                    <EditShiftDialog shift={shift} onUpdateShift={onUpdateShift} roles={roles} colorMeanings={colorMeanings} />
+                                    <EditShiftDialog shift={shift} onUpdateShift={onUpdateShift} roles={allShiftRoles} colorMeanings={colorMeanings} />
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
@@ -325,5 +343,3 @@ export function EditEmployeeDialog({
     </Dialog>
   );
 }
-
-    
