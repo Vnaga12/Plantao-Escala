@@ -9,11 +9,13 @@ import type { Employee, Shift, ShiftColor } from "@/lib/types";
 import { EditEmployeeDialog } from "./edit-employee-dialog";
 import { EditDayDialog } from "./edit-day-dialog";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 
 type EmployeeSidebarProps = {
   employees: Employee[];
-  setEmployees: (employees: Employee[]) => void;
+  onAddEmployee: (name: string) => void;
   onUpdateEmployee: (employee: Employee) => void;
+  onDeleteEmployee: (employeeId: string) => void;
   shifts: Shift[];
   currentDate: Date;
   onUpdateShift: (updatedShift: Shift) => void;
@@ -27,8 +29,9 @@ type EmployeeSidebarProps = {
 
 export default function EmployeeSidebar({
   employees,
-  setEmployees,
+  onAddEmployee,
   onUpdateEmployee,
+  onDeleteEmployee,
   shifts,
   currentDate,
   onUpdateShift,
@@ -39,30 +42,30 @@ export default function EmployeeSidebar({
   onAddDayEvent,
   colorMeanings
 }: EmployeeSidebarProps) {
-  const handleAddEmployee = () => {
-    const newEmployee: Employee = {
-      id: `emp-${Date.now()}`,
-      name: `Novo Funcionário ${employees.length + 1}`,
-      role: "Sem Função",
-      availability: [],
-      preferences: "",
-    };
-    setEmployees([...employees, newEmployee]);
-  };
+  const [newEmployeeName, setNewEmployeeName] = React.useState("");
 
-  const handleDeleteEmployee = (employeeId: string) => {
-    const newEmployees = employees.filter(emp => emp.id !== employeeId);
-    setEmployees(newEmployees);
-  }
+  const handleAddClick = () => {
+    if (newEmployeeName.trim() === "") return;
+    onAddEmployee(newEmployeeName.trim());
+    setNewEmployeeName("");
+  };
 
   const allShiftRoles = [...new Set(shifts.map(s => s.role))];
 
   return (
     <aside className="w-72 flex-shrink-0 border-r bg-gray-50 p-4 flex flex-col print:hidden">
       <div className="flex-1 flex flex-col min-h-0">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-2">
           <h2 className="text-lg font-semibold flex items-center gap-2"><Users className="h-5 w-5" /> Grupo</h2>
-          <Button size="sm" variant="outline" onClick={handleAddEmployee}>
+        </div>
+        <div className="flex items-center gap-2 mb-4">
+          <Input 
+            placeholder="Nome do funcionário"
+            value={newEmployeeName}
+            onChange={(e) => setNewEmployeeName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddClick()}
+          />
+          <Button size="sm" onClick={handleAddClick}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Adicionar
           </Button>
@@ -79,7 +82,7 @@ export default function EmployeeSidebar({
                     <EditEmployeeDialog 
                         employee={employee}
                         onUpdateEmployee={onUpdateEmployee}
-                        onDeleteEmployee={handleDeleteEmployee}
+                        onDeleteEmployee={onDeleteEmployee}
                         shifts={shifts}
                         currentDate={currentDate}
                         onUpdateShift={onUpdateShift}
@@ -112,5 +115,3 @@ export default function EmployeeSidebar({
     </aside>
   );
 }
-
-    

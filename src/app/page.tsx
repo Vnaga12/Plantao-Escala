@@ -10,6 +10,7 @@ import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
+import { SuggestShiftsDialog } from "./components/suggest-shifts-dialog";
 
 const initialCalendars: Calendar[] = [
   {
@@ -203,6 +204,28 @@ export default function Home() {
     toast({ title: "Turno Atualizado", description: "O turno foi atualizado com sucesso." });
   };
 
+  const handleAddEmployee = (name: string) => {
+    const formattedName = name
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+
+    const newEmployee: Employee = {
+      id: `emp-${Date.now()}`,
+      name: formattedName,
+      role: "Sem Função",
+      availability: [],
+      preferences: "",
+    };
+    setEmployees([...employees, newEmployee]);
+  };
+  
+  const handleDeleteEmployee = (employeeId: string) => {
+    const newEmployees = employees.filter(emp => emp.id !== employeeId);
+    setEmployees(newEmployees);
+  }
+
   const handleUpdateEmployee = (updatedEmployee: Employee) => {
     const oldEmployee = employees.find(emp => emp.id === updatedEmployee.id);
     if (!oldEmployee) return;
@@ -274,6 +297,46 @@ export default function Home() {
   
   const allShiftRoles = [...new Set(calendars.flatMap(c => c.shifts).map(s => s.role))];
 
+  const handleApplySuggestions = (suggestions: Omit<Shift, 'id' | 'color'>[]) => {
+    const monthStart = startOfWeek(startOfMonth(currentDate));
+    const monthEnd = endOfWeek(endOfMonth(currentDate));
+    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+    const dayNameToDateMap = new Map<string, Date>();
+    days.forEach(day => {
+        const dayName = format(day, 'EEEE', { locale: ptBR });
+        // Estandarizar para o formato em inglês usado na sugestão
+        const englishDayName = format(day, 'EEEE'); 
+        if (!dayNameToDateMap.has(englishDayName)) {
+            dayNameToDateMap.set(englishDayName, day);
+        }
+    });
+
+    const newShifts: Shift[] = suggestions.map((suggestion, index) => {
+        const date = dayNameToDateMap.get(suggestion.date); // suggestion.date is "Monday", "Tuesday", etc.
+        if (!date || !isSameMonth(date, currentDate)) {
+            // Find the first occurrence in the current month if not found in the displayed calendar range
+            for(let i = 1; i <= getDaysInMonth(currentDate); i++) {
+                const dayInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), i);
+                if(format(dayInMonth, 'EEEE') === suggestion.date) {
+                    suggestion.date = format(dayInMonth, 'yyyy-MM-dd');
+                    break;
+                }
+            }
+        } else {
+             suggestion.date = format(date, 'yyyy-MM-dd');
+        }
+
+        return {
+            ...suggestion,
+            id: `suggested-${Date.now()}-${index}`,
+            color: roleToColorMap.get(suggestion.role) || 'yellow',
+        };
+    }).filter(s => s.date.startsWith(format(currentDate, 'yyyy-MM'))); // Ensure shifts are for the current month
+
+    updateActiveCalendarShifts([...shifts, ...newShifts]);
+  };
+
 
   if (!isClient || !activeCalendar) {
     return null;
@@ -306,8 +369,9 @@ export default function Home() {
       <div className="flex flex-1 overflow-hidden print:block print:overflow-visible">
         {isSidebarOpen && <EmployeeSidebar 
             employees={employees} 
-            setEmployees={setEmployees} 
+            onAddEmployee={handleAddEmployee}
             onUpdateEmployee={handleUpdateEmployee}
+            onDeleteEmployee={handleDeleteEmployee}
             shifts={shifts}
             currentDate={currentDate}
             onUpdateShift={handleUpdateShift}
@@ -320,6 +384,9 @@ export default function Home() {
             />}
         <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
           <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none flex-1 flex flex-col print:block">
+            <div className="flex justify-end p-2 print:hidden">
+              <SuggestShiftsDialog employees={employees} roles={roles} onApplySuggestions={handleApplySuggestions} />
+            </div>
             <CalendarView 
               currentDate={currentDate} 
               shifts={filteredShifts}
@@ -344,3 +411,4 @@ export default function Home() {
     </div>
   );
 }
+
