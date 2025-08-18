@@ -5,13 +5,14 @@ import * as React from "react";
 import type { Employee, Calendar, ShiftColor, Role } from "@/lib/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen, ClipboardList } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen, ClipboardList, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/app/components/icons/logo";
 import { SettingsDialog } from "./settings-dialog";
 import CalendarSwitcher from "./calendar-switcher";
 import { ReportDialog } from "./report-dialog";
 import { Input } from "@/components/ui/input";
+import { SuggestShiftsDialog } from "./suggest-shifts-dialog";
 
 
 type HeaderProps = {
@@ -55,6 +56,11 @@ export default function Header({
   const handlePrint = () => {
     window.print();
   };
+  
+  const activeCalendar = calendars.find(c => c.id === activeCalendarId);
+  const shifts = activeCalendar?.shifts || [];
+  const allShiftRoles = [...new Set(shifts.map(s => s.role))];
+
 
   return (
     <header className="flex-shrink-0 border-b print:hidden">
@@ -116,3 +122,5 @@ export default function Header({
     </header>
   );
 }
+
+    
