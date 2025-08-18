@@ -114,10 +114,14 @@ export function SettingsDialog({
 
   const handleAddRule = (roleIndex: number) => {
     const newRoles = [...internalRoles];
-    if (!newRoles[roleIndex].unavailabilityRules) {
-        newRoles[roleIndex].unavailabilityRules = [];
+    const roleToUpdate = { ...newRoles[roleIndex] }; // Clone the role object
+    
+    if (!roleToUpdate.unavailabilityRules) {
+        roleToUpdate.unavailabilityRules = [];
     }
-    newRoles[roleIndex].unavailabilityRules.push({ day: 'Monday', startTime: '00:00', endTime: '23:59' });
+    
+    roleToUpdate.unavailabilityRules.push({ day: 'Monday', startTime: '00:00', endTime: '23:59' });
+    newRoles[roleIndex] = roleToUpdate;
     setInternalRoles(newRoles);
   };
 
@@ -192,7 +196,12 @@ export function SettingsDialog({
                   </div>
                   
                   <div className="space-y-2">
-                      <Label className="text-sm font-medium">Regras de Indisponibilidade</Label>
+                      <div className="flex justify-between items-center">
+                        <Label className="text-sm font-medium">Regras de Indisponibilidade</Label>
+                        <Button variant="outline" size="sm" onClick={() => handleAddRule(roleIndex)}>
+                            <Plus className="mr-2 h-4 w-4" /> Adicionar Regra
+                        </Button>
+                      </div>
                       {role.unavailabilityRules?.map((rule, ruleIndex) => (
                           <div key={ruleIndex} className="grid grid-cols-[1fr,1fr,1fr,auto] gap-2 items-end">
                               <div className="space-y-1">
@@ -217,9 +226,6 @@ export function SettingsDialog({
                               </Button>
                           </div>
                       ))}
-                      <Button variant="outline" size="sm" onClick={() => handleAddRule(roleIndex)}>
-                          <Plus className="mr-2 h-4 w-4" /> Adicionar Regra
-                      </Button>
                   </div>
                 </div>
               ))}
@@ -302,5 +308,3 @@ export function SettingsDialog({
     </Dialog>
   );
 }
-
-    
