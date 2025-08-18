@@ -29,7 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Wand2, Loader2, Check, X, Pencil, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import type { Employee, Role, Shift, ShiftColor } from "@/lib/types";
+import type { Employee, Shift, ShiftColor } from "@/lib/types";
 import { suggestShiftAssignments } from "@/ai/flows/suggest-shifts";
 import type { SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
 import { useToast } from "@/components/ui/use-toast";

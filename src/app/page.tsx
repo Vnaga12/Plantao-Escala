@@ -4,13 +4,12 @@
 import * as React from "react";
 import { addMonths, subMonths, getDaysInMonth, getDay, format, parse, isSameMonth, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, getDayOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { Shift, Employee, Calendar, ShiftColor, Role } from "@/lib/types";
+import type { Shift, Employee, Calendar, ShiftColor } from "@/lib/types";
 import Header from "@/app/components/header";
 import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
-import { SuggestShiftsDialog } from "@/app/components/suggest-shifts-dialog";
 
 const initialCalendars: Calendar[] = [
   {
@@ -32,46 +31,41 @@ const initialCalendars: Calendar[] = [
   }
 ];
 
-const initialRoles: Role[] = [
-    { id: 'role-1', name: 'Médico(a)', unavailabilityRules: [] },
-    { id: 'role-2', name: 'Enfermeiro(a)', unavailabilityRules: [] },
-    { id: 'role-3', name: 'Técnico(a)', unavailabilityRules: [] },
-    { id: 'role-unassigned', name: 'Sem Função', unavailabilityRules: [] }
-];
+const initialRoles: string[] = ['Médico(a)', 'Enfermeiro(a)', 'Técnico(a)'];
 
 const initialEmployees: Employee[] = [
     {
         id: '1',
         name: 'Dra. Alice',
-        roleId: 'role-1',
+        role: 'Médico(a)',
         availability: [{ day: 'Monday', startTime: '08:00', endTime: '17:00' }],
         preferences: 'Prefere turnos da manhã.'
     },
     {
         id: '2',
         name: 'Beto',
-        roleId: 'role-2',
+        role: 'Enfermeiro(a)',
         availability: [{ day: 'Tuesday', startTime: '12:00', endTime: '20:00' }],
         preferences: 'Não pode trabalhar nos fins de semana.'
     },
     {
         id: '3',
         name: 'Carlos',
-        roleId: 'role-1',
+        role: 'Médico(a)',
         availability: [],
         preferences: 'Disponível para cobrir turnos.'
     },
     {
         id: '4',
         name: 'Dr. David',
-        roleId: 'role-1',
+        role: 'Médico(a)',
         availability: [],
         preferences: 'Prefere turnos da noite.'
     },
-     {
+    {
         id: '5',
         name: 'Dra. Elisa',
-        roleId: 'role-unassigned',
+        role: 'Sem Função',
         availability: [],
         preferences: ''
     }
@@ -101,7 +95,7 @@ export default function Home() {
   const [calendars, setCalendars] = React.useState<Calendar[]>([]);
   const [activeCalendarId, setActiveCalendarId] = React.useState<string>('');
   const [employees, setEmployees] = React.useState<Employee[]>([]);
-  const [roles, setRoles] = React.useState<Role[]>([]);
+  const [roles, setRoles] = React.useState<string[]>([]);
   const [colorMeanings, setColorMeanings] = React.useState<{ color: ShiftColor, meaning: string }[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   
@@ -120,6 +114,7 @@ export default function Home() {
         const storedSidebarState = localStorage.getItem('isSidebarOpen');
 
         if (storedDate) setCurrentDate(new Date(storedDate));
+        
         const loadedCalendars = storedCalendars ? JSON.parse(storedCalendars) : initialCalendars;
         
         const migratedCalendars = loadedCalendars.map((cal: Calendar) => ({
@@ -141,25 +136,9 @@ export default function Home() {
         const loadedRoles = storedRoles ? JSON.parse(storedRoles) : initialRoles;
         const loadedEmployees = storedEmployees ? JSON.parse(storedEmployees) : initialEmployees;
 
-        // Migration for employees from old role string to new roleId
-        const migratedEmployees = loadedEmployees.map((emp: any) => {
-            if (typeof emp.role === 'string') {
-                let role = loadedRoles.find((r: Role) => r.name === emp.role);
-                if (!role) {
-                    role = loadedRoles.find((r: Role) => r.id === 'role-unassigned');
-                }
-                return { ...emp, role: undefined, roleId: role.id };
-            }
-            if (!emp.roleId) {
-                return { ...emp, roleId: 'role-unassigned' };
-            }
-            return emp;
-        });
-
-
         setCalendars(migratedCalendars);
         setActiveCalendarId(storedActiveId || migratedCalendars[0]?.id || '');
-        setEmployees(migratedEmployees);
+        setEmployees(loadedEmployees);
         setRoles(loadedRoles);
         setColorMeanings(storedColorMeanings ? JSON.parse(storedColorMeanings) : initialColorMeanings);
         setIsSidebarOpen(storedSidebarState ? JSON.parse(storedSidebarState) : true);
@@ -282,10 +261,6 @@ export default function Home() {
     });
 };
 
-  const handleEmployeesChange = (newEmployees: Employee[]) => {
-    setEmployees(newEmployees);
-  }
-
   const filteredShifts = shifts.filter(shift => {
     const query = searchQuery.toLowerCase();
     const shiftDate = parseISO(shift.date);
@@ -331,7 +306,7 @@ export default function Home() {
       <div className="flex flex-1 overflow-hidden print:block print:overflow-visible">
         {isSidebarOpen && <EmployeeSidebar 
             employees={employees} 
-            onEmployeesChange={handleEmployeesChange}
+            setEmployees={setEmployees} 
             onUpdateEmployee={handleUpdateEmployee}
             shifts={shifts}
             currentDate={currentDate}
@@ -345,9 +320,6 @@ export default function Home() {
             />}
         <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
           <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none flex-1 flex flex-col print:block">
-            <div className="flex justify-end p-2 print:hidden">
-              <SuggestShiftsDialog employees={employees} roles={roles.map(r => r.name)} onApplySuggestions={() => {}} />
-            </div>
             <CalendarView 
               currentDate={currentDate} 
               shifts={filteredShifts}

@@ -2,17 +2,16 @@
 "use client";
 
 import * as React from "react";
-import type { Employee, Calendar, ShiftColor, Role } from "@/lib/types";
+import type { Employee, Calendar, ShiftColor } from "@/lib/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen, ClipboardList, Wand2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/app/components/icons/logo";
 import { SettingsDialog } from "./settings-dialog";
 import CalendarSwitcher from "./calendar-switcher";
 import { ReportDialog } from "./report-dialog";
 import { Input } from "@/components/ui/input";
-import { SuggestShiftsDialog } from "./suggest-shifts-dialog";
 
 
 type HeaderProps = {
@@ -22,8 +21,8 @@ type HeaderProps = {
   employees: Employee[];
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  roles: Role[];
-  onRolesChange: (roles: Role[]) => void;
+  roles: string[];
+  onRolesChange: (roles: string[]) => void;
   calendars: Calendar[];
   activeCalendarId: string;
   onCalendarChange: (id: string) => void;
@@ -56,11 +55,6 @@ export default function Header({
   const handlePrint = () => {
     window.print();
   };
-  
-  const activeCalendar = calendars.find(c => c.id === activeCalendarId);
-  const shifts = activeCalendar?.shifts || [];
-  const allShiftRoles = [...new Set(shifts.map(s => s.role))];
-
 
   return (
     <header className="flex-shrink-0 border-b print:hidden">
@@ -111,7 +105,7 @@ export default function Header({
               employees={employees}
               calendars={calendars}
               currentDate={currentDate}
-              roles={roles.map(r => r.name)}
+              roles={roles}
             />
             <Button variant="outline" onClick={handlePrint}>
               <Download className="mr-2 h-4 w-4" />

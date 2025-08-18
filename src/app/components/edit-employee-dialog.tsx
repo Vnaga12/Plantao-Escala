@@ -29,7 +29,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, Save, Hospital, Pencil, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
-import type { Employee, Shift, ShiftColor, Role } from "@/lib/types";
+import type { Employee, Shift, ShiftColor } from "@/lib/types";
 import { useToast } from "@/components/ui/use-toast";
 import { format, addMonths, subMonths, isSameMonth, parseISO, getDate } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -49,11 +49,10 @@ const weekdays = [
     { value: "Sunday", label: "Domingo" },
 ];
 
-type FormValues = Omit<Employee, 'role'>;
+type FormValues = Employee;
 
 type EditEmployeeDialogProps = {
   employee: Employee;
-  allEmployees: Employee[];
   onUpdateEmployee: (employee: Employee) => void;
   onDeleteEmployee: (employeeId: string) => void;
   children: React.ReactNode;
@@ -62,15 +61,14 @@ type EditEmployeeDialogProps = {
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
   onAddShift: (newShift: Omit<Shift, 'id' | 'color'>) => void;
-  roles: Role[];
+  roles: string[];
   allShiftRoles: string[];
   calendarName: string;
   colorMeanings: { color: ShiftColor, meaning: string }[];
 };
 
 export function EditEmployeeDialog({ 
-    employee,
-    allEmployees, 
+    employee, 
     onUpdateEmployee, 
     onDeleteEmployee, 
     children,
@@ -125,6 +123,7 @@ export function EditEmployeeDialog({
     setIsOpen(false);
   }
 
+  const allEmployees = [employee]; // Dummy data for swap dialog
   const allAssignedShifts = shifts.filter(s => s.employeeName === employee.name);
   const assignedShiftsForMonth = allAssignedShifts.filter(s => {
     const shiftDate = parseISO(s.date);
@@ -161,23 +160,8 @@ export function EditEmployeeDialog({
                                         <Input id="name" {...register("name", { required: "O nome é obrigatório" })} className="mt-1" />
                                     </div>
                                     <div>
-                                        <Label htmlFor="roleId" className="font-semibold">Função</Label>
-                                        <Controller
-                                            name="roleId"
-                                            control={control}
-                                            render={({ field }) => (
-                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                    <SelectTrigger className="mt-1">
-                                                        <SelectValue placeholder="Selecione uma função" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {roles.map(role => (
-                                                            <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            )}
-                                        />
+                                        <Label htmlFor="role" className="font-semibold">Função</Label>
+                                        <Input id="role" {...register("role")} className="mt-1" />
                                     </div>
                                 </div>
                                 <div>

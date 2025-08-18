@@ -20,17 +20,10 @@ export type EmployeeAvailability = {
   endTime: string;
 };
 
-export type Role = {
-  id: string;
-  name: string;
-  unavailabilityRules: EmployeeAvailability[];
-};
-
-
 export type Employee = {
   id: string;
   name: string;
-  roleId: string;
+  role: string;
   availability: EmployeeAvailability[];
   preferences: string;
 };

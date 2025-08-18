@@ -5,21 +5,21 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusCircle, User, CalendarPlus, Users } from "lucide-react";
-import type { Employee, Shift, ShiftColor, Role } from "@/lib/types";
+import type { Employee, Shift, ShiftColor } from "@/lib/types";
 import { EditEmployeeDialog } from "./edit-employee-dialog";
 import { EditDayDialog } from "./edit-day-dialog";
 import { Separator } from "@/components/ui/separator";
 
 type EmployeeSidebarProps = {
   employees: Employee[];
-  onEmployeesChange: (employees: Employee[]) => void;
+  setEmployees: (employees: Employee[]) => void;
   onUpdateEmployee: (employee: Employee) => void;
   shifts: Shift[];
   currentDate: Date;
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
   onAddShift: (newShift: Omit<Shift, 'id' | 'color'>) => void;
-  roles: Role[];
+  roles: string[];
   calendarName: string;
   onAddDayEvent: (event: { date: Date; name: string; color: ShiftColor }) => void;
   colorMeanings: { color: ShiftColor, meaning: string }[];
@@ -27,7 +27,7 @@ type EmployeeSidebarProps = {
 
 export default function EmployeeSidebar({
   employees,
-  onEmployeesChange,
+  setEmployees,
   onUpdateEmployee,
   shifts,
   currentDate,
@@ -40,40 +40,20 @@ export default function EmployeeSidebar({
   colorMeanings
 }: EmployeeSidebarProps) {
   const handleAddEmployee = () => {
-    const unassignedRole = roles.find(r => r.id === 'role-unassigned') || roles[0];
     const newEmployee: Employee = {
       id: `emp-${Date.now()}`,
       name: `Novo Funcionário ${employees.length + 1}`,
-      roleId: unassignedRole.id,
+      role: "Sem Função",
       availability: [],
       preferences: "",
     };
-    onEmployeesChange([...employees, newEmployee]);
+    setEmployees([...employees, newEmployee]);
   };
 
   const handleDeleteEmployee = (employeeId: string) => {
     const newEmployees = employees.filter(emp => emp.id !== employeeId);
-    onEmployeesChange(newEmployees);
+    setEmployees(newEmployees);
   }
-
-  const employeesByRole = React.useMemo(() => {
-    const grouped: { [key: string]: Employee[] } = {};
-    roles.forEach(role => {
-        grouped[role.id] = [];
-    });
-    employees.forEach(employee => {
-        if (grouped[employee.roleId]) {
-            grouped[employee.roleId].push(employee);
-        } else {
-            // Handle employees with orphaned roleId
-            if (!grouped['role-unassigned']) {
-                 grouped['role-unassigned'] = [];
-            }
-             grouped['role-unassigned'].push(employee);
-        }
-    });
-    return { grouped, order: roles.map(r => r.id) };
-  }, [employees, roles]);
 
   const allShiftRoles = [...new Set(shifts.map(s => s.role))];
 
@@ -88,44 +68,33 @@ export default function EmployeeSidebar({
           </Button>
         </div>
         <ScrollArea className="flex-1 -mr-4 pr-4">
-          <div className="space-y-4">
-            {employeesByRole.order.map(roleId => {
-              const role = roles.find(r => r.id === roleId);
-              if (!role || employeesByRole.grouped[roleId].length === 0) return null;
-              return (
-                <div key={role.id}>
-                    <h3 className="text-sm font-semibold text-gray-500 px-2 mb-2 uppercase tracking-wider">{role.name}</h3>
-                    <div className="space-y-1">
-                        {employeesByRole.grouped[roleId].map(employee => (
-                           <div key={employee.id} className="flex items-center justify-between p-2 rounded-md hover:bg-gray-100 group">
-                             <div>
-                                 <p className="font-medium text-sm text-gray-700">{employee.name}</p>
-                             </div>
-                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                 <EditEmployeeDialog 
-                                     employee={employee}
-                                     allEmployees={employees}
-                                     onUpdateEmployee={onUpdateEmployee}
-                                     onDeleteEmployee={handleDeleteEmployee}
-                                     shifts={shifts}
-                                     currentDate={currentDate}
-                                     onUpdateShift={onUpdateShift}
-                                     onDeleteShift={onDeleteShift}
-                                     onAddShift={onAddShift}
-                                     roles={roles}
-                                     allShiftRoles={allShiftRoles}
-                                     calendarName={calendarName}
-                                     colorMeanings={colorMeanings}
-                                 >
-                                     <Button variant="ghost" size="icon" className="h-7 w-7"><User className="h-4 w-4" /></Button>
-                                 </EditEmployeeDialog>
-                             </div>
-                           </div>
-                        ))}
-                    </div>
+          <div className="space-y-1">
+            {employees.map((employee) => (
+              <div key={employee.id} className="flex items-center justify-between p-2 rounded-md hover:bg-gray-100 group">
+                <div>
+                    <p className="font-medium text-sm text-gray-700">{employee.name}</p>
+                    <p className="text-xs text-muted-foreground">{employee.role}</p>
                 </div>
-              )
-            })}
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <EditEmployeeDialog 
+                        employee={employee}
+                        onUpdateEmployee={onUpdateEmployee}
+                        onDeleteEmployee={handleDeleteEmployee}
+                        shifts={shifts}
+                        currentDate={currentDate}
+                        onUpdateShift={onUpdateShift}
+                        onDeleteShift={onDeleteShift}
+                        onAddShift={onAddShift}
+                        roles={roles}
+                        allShiftRoles={allShiftRoles}
+                        calendarName={calendarName}
+                        colorMeanings={colorMeanings}
+                    >
+                        <Button variant="ghost" size="icon" className="h-7 w-7"><User className="h-4 w-4" /></Button>
+                    </EditEmployeeDialog>
+                </div>
+              </div>
+            ))}
           </div>
         </ScrollArea>
       </div>
