@@ -281,6 +281,9 @@ export default function Home() {
     });
 };
 
+  const handleEmployeesChange = (newEmployees: Employee[]) => {
+    setEmployees(newEmployees);
+  }
 
   const filteredShifts = shifts.filter(shift => {
     const query = searchQuery.toLowerCase();
@@ -327,7 +330,7 @@ export default function Home() {
       <div className="flex flex-1 overflow-hidden print:block print:overflow-visible">
         {isSidebarOpen && <EmployeeSidebar 
             employees={employees} 
-            onEmployeesChange={setEmployees}
+            onEmployeesChange={handleEmployeesChange}
             onUpdateEmployee={handleUpdateEmployee}
             shifts={shifts}
             currentDate={currentDate}
@@ -367,4 +370,3 @@ export default function Home() {
     </div>
   );
 }
-
