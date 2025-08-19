@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle } from "lucide-react";
-import type { Shift, ShiftColor } from "@/lib/types";
+import type { Shift, ShiftColor, Employee } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -43,9 +43,10 @@ type AddShiftDialogProps = {
   date: Date;
   shiftTypes: string[];
   colorMeanings: { color: ShiftColor, meaning: string }[];
+  employees: Employee[];
 };
 
-export function AddShiftDialog({ onAddShift, date, shiftTypes, colorMeanings }: AddShiftDialogProps) {
+export function AddShiftDialog({ onAddShift, date, shiftTypes, colorMeanings, employees }: AddShiftDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<AddShiftFormValues>({
     defaultValues: {
@@ -70,13 +71,13 @@ export function AddShiftDialog({ onAddShift, date, shiftTypes, colorMeanings }: 
   React.useEffect(() => {
     if (isOpen) {
         reset({
-            employeeName: "",
+            employeeName: employees[0]?.name || "",
             startTime: "09:00",
             endTime: "17:00",
             role: shiftTypes[0] || "",
         });
     }
-  }, [isOpen, shiftTypes, reset]);
+  }, [isOpen, shiftTypes, reset, employees]);
 
 
   return (
@@ -116,7 +117,23 @@ export function AddShiftDialog({ onAddShift, date, shiftTypes, colorMeanings }: 
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="employeeName" className="text-right">Funcionário</Label>
-              <Input id="employeeName" {...register("employeeName", { required: "O nome do funcionário é obrigatório" })} className="col-span-3" />
+               <Controller
+                  name="employeeName"
+                  control={control}
+                   rules={{ required: "O nome do funcionário é obrigatório" }}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Selecione um funcionário" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        {employees.map(employee => (
+                            <SelectItem key={employee.id} value={employee.name}>{employee.name}</SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                 )}
+              />
               {errors.employeeName && <p className="col-span-4 text-xs text-red-500 text-right">{errors.employeeName.message}</p>}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -154,5 +171,3 @@ export function AddShiftDialog({ onAddShift, date, shiftTypes, colorMeanings }: 
     </Dialog>
   );
 }
-
-    

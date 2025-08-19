@@ -79,7 +79,7 @@ export default function CalendarView({
                   {day}
                 </span>
                 <div className="print:hidden">
-                    <AddShiftDialog onAddShift={onAddShift} date={dateForDay} shiftTypes={shiftTypes} colorMeanings={colorMeanings} />
+                    <AddShiftDialog onAddShift={onAddShift} date={dateForDay} shiftTypes={shiftTypes} colorMeanings={colorMeanings} employees={employees} />
                 </div>
               </div>
               <div className="flex flex-col gap-1 overflow-y-auto print:overflow-visible">
@@ -102,5 +102,3 @@ export default function CalendarView({
     </div>
   );
 }
-
-    
