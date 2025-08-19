@@ -59,6 +59,21 @@ const roleColorMap: Record<ShiftColor, string> = {
   lime: "FF84CC16", // bg-lime-500
 };
 
+const cellColorClasses: Record<ShiftColor, string> = {
+  blue: "bg-blue-100",
+  green: "bg-green-100",
+  purple: "bg-purple-100",
+  red: "bg-red-100",
+  yellow: "bg-yellow-100",
+  gray: "bg-gray-100",
+  pink: "bg-pink-100",
+  cyan: "bg-cyan-100",
+  orange: "bg-orange-100",
+  indigo: "bg-indigo-100",
+  teal: "bg-teal-100",
+  lime: "bg-lime-100",
+};
+
 
 export function ReportDialog({ employees, calendars, currentDate, shiftTypes }: ReportDialogProps) {
     const [isOpen, setIsOpen] = React.useState(false);
@@ -296,10 +311,12 @@ export function ReportDialog({ employees, calendars, currentDate, shiftTypes }: 
                             key={index}
                             className={cn(
                                 "text-center p-1 text-xs border-l h-16",
-                                cellColor && `bg-${cellColor}-100`
+                                cellColor && cellColorClasses[cellColor]
                             )}
                           >
-                            {cellContent}
+                            <div className="flex flex-col justify-center items-center h-full">
+                                {cellContent.split(', ').map((text, i) => <div key={i}>{text}</div>)}
+                            </div>
                           </TableCell>
                         );
                       })}
