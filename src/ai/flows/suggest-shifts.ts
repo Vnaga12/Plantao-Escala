@@ -82,8 +82,8 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
 
   Com base na disponibilidade dos funcionários, preferências, requisitos de turno e restrições de horário, sugira atribuições de turno.
 
-  Funcionários: {{JSON.stringify(employees)}}
-  Turnos: {{JSON.stringify(shifts)}}
+  Funcionários: {{{JSON.stringify employees}}}
+  Turnos: {{{JSON.stringify shifts}}}
   Restrições de Horário: {{{scheduleConstraints}}}
 
   Considere as preferências dos funcionários e a justiça ao fazer as atribuições.
@@ -91,7 +91,8 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
   Certifique-se de que sua resposta corresponda exatamente ao esquema de saída, incluindo todos os campos.
   Pense passo a passo e explique seu raciocínio no resumo.
   IMPORTANTE: Os dias da semana no campo shiftDay DEVEM estar em inglês (ex: Monday, Tuesday, etc.). O resumo deve estar em português.
-  `,config: {
+  `,
+  config: {
     safetySettings: [
       {
         category: 'HARM_CATEGORY_HATE_SPEECH',
@@ -111,6 +112,11 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
       },
     ],
   },
+  template: {
+    helpers: {
+      'JSON.stringify': (context: any) => JSON.stringify(context),
+    }
+  }
 });
 
 const suggestShiftAssignmentsFlow = ai.defineFlow(
