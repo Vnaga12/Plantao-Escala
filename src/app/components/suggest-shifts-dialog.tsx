@@ -35,11 +35,13 @@ import type { SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
 import { useToast } from "@/components/ui/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EditShiftDialog } from "./edit-shift-dialog";
+import { format } from "date-fns";
 
 type SuggestShiftsDialogProps = {
   employees: Employee[];
   onApplySuggestions: (suggestions: Shift[]) => void;
   roles: string[];
+  currentDate: Date;
 };
 
 const weekdayMap: { [key: string]: string } = {
@@ -59,7 +61,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, roles }: SuggestShiftsDialogProps) {
+export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, roles, currentDate }: SuggestShiftsDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [suggestions, setSuggestions] = React.useState<SuggestShiftAssignmentsOutput | null>(null);
@@ -107,6 +109,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
         employees: employees.map(({ id, name, availability, preferences }) => ({ id, name, availability, preferences })),
         shifts: shiftsToFill,
         scheduleConstraints: data.scheduleConstraints || "",
+        currentDate: format(currentDate, 'yyyy-MM-dd'),
       });
         
       if (result && result.assignments) {
@@ -360,5 +363,3 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
     </Dialog>
   );
 }
-
-    

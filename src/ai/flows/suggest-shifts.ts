@@ -49,6 +49,7 @@ const SuggestShiftAssignmentsInputSchema = z.object({
   scheduleConstraints: z
     .string()
     .describe('Constraints or requirements for the overall schedule.'),
+  currentDate: z.string().describe('The current date for context, in YYYY-MM-DD format.'),
 });
 
 export type SuggestShiftAssignmentsInput = z.infer<typeof SuggestShiftAssignmentsInputSchema>;
@@ -80,11 +81,14 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
       employees: z.string(),
       shifts: z.string(),
       scheduleConstraints: z.string(),
+      currentDate: z.string(),
   })},
   output: {schema: SuggestShiftAssignmentsOutputSchema},
   prompt: `Você é um assistente de IA que ajuda a criar atribuições de turno ideais para uma equipe médica. A resposta deve ser em português, EXCETO pelo campo shiftDay.
 
   Com base na disponibilidade dos funcionários, preferências, requisitos de turno e restrições de horário, sugira atribuições de turno.
+
+  A data de hoje para referência é {{{currentDate}}}. Use isso para entender quaisquer datas relativas ou específicas mencionadas nas restrições.
 
   Funcionários: {{{employees}}}
   Turnos: {{{shifts}}}
@@ -128,7 +132,8 @@ const suggestShiftAssignmentsFlow = ai.defineFlow(
     const {output} = await suggestShiftAssignmentsPrompt({
         employees: JSON.stringify(input.employees),
         shifts: JSON.stringify(input.shifts),
-        scheduleConstraints: input.scheduleConstraints
+        scheduleConstraints: input.scheduleConstraints,
+        currentDate: input.currentDate,
     });
     return output!;
   }

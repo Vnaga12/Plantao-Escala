@@ -302,13 +302,15 @@ export default function Home() {
 
     const finalShifts = newShifts.map(s => {
         const targetDayIndex = englishToJsDayMap[s.date];
+        if (targetDayIndex === undefined) return null;
+
         const targetDate = weekDays.find(d => d.getDay() === targetDayIndex);
         
         return {
             ...s,
             date: targetDate ? format(targetDate, 'yyyy-MM-dd') : s.date // Fallback
         };
-    }).filter(s => s.date.includes('-')); // Ensure only valid dates are added
+    }).filter((s): s is Shift => s !== null && s.date.includes('-')); // Ensure only valid dates are added
 
     updateActiveCalendarShifts([...shifts, ...finalShifts]);
     toast({
@@ -362,6 +364,7 @@ export default function Home() {
               employees={employees} 
               roles={shiftTypes} 
               onApplySuggestions={(newShifts) => handleApplySuggestions(newShifts, currentDate)}
+              currentDate={currentDate}
             />
         </div>
         <div className="flex flex-1 overflow-hidden print:block print:overflow-visible">
