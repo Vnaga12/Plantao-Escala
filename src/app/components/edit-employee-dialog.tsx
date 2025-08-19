@@ -53,6 +53,7 @@ type FormValues = Employee;
 
 type EditEmployeeDialogProps = {
   employee: Employee;
+  allEmployees: Employee[];
   onUpdateEmployee: (employee: Employee) => void;
   onDeleteEmployee: (employeeId: string) => void;
   children: React.ReactNode;
@@ -67,7 +68,8 @@ type EditEmployeeDialogProps = {
 };
 
 export function EditEmployeeDialog({ 
-    employee, 
+    employee,
+    allEmployees,
     onUpdateEmployee, 
     onDeleteEmployee, 
     children,
@@ -121,7 +123,6 @@ export function EditEmployeeDialog({
     setIsOpen(false);
   }
 
-  const allEmployees = [employee]; // Dummy data for swap dialog
   const allAssignedShifts = shifts.filter(s => s.employeeName === employee.name);
   const assignedShiftsForMonth = allAssignedShifts.filter(s => {
     const shiftDate = parseISO(s.date);

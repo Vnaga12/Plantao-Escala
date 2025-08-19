@@ -84,6 +84,7 @@ export default function EmployeeSidebar({
               <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                   <EditEmployeeDialog 
                       employee={employee}
+                      allEmployees={employees}
                       onUpdateEmployee={onUpdateEmployee}
                       onDeleteEmployee={onDeleteEmployee}
                       shifts={shifts}
