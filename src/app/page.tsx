@@ -32,45 +32,39 @@ const initialCalendars: Calendar[] = [
   }
 ];
 
-const initialRoles: Role[] = [
-    { id: 'role-1', name: 'Médico(a)', unavailabilityRules: [] },
-    { id: 'role-2', name: 'Enfermeiro(a)', unavailabilityRules: [] },
-    { id: 'role-3', name: 'Técnico(a)', unavailabilityRules: [] },
-];
-
 const initialEmployees: Employee[] = [
     {
         id: '1',
         name: 'Dra. Alice',
-        roleId: 'role-1',
+        role: 'Médico(a)',
         availability: [{ day: 'Monday', startTime: '08:00', endTime: '17:00' }],
         preferences: 'Prefere turnos da manhã.'
     },
     {
         id: '2',
         name: 'Beto',
-        roleId: 'role-2',
+        role: 'Enfermeiro(a)',
         availability: [{ day: 'Tuesday', startTime: '12:00', endTime: '20:00' }],
         preferences: 'Não pode trabalhar nos fins de semana.'
     },
     {
         id: '3',
         name: 'Carlos',
-        roleId: 'role-1',
+        role: 'Médico(a)',
         availability: [],
         preferences: 'Disponível para cobrir turnos.'
     },
     {
         id: '4',
         name: 'Dr. David',
-        roleId: 'role-1',
+        role: 'Médico(a)',
         availability: [],
         preferences: 'Prefere turnos da noite.'
     },
     {
         id: '5',
         name: 'Dra. Elisa',
-        roleId: 'role-3',
+        role: 'Técnico(a)',
         availability: [],
         preferences: ''
     }
@@ -84,12 +78,6 @@ export const initialColorMeanings: { color: ShiftColor, meaning: string }[] = [
     { color: 'red', meaning: 'Emergência' },
     { color: 'yellow', meaning: 'Aviso' },
     { color: 'gray', meaning: 'Outro' },
-    { color: 'pink', meaning: 'Consulta' },
-    { color: 'cyan', meaning: 'Procedimento' },
-    { color: 'orange', meaning: 'Sobreaviso' },
-    { color: 'indigo', meaning: 'Administrativo' },
-    { color: 'teal', meaning: 'Treinamento' },
-    { color: 'lime', meaning: 'Reunião' },
 ];
 
 export default function Home() {
@@ -100,7 +88,6 @@ export default function Home() {
   const [calendars, setCalendars] = React.useState<Calendar[]>([]);
   const [activeCalendarId, setActiveCalendarId] = React.useState<string>('');
   const [employees, setEmployees] = React.useState<Employee[]>([]);
-  const [roles, setRoles] = React.useState<Role[]>([]);
   const [colorMeanings, setColorMeanings] = React.useState<{ color: ShiftColor, meaning: string }[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   
@@ -114,7 +101,6 @@ export default function Home() {
         const storedCalendars = localStorage.getItem('calendars');
         const storedActiveId = localStorage.getItem('activeCalendarId');
         const storedEmployees = localStorage.getItem('employees');
-        const storedRoles = localStorage.getItem('roles');
         const storedColorMeanings = localStorage.getItem('colorMeanings');
         const storedSidebarState = localStorage.getItem('isSidebarOpen');
 
@@ -138,13 +124,11 @@ export default function Home() {
             })
         }));
         
-        const loadedRoles = storedRoles ? JSON.parse(storedRoles) : initialRoles;
         const loadedEmployees = storedEmployees ? JSON.parse(storedEmployees) : initialEmployees;
 
         setCalendars(migratedCalendars);
         setActiveCalendarId(storedActiveId || migratedCalendars[0]?.id || '');
         setEmployees(loadedEmployees);
-        setRoles(loadedRoles);
         setColorMeanings(storedColorMeanings ? JSON.parse(storedColorMeanings) : initialColorMeanings);
         setIsSidebarOpen(storedSidebarState ? JSON.parse(storedSidebarState) : true);
 
@@ -153,7 +137,6 @@ export default function Home() {
         setCalendars(initialCalendars);
         setActiveCalendarId(initialCalendars[0]?.id || '');
         setEmployees(initialEmployees);
-        setRoles(initialRoles);
         setColorMeanings(initialColorMeanings);
         setIsSidebarOpen(true);
     }
@@ -166,11 +149,10 @@ export default function Home() {
         localStorage.setItem('calendars', JSON.stringify(calendars));
         localStorage.setItem('activeCalendarId', activeCalendarId);
         localStorage.setItem('employees', JSON.stringify(employees));
-        localStorage.setItem('roles', JSON.stringify(roles));
         localStorage.setItem('colorMeanings', JSON.stringify(colorMeanings));
         localStorage.setItem('isSidebarOpen', JSON.stringify(isSidebarOpen));
     }
-  }, [currentDate, calendars, activeCalendarId, employees, roles, colorMeanings, isSidebarOpen, isClient]);
+  }, [currentDate, calendars, activeCalendarId, employees, colorMeanings, isSidebarOpen, isClient]);
 
 
   const activeCalendar = calendars.find(c => c.id === activeCalendarId) ?? calendars[0];
@@ -190,7 +172,7 @@ export default function Home() {
     ));
   };
   
-  const roleToColorMap = new Map(colorMeanings.map(m => [m.meaning, m.color]));
+  const roleToColorMap = React.useMemo(() => new Map(colorMeanings.map(m => [m.meaning, m.color])), [colorMeanings]);
 
   const handleAddShift = (newShift: Omit<Shift, 'id' | 'color'>) => {
     const shiftWithId: Shift = {
@@ -203,7 +185,7 @@ export default function Home() {
   };
   
   const handleUpdateShift = (updatedShift: Shift) => {
-    const newShifts = shifts.map(s => s.id === updatedShift.id ? updatedShift : s);
+    const newShifts = shifts.map(s => s.id === updatedShift.id ? { ...updatedShift, color: roleToColorMap.get(updatedShift.role) || 'gray' } : s);
     updateActiveCalendarShifts(newShifts);
     toast({ title: "Turno Atualizado", description: "O turno foi atualizado com sucesso." });
   };
@@ -218,16 +200,12 @@ export default function Home() {
     const newEmployee: Employee = {
       id: `emp-${Date.now()}`,
       name: formattedName,
-      roleId: roles[0]?.id || '',
+      role: '',
       availability: [],
       preferences: "",
     };
     setEmployees([...employees, newEmployee]);
   };
-  
-  const handleEmployeesChange = (newEmployees: Employee[]) => {
-    setEmployees(newEmployees);
-  }
 
   const handleUpdateEmployee = (updatedEmployee: Employee) => {
     const oldEmployee = employees.find(emp => emp.id === updatedEmployee.id);
@@ -260,6 +238,27 @@ export default function Home() {
     toast({ title: "Turno Excluído", description: "O turno foi removido do calendário." });
   };
   
+  const handleDeleteEmployee = (employeeId: string) => {
+    const employeeToDelete = employees.find(emp => emp.id === employeeId);
+    if (!employeeToDelete) return;
+
+    // Remove employee
+    const newEmployees = employees.filter(emp => emp.id !== employeeId);
+    setEmployees(newEmployees);
+
+    // Remove shifts associated with the deleted employee from all calendars
+    const newCalendars = calendars.map(calendar => ({
+        ...calendar,
+        shifts: calendar.shifts.filter(shift => shift.employeeName !== employeeToDelete.name),
+    }));
+    setCalendars(newCalendars);
+
+    toast({
+        title: "Funcionário Excluído",
+        description: `${employeeToDelete.name} e seus plantões foram removidos.`,
+    });
+  };
+
   const handleAddDayEvent = (event: { date: Date; name: string; color: ShiftColor }) => {
     const { date, name, color } = event;
     const eventDate = format(date, 'yyyy-MM-dd');
@@ -313,8 +312,8 @@ export default function Home() {
         employees={employees}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        roles={roles}
-        onRolesChange={setRoles}
+        roles={[]}
+        onRolesChange={() => {}}
         calendars={calendars}
         activeCalendarId={activeCalendarId}
         onCalendarChange={setActiveCalendarId}
@@ -330,20 +329,34 @@ export default function Home() {
        </div>
        <div className="flex-1 min-h-0 flex flex-col">
         <div className="flex justify-end p-2 print:hidden">
-            <SuggestShiftsDialog employees={employees} roles={shiftTypes} onApplySuggestions={() => {}} />
+            <SuggestShiftsDialog employees={employees} roles={shiftTypes} onApplySuggestions={(newShifts) => {
+              const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 /* Monday */ });
+              const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
+              const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+              const dayNameToDateMap = new Map(weekDays.map(d => [format(d, 'EEEE', { locale: ptBR }), format(d, 'yyyy-MM-dd')]));
+
+              const finalShifts = newShifts.map(s => ({
+                  ...s,
+                  // The AI flow returns the day name in English, we need to convert it to a date
+                  // This is a bit of a hack, assumes the suggestions are for the "current" week
+                  date: dayNameToDateMap.get(s.date) || s.date 
+              }));
+
+              updateActiveCalendarShifts([...shifts, ...finalShifts]);
+            }} />
         </div>
         <div className="flex flex-1 overflow-hidden print:block print:overflow-visible">
             {isSidebarOpen && <EmployeeSidebar 
                 employees={employees} 
                 onAddEmployee={handleAddEmployee}
                 onUpdateEmployee={handleUpdateEmployee}
-                onEmployeesChange={handleEmployeesChange}
+                onDeleteEmployee={handleDeleteEmployee}
                 shifts={shifts}
                 currentDate={currentDate}
                 onUpdateShift={handleUpdateShift}
                 onDeleteShift={handleDeleteShift}
                 onAddShift={handleAddShift}
-                roles={roles}
+                shiftTypes={shiftTypes}
                 calendarName={activeCalendar.name}
                 onAddDayEvent={handleAddDayEvent}
                 colorMeanings={colorMeanings}
@@ -375,5 +388,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

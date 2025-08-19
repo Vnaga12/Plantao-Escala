@@ -34,4 +34,7 @@ export type Calendar = {
   shifts: Shift[];
 };
 
-    
+export type Role = {
+    id: string;
+    name: string;
+}

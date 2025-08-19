@@ -41,7 +41,7 @@ type ManageShiftsDialogProps = {
     onAddShift: (newShift: Omit<Shift, 'id' | 'color'>) => void;
     onUpdateShift: (updatedShift: Shift) => void;
     onDeleteShift: (shiftId: string) => void;
-    roles: string[];
+    shiftTypes: string[];
     currentDate: Date;
     colorMeanings: { color: ShiftColor, meaning: string }[];
 };
@@ -56,7 +56,7 @@ export function ManageEmployeeShiftsDialog({
     assignedShifts,
     onAddShift,
     onUpdateShift,
-    roles,
+    shiftTypes,
     currentDate,
     colorMeanings
 }: ManageShiftsDialogProps) {
@@ -69,7 +69,7 @@ export function ManageEmployeeShiftsDialog({
             date: currentDate,
             startTime: "09:00",
             endTime: "17:00",
-            role: roles[0] || "",
+            role: shiftTypes[0] || "",
         },
     });
 
@@ -110,11 +110,11 @@ export function ManageEmployeeShiftsDialog({
                 date: currentDate,
                 startTime: "09:00",
                 endTime: "17:00",
-                role: roles[0] || "",
+                role: shiftTypes[0] || "",
             });
             swapForm.reset();
         }
-    }, [isOpen, currentDate, roles, addForm, swapForm]);
+    }, [isOpen, currentDate, shiftTypes, addForm, swapForm]);
 
 
     return (
@@ -183,7 +183,7 @@ export function ManageEmployeeShiftsDialog({
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <SelectTrigger><SelectValue/></SelectTrigger>
                                             <SelectContent>
-                                                {roles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                                                {shiftTypes.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                                             </SelectContent>
                                         </Select>
                                     )}

@@ -61,8 +61,7 @@ type EditEmployeeDialogProps = {
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
   onAddShift: (newShift: Omit<Shift, 'id' | 'color'>) => void;
-  roles: string[];
-  allShiftRoles: string[];
+  shiftTypes: string[];
   calendarName: string;
   colorMeanings: { color: ShiftColor, meaning: string }[];
 };
@@ -77,8 +76,7 @@ export function EditEmployeeDialog({
     onUpdateShift,
     onDeleteShift,
     onAddShift,
-    roles,
-    allShiftRoles,
+    shiftTypes,
     calendarName,
     colorMeanings
 }: EditEmployeeDialogProps) {
@@ -241,7 +239,7 @@ export function EditEmployeeDialog({
                                     onUpdateShift={onUpdateShift}
                                     onAddShift={onAddShift}
                                     onDeleteShift={onDeleteShift}
-                                    roles={allShiftRoles}
+                                    shiftTypes={shiftTypes}
                                     currentDate={viewedMonth}
                                     colorMeanings={colorMeanings}
                                 >
@@ -269,7 +267,7 @@ export function EditEmployeeDialog({
                                     </div>
                                 </div>
                                 <div className="flex items-center">
-                                    <EditShiftDialog shift={shift} onUpdateShift={onUpdateShift} roles={allShiftRoles} colorMeanings={colorMeanings} />
+                                    <EditShiftDialog shift={shift} onUpdateShift={onUpdateShift} shiftTypes={shiftTypes} colorMeanings={colorMeanings} />
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>

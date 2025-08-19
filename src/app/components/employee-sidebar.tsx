@@ -21,7 +21,7 @@ type EmployeeSidebarProps = {
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
   onAddShift: (newShift: Omit<Shift, 'id' | 'color'>) => void;
-  roles: string[];
+  shiftTypes: string[];
   calendarName: string;
   onAddDayEvent: (event: { date: Date; name: string; color: ShiftColor }) => void;
   colorMeanings: { color: ShiftColor, meaning: string }[];
@@ -37,7 +37,7 @@ export default function EmployeeSidebar({
   onUpdateShift,
   onDeleteShift,
   onAddShift,
-  roles,
+  shiftTypes,
   calendarName,
   onAddDayEvent,
   colorMeanings,
@@ -49,8 +49,6 @@ export default function EmployeeSidebar({
     onAddEmployee(newEmployeeName.trim());
     setNewEmployeeName("");
   };
-
-  const allShiftRoles = [...new Set(shifts.map(s => s.role))];
 
   return (
     <aside className="w-72 flex-shrink-0 border-r bg-gray-50 p-4 flex flex-col print:hidden">
@@ -89,8 +87,7 @@ export default function EmployeeSidebar({
                       onUpdateShift={onUpdateShift}
                       onDeleteShift={onDeleteShift}
                       onAddShift={onAddShift}
-                      roles={roles}
-                      allShiftRoles={allShiftRoles}
+                      shiftTypes={shiftTypes}
                       calendarName={calendarName}
                       colorMeanings={colorMeanings}
                   >
