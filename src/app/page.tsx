@@ -4,12 +4,13 @@
 import * as React from "react";
 import { addMonths, subMonths, getDaysInMonth, getDay, format, parse, isSameMonth, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, getDayOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { Shift, Employee, Calendar, ShiftColor } from "@/lib/types";
+import type { Shift, Employee, Calendar, ShiftColor, Role } from "@/lib/types";
 import Header from "@/app/components/header";
 import CalendarView from "@/app/components/calendar-view";
 import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
+import { SuggestShiftsDialog } from "./components/suggest-shifts-dialog";
 
 const initialCalendars: Calendar[] = [
   {
@@ -31,41 +32,45 @@ const initialCalendars: Calendar[] = [
   }
 ];
 
-const initialRoles: string[] = ['Médico(a)', 'Enfermeiro(a)', 'Técnico(a)'];
+const initialRoles: Role[] = [
+    { id: 'role-1', name: 'Médico(a)', unavailabilityRules: [] },
+    { id: 'role-2', name: 'Enfermeiro(a)', unavailabilityRules: [] },
+    { id: 'role-3', name: 'Técnico(a)', unavailabilityRules: [] },
+];
 
 const initialEmployees: Employee[] = [
     {
         id: '1',
         name: 'Dra. Alice',
-        role: 'Médico(a)',
+        roleId: 'role-1',
         availability: [{ day: 'Monday', startTime: '08:00', endTime: '17:00' }],
         preferences: 'Prefere turnos da manhã.'
     },
     {
         id: '2',
         name: 'Beto',
-        role: 'Enfermeiro(a)',
+        roleId: 'role-2',
         availability: [{ day: 'Tuesday', startTime: '12:00', endTime: '20:00' }],
         preferences: 'Não pode trabalhar nos fins de semana.'
     },
     {
         id: '3',
         name: 'Carlos',
-        role: 'Médico(a)',
+        roleId: 'role-1',
         availability: [],
         preferences: 'Disponível para cobrir turnos.'
     },
     {
         id: '4',
         name: 'Dr. David',
-        role: 'Médico(a)',
+        roleId: 'role-1',
         availability: [],
         preferences: 'Prefere turnos da noite.'
     },
     {
         id: '5',
         name: 'Dra. Elisa',
-        role: 'Sem Função',
+        roleId: 'role-3',
         availability: [],
         preferences: ''
     }
@@ -95,7 +100,7 @@ export default function Home() {
   const [calendars, setCalendars] = React.useState<Calendar[]>([]);
   const [activeCalendarId, setActiveCalendarId] = React.useState<string>('');
   const [employees, setEmployees] = React.useState<Employee[]>([]);
-  const [roles, setRoles] = React.useState<string[]>([]);
+  const [roles, setRoles] = React.useState<Role[]>([]);
   const [colorMeanings, setColorMeanings] = React.useState<{ color: ShiftColor, meaning: string }[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   
@@ -213,15 +218,14 @@ export default function Home() {
     const newEmployee: Employee = {
       id: `emp-${Date.now()}`,
       name: formattedName,
-      role: "Sem Função",
+      roleId: roles[0]?.id || '',
       availability: [],
       preferences: "",
     };
     setEmployees([...employees, newEmployee]);
   };
   
-  const handleDeleteEmployee = (employeeId: string) => {
-    const newEmployees = employees.filter(emp => emp.id !== employeeId);
+  const handleEmployeesChange = (newEmployees: Employee[]) => {
     setEmployees(newEmployees);
   }
 
@@ -294,7 +298,7 @@ export default function Home() {
     );
   });
   
-  const allShiftRoles = [...new Set(calendars.flatMap(c => c.shifts).map(s => s.role))];
+  const shiftTypes = React.useMemo(() => colorMeanings.map(cm => cm.meaning), [colorMeanings]);
 
   if (!isClient || !activeCalendar) {
     return null;
@@ -324,41 +328,46 @@ export default function Home() {
             <h1 className="text-2xl font-bold capitalize">{format(currentDate, "MMMM yyyy", { locale: ptBR })}</h1>
             <h2 className="text-lg">{activeCalendar.name}</h2>
        </div>
-      <div className="flex flex-1 overflow-hidden print:block print:overflow-visible">
-        {isSidebarOpen && <EmployeeSidebar 
-            employees={employees} 
-            onAddEmployee={handleAddEmployee}
-            onUpdateEmployee={handleUpdateEmployee}
-            onDeleteEmployee={handleDeleteEmployee}
-            shifts={shifts}
-            currentDate={currentDate}
-            onUpdateShift={handleUpdateShift}
-            onDeleteShift={handleDeleteShift}
-            onAddShift={handleAddShift}
-            roles={roles}
-            calendarName={activeCalendar.name}
-            onAddDayEvent={handleAddDayEvent}
-            colorMeanings={colorMeanings}
-            />}
-        <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
-          <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none flex-1 flex flex-col print:block">
-            <CalendarView 
-              currentDate={currentDate} 
-              shifts={filteredShifts}
-              onAddShift={handleAddShift} 
-              employees={employees}
-              onUpdateShift={handleUpdateShift}
-              onDeleteShift={handleDeleteShift}
-              roles={allShiftRoles}
-              colorMeanings={colorMeanings}
-            />
-          </div>
-          {/* Legend for Screen */}
-          <div className="print:hidden mt-4">
-              <ColorLegend meanings={colorMeanings} />
-          </div>
-        </main>
-      </div>
+       <div className="flex-1 min-h-0 flex flex-col">
+        <div className="flex justify-end p-2 print:hidden">
+            <SuggestShiftsDialog employees={employees} roles={shiftTypes} onApplySuggestions={() => {}} />
+        </div>
+        <div className="flex flex-1 overflow-hidden print:block print:overflow-visible">
+            {isSidebarOpen && <EmployeeSidebar 
+                employees={employees} 
+                onAddEmployee={handleAddEmployee}
+                onUpdateEmployee={handleUpdateEmployee}
+                onEmployeesChange={handleEmployeesChange}
+                shifts={shifts}
+                currentDate={currentDate}
+                onUpdateShift={handleUpdateShift}
+                onDeleteShift={handleDeleteShift}
+                onAddShift={handleAddShift}
+                roles={roles}
+                calendarName={activeCalendar.name}
+                onAddDayEvent={handleAddDayEvent}
+                colorMeanings={colorMeanings}
+                />}
+            <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
+            <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none flex-1 flex flex-col print:block">
+                <CalendarView 
+                currentDate={currentDate} 
+                shifts={filteredShifts}
+                onAddShift={handleAddShift} 
+                employees={employees}
+                onUpdateShift={handleUpdateShift}
+                onDeleteShift={handleDeleteShift}
+                shiftTypes={shiftTypes}
+                colorMeanings={colorMeanings}
+                />
+            </div>
+            {/* Legend for Screen */}
+            <div className="print:hidden mt-4">
+                <ColorLegend meanings={colorMeanings} />
+            </div>
+            </main>
+        </div>
+        </div>
        {/* Legend for Print Only */}
        <div className="hidden print:block mt-4">
           <ColorLegend meanings={colorMeanings} />
@@ -366,3 +375,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

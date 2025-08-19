@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import type { Employee, Calendar, ShiftColor } from "@/lib/types";
+import type { Employee, Calendar, ShiftColor, Role } from "@/lib/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen, ClipboardList } from "lucide-react";
@@ -21,8 +21,8 @@ type HeaderProps = {
   employees: Employee[];
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  roles: string[];
-  onRolesChange: (roles: string[]) => void;
+  roles: Role[];
+  onRolesChange: (roles: Role[]) => void;
   calendars: Calendar[];
   activeCalendarId: string;
   onCalendarChange: (id: string) => void;
@@ -55,6 +55,9 @@ export default function Header({
   const handlePrint = () => {
     window.print();
   };
+
+  const shiftTypes = React.useMemo(() => colorMeanings.map(cm => cm.meaning), [colorMeanings]);
+
 
   return (
     <header className="flex-shrink-0 border-b print:hidden">
@@ -105,7 +108,7 @@ export default function Header({
               employees={employees}
               calendars={calendars}
               currentDate={currentDate}
-              roles={roles}
+              shiftTypes={shiftTypes}
             />
             <Button variant="outline" onClick={handlePrint}>
               <Download className="mr-2 h-4 w-4" />

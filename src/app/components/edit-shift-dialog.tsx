@@ -40,11 +40,11 @@ type EditShiftFormValues = Omit<Shift, 'id' | 'date'>;
 type EditShiftDialogProps = {
   shift: Shift;
   onUpdateShift: (shift: Shift) => void;
-  roles: string[];
+  shiftTypes: string[];
   colorMeanings: { color: ShiftColor, meaning: string }[];
 };
 
-export function EditShiftDialog({ onUpdateShift, shift, roles, colorMeanings }: EditShiftDialogProps) {
+export function EditShiftDialog({ onUpdateShift, shift, shiftTypes, colorMeanings }: EditShiftDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<EditShiftFormValues>({
     defaultValues: {
@@ -118,8 +118,8 @@ export function EditShiftDialog({ onUpdateShift, shift, roles, colorMeanings }: 
                         <SelectValue placeholder="Selecione um tipo" />
                         </SelectTrigger>
                         <SelectContent>
-                        {roles.map(role => (
-                            <SelectItem key={role} value={role}>{role}</SelectItem>
+                        {shiftTypes.map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
                         ))}
                         </SelectContent>
                     </Select>
@@ -166,3 +166,5 @@ export function EditShiftDialog({ onUpdateShift, shift, roles, colorMeanings }: 
     </Dialog>
   );
 }
+
+    

@@ -15,7 +15,7 @@ type CalendarViewProps = {
   employees: Employee[];
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
-  roles: string[];
+  shiftTypes: string[];
   colorMeanings: { color: ShiftColor, meaning: string }[];
 };
 
@@ -26,7 +26,7 @@ export default function CalendarView({
     employees, 
     onUpdateShift, 
     onDeleteShift, 
-    roles,
+    shiftTypes,
     colorMeanings
 }: CalendarViewProps) {
   const firstDayOfMonth = startOfMonth(currentDate);
@@ -79,7 +79,7 @@ export default function CalendarView({
                   {day}
                 </span>
                 <div className="print:hidden">
-                    <AddShiftDialog onAddShift={onAddShift} date={dateForDay} roles={roles} colorMeanings={colorMeanings} />
+                    <AddShiftDialog onAddShift={onAddShift} date={dateForDay} shiftTypes={shiftTypes} colorMeanings={colorMeanings} />
                 </div>
               </div>
               <div className="flex flex-col gap-1 overflow-y-auto print:overflow-visible">
@@ -90,7 +90,7 @@ export default function CalendarView({
                     employees={employees} 
                     onUpdateShift={onUpdateShift}
                     onDeleteShift={onDeleteShift}
-                    roles={roles}
+                    shiftTypes={shiftTypes}
                     colorMeanings={colorMeanings}
                   />
                 ))}
@@ -102,3 +102,5 @@ export default function CalendarView({
     </div>
   );
 }
+
+    

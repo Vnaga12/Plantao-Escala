@@ -14,12 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, Trash2, Plus } from "lucide-react";
+import { Settings, Trash2, Plus, GripVertical } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import type { ShiftColor } from "@/lib/types";
+import type { ShiftColor, Role, DayOfWeek } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const availableColors: { name: ShiftColor, class: string }[] = [
   { name: 'blue', class: 'bg-blue-500' },
@@ -36,9 +37,19 @@ const availableColors: { name: ShiftColor, class: string }[] = [
   { name: 'lime', class: 'bg-lime-500' },
 ];
 
+const weekdays: { value: DayOfWeek, label: string }[] = [
+    { value: "Monday", label: "Segunda-feira" },
+    { value: "Tuesday", label: "Terça-feira" },
+    { value: "Wednesday", label: "Quarta-feira" },
+    { value: "Thursday", label: "Quinta-feira" },
+    { value: "Friday", label: "Sexta-feira" },
+    { value: "Saturday", label: "Sábado" },
+    { value: "Sunday", label: "Domingo" },
+];
+
 type SettingsDialogProps = {
-  roles: string[];
-  onRolesChange: (roles: string[]) => void;
+  roles: Role[];
+  onRolesChange: (roles: Role[]) => void;
   colorMeanings: { color: ShiftColor; meaning: string }[];
   onColorMeaningsChange: (meanings: { color: ShiftColor; meaning: string }[]) => void;
 };
@@ -51,7 +62,6 @@ export function SettingsDialog({
 }: SettingsDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [internalRoles, setInternalRoles] = React.useState(roles);
-  const [newRoleName, setNewRoleName] = React.useState("");
   const [internalColorMeanings, setInternalColorMeanings] = React.useState(colorMeanings);
   const [newMeaning, setNewMeaning] = React.useState("");
   const [newMeaningColor, setNewMeaningColor] = React.useState<ShiftColor>('blue');
@@ -60,29 +70,11 @@ export function SettingsDialog({
   React.useEffect(() => {
     if (isOpen) {
       setInternalRoles(roles);
-      setNewRoleName("");
       setInternalColorMeanings(colorMeanings);
       setNewMeaning("");
       setNewMeaningColor("blue");
     }
   }, [roles, colorMeanings, isOpen]);
-
-  const handleRoleChange = (index: number, value: string) => {
-    const newRoles = [...internalRoles];
-    newRoles[index] = value;
-    setInternalRoles(newRoles);
-  };
-
-  const handleAddRole = () => {
-    if (newRoleName.trim() === "") return;
-    setInternalRoles([...internalRoles, newRoleName]);
-    setNewRoleName("");
-  };
-
-  const handleRemoveRole = (index: number) => {
-    const newRoles = internalRoles.filter((_, i) => i !== index);
-    setInternalRoles(newRoles);
-  };
 
   const handleColorMeaningChange = (index: number, value: string) => {
     const newMeanings = [...internalColorMeanings];
@@ -98,6 +90,10 @@ export function SettingsDialog({
   const handleAddColorMeaning = () => {
     if (newMeaning.trim() === "") {
         toast({variant: "destructive", title: "Erro", description: "O significado não pode estar vazio."})
+        return;
+    }
+    if (internalColorMeanings.some(cm => cm.meaning.toLowerCase() === newMeaning.toLowerCase().trim())) {
+        toast({variant: "destructive", title: "Erro", description: "Este tipo de plantão já existe."})
         return;
     }
     setInternalColorMeanings([
@@ -121,7 +117,7 @@ export function SettingsDialog({
           <Settings />
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Configurações</DialogTitle>
           <DialogDescription>
@@ -131,38 +127,8 @@ export function SettingsDialog({
         <ScrollArea className="max-h-[60vh] pr-6 -mr-6">
             <div className="space-y-6">
             <div>
-                <Label className="text-base font-semibold">Funções do Grupo</Label>
-                <p className="text-sm text-muted-foreground mb-2">Adicione ou remova as funções que seus funcionários podem ter.</p>
-                <div className="space-y-2">
-                {internalRoles.map((role, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                    <Input
-                        value={role}
-                        onChange={(e) => handleRoleChange(index, e.target.value)}
-                    />
-                    <Button variant="ghost" size="icon" onClick={() => handleRemoveRole(index)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                    </div>
-                ))}
-                </div>
-                <div className="flex items-center gap-2 mt-4">
-                <Input
-                    value={newRoleName}
-                    onChange={(e) => setNewRoleName(e.target.value)}
-                    placeholder="Nova Função"
-                />
-                <Button onClick={handleAddRole}>
-                    <Plus className="mr-2 h-4 w-4" /> Adicionar
-                </Button>
-                </div>
-            </div>
-
-            <Separator />
-            
-            <div>
-                <Label className="text-base font-semibold">Legendas de Cores</Label>
-                <p className="text-sm text-muted-foreground mb-2">Adicione, edite ou remova os significados das cores de plantão.</p>
+                <Label className="text-base font-semibold">Tipos de Plantão</Label>
+                <p className="text-sm text-muted-foreground mb-2">Adicione, edite ou remova os tipos de plantão e suas cores.</p>
                 <div className="space-y-2">
                 {internalColorMeanings.map(({ color, meaning }, index) => {
                     const colorInfo = availableColors.find(c => c.name === color);
@@ -172,7 +138,7 @@ export function SettingsDialog({
                         <Input
                         value={meaning}
                         onChange={(e) => handleColorMeaningChange(index, e.target.value)}
-                        placeholder="Significado da cor"
+                        placeholder="Nome do tipo de plantão"
                         />
                         <Button variant="ghost" size="icon" onClick={() => handleRemoveColorMeaning(index)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -185,14 +151,14 @@ export function SettingsDialog({
                 <Separator className="my-4"/>
 
                 <div className="p-4 border-dashed border-2 rounded-lg space-y-3">
-                    <h4 className="text-sm font-semibold">Nova Legenda</h4>
+                    <h4 className="text-sm font-semibold">Novo Tipo de Plantão</h4>
                     <div className="flex items-center gap-2">
                         <Input
                         value={newMeaning}
                         onChange={(e) => setNewMeaning(e.target.value)}
-                        placeholder="Significado (ex: Feriado)"
+                        placeholder="Nome (ex: Feriado, Plantão Ortopedia)"
                         />
-                        <Button onClick={handleAddColorMeaning}>Adicionar Legenda</Button>
+                        <Button onClick={handleAddColorMeaning}>Adicionar</Button>
                     </div>
                     <div className="flex items-center gap-2">
                         <Label className="text-xs">Cor:</Label>
@@ -216,7 +182,7 @@ export function SettingsDialog({
             </div>
             </div>
         </ScrollArea>
-        <DialogFooter className="pt-6">
+        <DialogFooter className="pt-6 border-t mt-4">
           <Button variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
           <Button onClick={handleSaveChanges}>Salvar Alterações</Button>
         </DialogFooter>
@@ -224,3 +190,5 @@ export function SettingsDialog({
     </Dialog>
   );
 }
+
+    

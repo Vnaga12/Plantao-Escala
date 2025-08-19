@@ -41,7 +41,7 @@ type ReportDialogProps = {
   employees: Employee[];
   calendars: Calendar[];
   currentDate: Date;
-  roles: string[];
+  shiftTypes: string[];
 };
 
 const roleColorMap: Record<ShiftColor, string> = {
@@ -60,7 +60,7 @@ const roleColorMap: Record<ShiftColor, string> = {
 };
 
 
-export function ReportDialog({ employees, calendars, currentDate, roles }: ReportDialogProps) {
+export function ReportDialog({ employees, calendars, currentDate, shiftTypes }: ReportDialogProps) {
     const [isOpen, setIsOpen] = React.useState(false);
     const [viewedMonth, setViewedMonth] = React.useState(currentDate);
     const [selectedCalendarId, setSelectedCalendarId] = React.useState(calendars[0]?.id || 'all');
@@ -317,3 +317,5 @@ export function ReportDialog({ employees, calendars, currentDate, roles }: Repor
     </Dialog>
   );
 }
+
+    

@@ -22,7 +22,7 @@ import { EditShiftDialog } from "./edit-shift-dialog";
 type ShiftCardProps = {
   shift: Shift;
   employees: Employee[];
-  roles: string[];
+  shiftTypes: string[];
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
   colorMeanings: { color: ShiftColor, meaning: string }[];
@@ -43,7 +43,7 @@ const roleColorClasses: Record<ShiftColor, string> = {
   lime: "bg-lime-100 border-lime-400 text-lime-800 print:bg-lime-100 print:border-lime-400 print:text-black",
 };
 
-export default function ShiftCard({ shift, employees, onUpdateShift, onDeleteShift, roles, colorMeanings }: ShiftCardProps) {
+export default function ShiftCard({ shift, employees, onUpdateShift, onDeleteShift, shiftTypes, colorMeanings }: ShiftCardProps) {
   return (
     <div className={cn("rounded-lg border-l-4 p-2 text-xs shadow-sm print:shadow-none print:border", roleColorClasses[shift.color])}>
       <div className="flex justify-between items-start">
@@ -56,7 +56,7 @@ export default function ShiftCard({ shift, employees, onUpdateShift, onDeleteShi
           </div>
         </div>
         <div className="flex items-center print:hidden">
-            <EditShiftDialog shift={shift} roles={roles} onUpdateShift={onUpdateShift} colorMeanings={colorMeanings} />
+            <EditShiftDialog shift={shift} shiftTypes={shiftTypes} onUpdateShift={onUpdateShift} colorMeanings={colorMeanings} />
             <SwapShiftDialog shift={shift} employees={employees} onUpdateShift={onUpdateShift} />
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -84,3 +84,5 @@ export default function ShiftCard({ shift, employees, onUpdateShift, onDeleteShi
     </div>
   );
 }
+
+    

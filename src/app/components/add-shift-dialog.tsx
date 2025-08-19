@@ -41,18 +41,18 @@ type AddShiftFormValues = Omit<Shift, 'id' | 'date' | 'color'>;
 type AddShiftDialogProps = {
   onAddShift: (shift: Omit<Shift, 'id' | 'color'>) => void;
   date: Date;
-  roles: string[];
+  shiftTypes: string[];
   colorMeanings: { color: ShiftColor, meaning: string }[];
 };
 
-export function AddShiftDialog({ onAddShift, date, roles, colorMeanings }: AddShiftDialogProps) {
+export function AddShiftDialog({ onAddShift, date, shiftTypes, colorMeanings }: AddShiftDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<AddShiftFormValues>({
     defaultValues: {
       employeeName: "",
       startTime: "09:00",
       endTime: "17:00",
-      role: roles[0] || "",
+      role: shiftTypes[0] || "",
     }
   });
 
@@ -66,6 +66,18 @@ export function AddShiftDialog({ onAddShift, date, roles, colorMeanings }: AddSh
     setIsOpen(false);
     reset();
   };
+  
+  React.useEffect(() => {
+    if (isOpen) {
+        reset({
+            employeeName: "",
+            startTime: "09:00",
+            endTime: "17:00",
+            role: shiftTypes[0] || "",
+        });
+    }
+  }, [isOpen, shiftTypes, reset]);
+
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -94,8 +106,8 @@ export function AddShiftDialog({ onAddShift, date, roles, colorMeanings }: AddSh
                         <SelectValue placeholder="Selecione um tipo" />
                         </SelectTrigger>
                         <SelectContent>
-                        {roles.map(role => (
-                            <SelectItem key={role} value={role}>{role}</SelectItem>
+                        {shiftTypes.map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
                         ))}
                         </SelectContent>
                     </Select>
@@ -142,3 +154,5 @@ export function AddShiftDialog({ onAddShift, date, roles, colorMeanings }: AddSh
     </Dialog>
   );
 }
+
+    
