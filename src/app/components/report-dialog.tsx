@@ -104,7 +104,11 @@ export function ReportDialog({ employees, calendars, currentDate, shiftTypes }: 
         }
     });
 
-    const reportData = employees.map(employee => {
+    const sortedEmployees = React.useMemo(() => 
+        [...employees].sort((a, b) => a.name.localeCompare(b.name)), 
+    [employees]);
+
+    const reportData = sortedEmployees.map(employee => {
         const shiftsByDay: { [key: string]: Shift[] } = {};
         shiftsForMonth.forEach(shift => {
             if (shift.employeeName === employee.name) {
@@ -317,5 +321,3 @@ export function ReportDialog({ employees, calendars, currentDate, shiftTypes }: 
     </Dialog>
   );
 }
-
-    
