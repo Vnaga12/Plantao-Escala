@@ -60,9 +60,11 @@ export function EditShiftDialog({ onUpdateShift, shift, shiftTypes, colorMeaning
   const selectedRole = watch("role");
 
   React.useEffect(() => {
-    const newColor = roleToColorMap.get(selectedRole) || 'gray';
-    setValue('color', newColor);
-  }, [selectedRole, setValue, roleToColorMap]);
+    if (colorMeanings && colorMeanings.length > 0) {
+      const newColor = roleToColorMap.get(selectedRole) || 'gray';
+      setValue('color', newColor);
+    }
+  }, [selectedRole, setValue, roleToColorMap, colorMeanings]);
 
 
   const onSubmit: SubmitHandler<EditShiftFormValues> = (data) => {
@@ -166,5 +168,3 @@ export function EditShiftDialog({ onUpdateShift, shift, shiftTypes, colorMeaning
     </Dialog>
   );
 }
-
-    

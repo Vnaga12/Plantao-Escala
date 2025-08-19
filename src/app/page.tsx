@@ -286,6 +286,37 @@ export default function Home() {
     });
 };
 
+  const handleApplySuggestions = (newShifts: Shift[], forDate: Date) => {
+    const englishToJsDayMap: Record<string, number> = {
+      Sunday: 0,
+      Monday: 1,
+      Tuesday: 2,
+      Wednesday: 3,
+      Thursday: 4,
+      Friday: 5,
+      Saturday: 6,
+    };
+
+    const weekStart = startOfWeek(forDate, { locale: ptBR });
+    const weekDays = eachDayOfInterval({ start: weekStart, end: endOfWeek(forDate, { locale: ptBR }) });
+
+    const finalShifts = newShifts.map(s => {
+        const targetDayIndex = englishToJsDayMap[s.date];
+        const targetDate = weekDays.find(d => d.getDay() === targetDayIndex);
+        
+        return {
+            ...s,
+            date: targetDate ? format(targetDate, 'yyyy-MM-dd') : s.date // Fallback
+        };
+    }).filter(s => s.date.includes('-')); // Ensure only valid dates are added
+
+    updateActiveCalendarShifts([...shifts, ...finalShifts]);
+    toast({
+      title: "Sugestões Aplicadas!",
+      description: `${finalShifts.length} novos turnos foram adicionados ao calendário.`
+    });
+  };
+
   const filteredShifts = shifts.filter(shift => {
     const query = searchQuery.toLowerCase();
     const shiftDate = parseISO(shift.date);
@@ -312,8 +343,6 @@ export default function Home() {
         employees={employees}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        roles={[]}
-        onRolesChange={() => {}}
         calendars={calendars}
         activeCalendarId={activeCalendarId}
         onCalendarChange={setActiveCalendarId}
@@ -329,21 +358,11 @@ export default function Home() {
        </div>
        <div className="flex-1 min-h-0 flex flex-col">
         <div className="flex justify-end p-2 print:hidden">
-            <SuggestShiftsDialog employees={employees} roles={shiftTypes} onApplySuggestions={(newShifts) => {
-              const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 /* Monday */ });
-              const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
-              const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
-              const dayNameToDateMap = new Map(weekDays.map(d => [format(d, 'EEEE', { locale: ptBR }), format(d, 'yyyy-MM-dd')]));
-
-              const finalShifts = newShifts.map(s => ({
-                  ...s,
-                  // The AI flow returns the day name in English, we need to convert it to a date
-                  // This is a bit of a hack, assumes the suggestions are for the "current" week
-                  date: dayNameToDateMap.get(s.date) || s.date 
-              }));
-
-              updateActiveCalendarShifts([...shifts, ...finalShifts]);
-            }} />
+            <SuggestShiftsDialog 
+              employees={employees} 
+              roles={shiftTypes} 
+              onApplySuggestions={(newShifts) => handleApplySuggestions(newShifts, currentDate)}
+            />
         </div>
         <div className="flex flex-1 overflow-hidden print:block print:overflow-visible">
             {isSidebarOpen && <EmployeeSidebar 

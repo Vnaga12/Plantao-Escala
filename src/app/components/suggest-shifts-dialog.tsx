@@ -30,7 +30,7 @@ import { Wand2, Loader2, Check, X, Pencil, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Employee, Shift, ShiftColor } from "@/lib/types";
-import { suggestShiftAssignments } from "@/ai/flows/suggest-shifts";
+import { suggestShiftAssignments } from "@/lib/actions";
 import type { SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
 import { useToast } from "@/components/ui/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -141,10 +141,6 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
     
     onApplySuggestions(finalShifts);
     setIsOpen(false);
-    toast({
-        title: "Sugestões Aplicadas!",
-        description: `${finalShifts.length} novos turnos foram adicionados ao calendário.`
-    })
   };
 
   const handleUpdateSuggestion = (updatedShift: Shift, index: number) => {
@@ -270,7 +266,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
                                         <TableRow>
                                             <TableHead className="w-[40px]">
                                                 <Checkbox
-                                                    checked={selectedSuggestions.length === editableSuggestions.length}
+                                                    checked={selectedSuggestions.length === editableSuggestions.length && editableSuggestions.length > 0}
                                                     onCheckedChange={(checked) => {
                                                         setSelectedSuggestions(checked ? editableSuggestions.map((_, index) => index) : []);
                                                     }}
@@ -315,7 +311,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
                                                 <EditShiftDialog 
                                                     shift={shiftForDialog} 
                                                     onUpdateShift={(updated) => handleUpdateSuggestion(updated, index)} 
-                                                    roles={roles}
+                                                    shiftTypes={roles}
                                                     colorMeanings={[]}
                                                 />
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteSuggestion(index)}>

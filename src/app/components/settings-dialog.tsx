@@ -48,20 +48,15 @@ const weekdays: { value: DayOfWeek, label: string }[] = [
 ];
 
 type SettingsDialogProps = {
-  roles: Role[];
-  onRolesChange: (roles: Role[]) => void;
   colorMeanings: { color: ShiftColor; meaning: string }[];
   onColorMeaningsChange: (meanings: { color: ShiftColor; meaning: string }[]) => void;
 };
 
 export function SettingsDialog({
-  roles,
-  onRolesChange,
   colorMeanings,
   onColorMeaningsChange
 }: SettingsDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [internalRoles, setInternalRoles] = React.useState(roles);
   const [internalColorMeanings, setInternalColorMeanings] = React.useState(colorMeanings);
   const [newMeaning, setNewMeaning] = React.useState("");
   const [newMeaningColor, setNewMeaningColor] = React.useState<ShiftColor>('blue');
@@ -69,12 +64,11 @@ export function SettingsDialog({
 
   React.useEffect(() => {
     if (isOpen) {
-      setInternalRoles(roles);
       setInternalColorMeanings(colorMeanings);
       setNewMeaning("");
       setNewMeaningColor("blue");
     }
-  }, [roles, colorMeanings, isOpen]);
+  }, [colorMeanings, isOpen]);
 
   const handleColorMeaningChange = (index: number, value: string) => {
     const newMeanings = [...internalColorMeanings];
@@ -104,7 +98,6 @@ export function SettingsDialog({
   };
 
   const handleSaveChanges = () => {
-    onRolesChange(internalRoles);
     onColorMeaningsChange(internalColorMeanings);
     toast({ title: "Configurações Salvas", description: "As configurações foram atualizadas." });
     setIsOpen(false);
@@ -190,5 +183,3 @@ export function SettingsDialog({
     </Dialog>
   );
 }
-
-    
