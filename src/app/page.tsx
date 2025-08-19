@@ -37,35 +37,35 @@ const initialEmployees: Employee[] = [
         id: '1',
         name: 'Dra. Alice',
         role: 'Médico(a)',
-        availability: [{ day: 'Monday', startTime: '08:00', endTime: '17:00' }],
+        unavailability: [{ day: 'Monday', startTime: '08:00', endTime: '17:00' }],
         preferences: 'Prefere turnos da manhã.'
     },
     {
         id: '2',
         name: 'Beto',
         role: 'Enfermeiro(a)',
-        availability: [{ day: 'Tuesday', startTime: '12:00', endTime: '20:00' }],
+        unavailability: [{ day: 'Tuesday', startTime: '12:00', endTime: '20:00' }],
         preferences: 'Não pode trabalhar nos fins de semana.'
     },
     {
         id: '3',
         name: 'Carlos',
         role: 'Médico(a)',
-        availability: [],
+        unavailability: [],
         preferences: 'Disponível para cobrir turnos.'
     },
     {
         id: '4',
         name: 'Dr. David',
         role: 'Médico(a)',
-        availability: [],
+        unavailability: [],
         preferences: 'Prefere turnos da noite.'
     },
     {
         id: '5',
         name: 'Dra. Elisa',
         role: 'Técnico(a)',
-        availability: [],
+        unavailability: [],
         preferences: ''
     }
 ];
@@ -124,7 +124,17 @@ export default function Home() {
             })
         }));
         
-        const loadedEmployees = storedEmployees ? JSON.parse(storedEmployees) : initialEmployees;
+        let loadedEmployees = storedEmployees ? JSON.parse(storedEmployees) : initialEmployees;
+
+        // Migration from availability to unavailability
+        loadedEmployees = loadedEmployees.map((emp: any) => {
+          if (emp.availability) {
+            const { availability, ...rest } = emp;
+            return { ...rest, unavailability: availability };
+          }
+          return emp;
+        })
+
 
         setCalendars(migratedCalendars);
         setActiveCalendarId(storedActiveId || migratedCalendars[0]?.id || '');
@@ -201,7 +211,7 @@ export default function Home() {
       id: `emp-${Date.now()}`,
       name: formattedName,
       role: '',
-      availability: [],
+      unavailability: [],
       preferences: "",
     };
     setEmployees([...employees, newEmployee]);

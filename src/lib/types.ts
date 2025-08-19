@@ -14,7 +14,7 @@ export type Shift = {
 
 export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 
-export type EmployeeAvailability = {
+export type EmployeeUnavailability = {
   day: DayOfWeek;
   startTime: string;
   endTime: string;
@@ -24,7 +24,7 @@ export type Employee = {
   id: string;
   name: string;
   role: string;
-  availability: EmployeeAvailability[];
+  unavailability: EmployeeUnavailability[];
   preferences: string;
 };
 

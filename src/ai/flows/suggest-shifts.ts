@@ -1,3 +1,4 @@
+
 // src/ai/flows/suggest-shifts.ts
 'use server';
 
@@ -5,7 +6,7 @@
  * @fileOverview AI-powered shift assignment suggestions.
  *
  * This file defines a Genkit flow to suggest optimal shift assignments
- * based on employee availability and preferences.
+ * based on employee unavailability and preferences.
  *
  * @module src/ai/flows/suggest-shifts
  *
@@ -23,19 +24,19 @@ const SuggestShiftAssignmentsInputSchema = z.object({
       z.object({
         id: z.string().describe('Unique identifier for the employee.'),
         name: z.string().describe('Name of the employee.'),
-        availability: z
+        unavailability: z
           .array(z.object({
             day: z.string().describe('Day of the week (e.g., Monday).'),
-            startTime: z.string().describe('Start time of availability (e.g., 09:00).'),
-            endTime: z.string().describe('End time of availability (e.g., 17:00).'),
+            startTime: z.string().describe('Start time of unavailability (e.g., 09:00).'),
+            endTime: z.string().describe('End time of unavailability (e.g., 17:00).'),
           }))
-          .describe('Employee availability for the week.'),
+          .describe('Employee unavailability for the week.'),
         preferences: z
           .string()
           .describe('Employee shift preferences or constraints.'),
       })
     )
-    .describe('List of employees and their availability and preferences.'),
+    .describe('List of employees and their unavailability and preferences.'),
   shifts: z
     .array(
       z.object({
@@ -86,11 +87,11 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
   output: {schema: SuggestShiftAssignmentsOutputSchema},
   prompt: `Você é um assistente de IA que ajuda a criar atribuições de turno ideais para uma equipe médica. A resposta deve ser em português, EXCETO pelo campo shiftDay.
 
-  Com base na disponibilidade dos funcionários, preferências, requisitos de turno e restrições de horário, sugira atribuições de turno.
+  Com base na indisponibilidade dos funcionários, preferências, requisitos de turno e restrições de horário, sugira atribuições de turno. Os períodos de indisponibilidade são bloqueios e nenhum turno deve ser atribuído a um funcionário durante esses horários.
 
   A data de hoje para referência é {{{currentDate}}}. Use isso para entender quaisquer datas relativas ou específicas mencionadas nas restrições.
 
-  Funcionários: {{{employees}}}
+  Funcionários (incluindo indisponibilidades): {{{employees}}}
   Turnos: {{{shifts}}}
   Restrições de Horário: {{{scheduleConstraints}}}
 

@@ -106,7 +106,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
 
     try {
       const result = await suggestShiftAssignments({
-        employees: employees.map(({ id, name, availability, preferences }) => ({ id, name, availability, preferences })),
+        employees: employees.map(({ id, name, unavailability, preferences }) => ({ id, name, unavailability, preferences })),
         shifts: shiftsToFill,
         scheduleConstraints: data.scheduleConstraints || "",
         currentDate: format(currentDate, 'yyyy-MM-dd'),

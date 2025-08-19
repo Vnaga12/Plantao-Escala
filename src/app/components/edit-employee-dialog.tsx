@@ -94,7 +94,7 @@ export function EditEmployeeDialog({
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "availability"
+    name: "unavailability"
   });
 
   React.useEffect(() => {
@@ -177,12 +177,12 @@ export function EditEmployeeDialog({
 
                                 <div>
                                     <div className="flex justify-between items-center mb-4">
-                                        <h3 className="font-semibold text-lg text-gray-700">Disponibilidade Pessoal</h3>
+                                        <h3 className="font-semibold text-lg text-gray-700">Dias de Indisponibilidade</h3>
                                         <Button type="button" size="sm" variant="outline" onClick={() => append({ day: 'Monday', startTime: '09:00', endTime: '17:00' })}>
                                             <Plus className="mr-2 h-4 w-4" /> Adicionar
                                         </Button>
                                     </div>
-                                     <p className="text-sm text-muted-foreground mb-4 -mt-2">Indisponibilidades específicas para este funcionário, além das regras da sua função.</p>
+                                     <p className="text-sm text-muted-foreground mb-4 -mt-2">Indique os dias e horários em que o funcionário não está disponível para trabalhar. A IA considerará estes como bloqueios.</p>
                                     <div className="space-y-3">
                                     {fields.map((item, index) => (
                                         <div key={item.id} className="grid grid-cols-[1fr,1fr,1fr,auto] items-center gap-2 p-2 border rounded-md bg-gray-50/50">
@@ -190,7 +190,7 @@ export function EditEmployeeDialog({
                                                 <Label className="text-xs">Dia</Label>
                                                 <Controller
                                                     control={control}
-                                                    name={`availability.${index}.day`}
+                                                    name={`unavailability.${index}.day`}
                                                     render={({ field }) => (
                                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                         <SelectTrigger><SelectValue /></SelectTrigger>
@@ -203,11 +203,11 @@ export function EditEmployeeDialog({
                                             </div>
                                             <div className="flex flex-col space-y-1">
                                                 <Label className="text-xs">Início</Label>
-                                                <Input type="time" {...register(`availability.${index}.startTime`)} />
+                                                <Input type="time" {...register(`unavailability.${index}.startTime`)} />
                                             </div>
                                             <div className="flex flex-col space-y-1">
                                             <Label className="text-xs">Fim</Label>
-                                            <Input type="time" {...register(`availability.${index}.endTime`)} />
+                                            <Input type="time" {...register(`unavailability.${index}.endTime`)} />
                                             </div>
                                             <Button type="button" variant="ghost" size="icon" className="self-end text-destructive hover:bg-destructive/10" onClick={() => remove(index)}>
                                                 <Trash2 className="h-4 w-4"/>
@@ -215,7 +215,7 @@ export function EditEmployeeDialog({
                                         </div>
                                     ))}
                                     {fields.length === 0 && (
-                                            <p className="text-sm text-muted-foreground text-center py-4">Nenhuma disponibilidade pessoal definida.</p>
+                                            <p className="text-sm text-muted-foreground text-center py-4">Nenhuma indisponibilidade definida.</p>
                                     )}
                                     </div>
                                 </div>
