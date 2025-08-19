@@ -108,9 +108,18 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
         shifts: shiftsToFill,
         scheduleConstraints: data.scheduleConstraints || "",
       });
-      setSuggestions(result);
-      setEditableSuggestions(result.assignments);
-      setSelectedSuggestions(result.assignments.map((_, index) => index)); // Select all by default
+        
+      if (result && result.assignments) {
+          setSuggestions(result);
+          setEditableSuggestions(result.assignments);
+          setSelectedSuggestions(result.assignments.map((_, index) => index)); // Select all by default
+      } else {
+        toast({
+            variant: "destructive",
+            title: "Erro ao Sugerir Turnos",
+            description: "A IA não conseguiu gerar sugestões. Verifique as restrições ou tente novamente.",
+        });
+      }
     } catch (error) {
       console.error("Error suggesting shifts:", error);
       toast({
@@ -153,8 +162,8 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
       ...suggestionToUpdate,
       employeeId: employee?.id || suggestionToUpdate.employeeId,
       role: updatedShift.role,
-      shiftStartTime: updatedShift.startTime,
-      shiftEndTime: updatedShift.endTime,
+      startTime: updatedShift.startTime,
+      endTime: updatedShift.endTime,
     };
     setEditableSuggestions(newEditableSuggestions);
   };
@@ -351,3 +360,5 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
     </Dialog>
   );
 }
+
+    
