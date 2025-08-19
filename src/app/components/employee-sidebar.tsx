@@ -10,6 +10,7 @@ import { EditEmployeeDialog } from "./edit-employee-dialog";
 import { EditDayDialog } from "./edit-day-dialog";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type EmployeeSidebarProps = {
   employees: Employee[];
@@ -25,6 +26,7 @@ type EmployeeSidebarProps = {
   calendarName: string;
   onAddDayEvent: (event: { date: Date; name: string; color: ShiftColor }) => void;
   colorMeanings: { color: ShiftColor, meaning: string }[];
+  onDeleteMultipleEmployees: (employeeIds: string[]) => void;
 };
 
 export default function EmployeeSidebar({
@@ -40,13 +42,16 @@ export default function EmployeeSidebar({
   roles,
   calendarName,
   onAddDayEvent,
-  colorMeanings
+  colorMeanings,
+  onDeleteMultipleEmployees,
 }: EmployeeSidebarProps) {
   const [newEmployeeName, setNewEmployeeName] = React.useState("");
+  const [selectedEmployees, setSelectedEmployees] = React.useState<string[]>([]);
+  const [isSelecting, setIsSelecting] = React.useState(false);
 
   const handleAddClick = () => {
     if (newEmployeeName.trim() === "") return;
-    onAddEmployee(newEmployeeName.trim());
+    onAddEmployee(newEmployeeName.trim()); // Assuming onAddEmployee takes the name directly
     setNewEmployeeName("");
   };
 
@@ -54,9 +59,29 @@ export default function EmployeeSidebar({
 
   return (
     <aside className="w-72 flex-shrink-0 border-r bg-gray-50 p-4 flex flex-col print:hidden">
-      <div className="flex-1 flex flex-col min-h-0">
-        <div className="flex justify-between items-center mb-2">
+       <div className="flex justify-between items-center mb-2">
           <h2 className="text-lg font-semibold flex items-center gap-2"><Users className="h-5 w-5" /> Grupo</h2>
+          <div className="flex items-center gap-2">
+            {isSelecting && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  onDeleteMultipleEmployees(selectedEmployees);
+                  setSelectedEmployees([]);
+                  setIsSelecting(false);
+                }}
+                disabled={selectedEmployees.length === 0}
+              >
+                Deletar ({selectedEmployees.length})
+              </Button>
+            )}
+             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsSelecting(!isSelecting)}>
+                <Users className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      <div className="flex-1 flex flex-col min-h-0">
         </div>
         <div className="flex items-center gap-2 mb-4">
           <Input 
@@ -100,7 +125,7 @@ export default function EmployeeSidebar({
             ))}
           </div>
         </ScrollArea>
-      </div>
+      
 
       <Separator className="my-4" />
 
