@@ -59,7 +59,15 @@ export function AddShiftDialog({ onAddShift, date, shiftTypes, colorMeanings, em
 
   const roleToColorMap = React.useMemo(() => new Map(colorMeanings.map(m => [m.meaning, m.color])), [colorMeanings]);
   const selectedRole = watch("role");
-  const selectedColor = roleToColorMap.get(selectedRole) || 'gray';
+  
+  React.useEffect(() => {
+    if (selectedRole) {
+      setValue('color', roleToColorMap.get(selectedRole) || 'gray');
+    }
+  }, [selectedRole, setValue, roleToColorMap]);
+
+  const selectedColor = watch("color");
+
 
   const onSubmit: SubmitHandler<AddShiftFormValues> = (data) => {
     const shiftDate = format(date, 'yyyy-MM-dd');
@@ -75,9 +83,10 @@ export function AddShiftDialog({ onAddShift, date, shiftTypes, colorMeanings, em
             startTime: "09:00",
             endTime: "17:00",
             role: shiftTypes[0] || "",
+            color: roleToColorMap.get(shiftTypes[0]) || 'gray'
         });
     }
-  }, [isOpen, shiftTypes, reset, employees]);
+  }, [isOpen, shiftTypes, reset, employees, roleToColorMap]);
 
 
   return (
