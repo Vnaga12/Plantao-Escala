@@ -50,6 +50,10 @@ export default function EmployeeSidebar({
     setNewEmployeeName("");
   };
 
+  const sortedEmployees = React.useMemo(() => 
+    [...employees].sort((a, b) => a.name.localeCompare(b.name)),
+  [employees]);
+
   return (
     <aside className="w-72 flex-shrink-0 border-r bg-gray-50 p-4 flex flex-col print:hidden">
       <div className="flex justify-between items-center mb-4">
@@ -71,7 +75,7 @@ export default function EmployeeSidebar({
 
       <ScrollArea className="flex-1 -mr-4 pr-4">
         <div className="space-y-1">
-          {employees.map((employee) => (
+          {sortedEmployees.map((employee) => (
             <div key={employee.id} className="flex items-center justify-between p-2 rounded-md hover:bg-gray-100 group">
               <div>
                   <p className="font-medium text-sm text-gray-700">{employee.name}</p>
