@@ -35,6 +35,7 @@ import { ClipboardList, FileSpreadsheet, ChevronLeft, ChevronRight } from "lucid
 import { format, getDaysInMonth, addMonths, subMonths, eachDayOfInterval, startOfMonth, endOfMonth, startOfWeek, endOfWeek, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import ColorLegend from "./color-legend";
 
 
 type ReportDialogProps = {
@@ -42,6 +43,7 @@ type ReportDialogProps = {
   calendars: Calendar[];
   currentDate: Date;
   shiftTypes: string[];
+  colorMeanings: { color: ShiftColor, meaning: string }[];
 };
 
 const roleColorMap: Record<ShiftColor, string> = {
@@ -75,7 +77,7 @@ const cellColorClasses: Record<ShiftColor, string> = {
 };
 
 
-export function ReportDialog({ employees, calendars, currentDate, shiftTypes }: ReportDialogProps) {
+export function ReportDialog({ employees, calendars, currentDate, shiftTypes, colorMeanings }: ReportDialogProps) {
     const [isOpen, setIsOpen] = React.useState(false);
     const [viewedMonth, setViewedMonth] = React.useState(currentDate);
     const [selectedCalendarId, setSelectedCalendarId] = React.useState(calendars[0]?.id || 'all');
@@ -260,7 +262,7 @@ export function ReportDialog({ employees, calendars, currentDate, shiftTypes }: 
             </div>
         </div>
         
-        <div className="flex-1 min-h-0 relative">
+        <div className="flex-1 min-h-0 relative flex flex-col gap-4">
             <div className="absolute top-2 right-2 z-10 flex gap-2">
                 <Button variant="outline" size="icon" onClick={() => handleScroll('left')}>
                     <ChevronLeft className="h-4 w-4" />
@@ -325,6 +327,9 @@ export function ReportDialog({ employees, calendars, currentDate, shiftTypes }: 
                 </TableBody>
               </Table>
             </ScrollArea>
+             <div className="mt-auto flex-shrink-0">
+                <ColorLegend meanings={colorMeanings} />
+             </div>
         </div>
 
 

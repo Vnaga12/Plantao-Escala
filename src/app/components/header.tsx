@@ -21,8 +21,6 @@ type HeaderProps = {
   employees: Employee[];
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  roles: Role[];
-  onRolesChange: (roles: Role[]) => void;
   calendars: Calendar[];
   activeCalendarId: string;
   onCalendarChange: (id: string) => void;
@@ -40,8 +38,6 @@ export default function Header({
   employees, 
   searchQuery, 
   onSearchChange,
-  roles,
-  onRolesChange,
   calendars,
   activeCalendarId,
   onCalendarChange,
@@ -99,8 +95,6 @@ export default function Header({
         </div>
         <div className="flex items-center gap-2">
            <SettingsDialog 
-              roles={roles} 
-              onRolesChange={onRolesChange} 
               colorMeanings={colorMeanings} 
               onColorMeaningsChange={onColorMeaningsChange} 
             />
@@ -109,6 +103,7 @@ export default function Header({
               calendars={calendars}
               currentDate={currentDate}
               shiftTypes={shiftTypes}
+              colorMeanings={colorMeanings}
             />
             <Button variant="outline" onClick={handlePrint}>
               <Download className="mr-2 h-4 w-4" />
@@ -119,5 +114,3 @@ export default function Header({
     </header>
   );
 }
-
-    
