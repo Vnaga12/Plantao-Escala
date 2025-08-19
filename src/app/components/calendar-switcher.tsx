@@ -18,11 +18,21 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronsUpDown, PlusCircle, Edit } from "lucide-react";
+import { ChevronsUpDown, PlusCircle, Edit, Trash2 } from "lucide-react";
 import type { Calendar } from "@/lib/types";
 
 type CalendarSwitcherProps = {
@@ -30,6 +40,7 @@ type CalendarSwitcherProps = {
   activeCalendarId: string;
   onCalendarChange: (id: string) => void;
   onCalendarsChange: (calendars: Calendar[]) => void;
+  onDeleteCalendar: (id: string) => void;
 };
 
 export default function CalendarSwitcher({
@@ -37,6 +48,7 @@ export default function CalendarSwitcher({
   activeCalendarId,
   onCalendarChange,
   onCalendarsChange,
+  onDeleteCalendar,
 }: CalendarSwitcherProps) {
   const [isAddOpen, setAddIsOpen] = React.useState(false);
   const [isEditOpen, setEditIsOpen] = React.useState(false);
@@ -68,6 +80,10 @@ export default function CalendarSwitcher({
     setEditIsOpen(false);
   };
 
+  const handleDelete = (calendarId: string) => {
+    onDeleteCalendar(calendarId);
+  }
+
   const openEditDialog = (calendar: Calendar) => {
     setEditingCalendar(calendar);
     setEditIsOpen(true);
@@ -88,21 +104,49 @@ export default function CalendarSwitcher({
           {calendars.map((calendar) => (
             <DropdownMenuItem
               key={calendar.id}
-              className="justify-between"
+              className="justify-between group"
               onSelect={() => onCalendarChange(calendar.id)}
             >
-              {calendar.name}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openEditDialog(calendar);
-                }}
-              >
-                <Edit className="h-3 w-3" />
-              </Button>
+              <span className="flex-1">{calendar.name}</span>
+              <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openEditDialog(calendar);
+                  }}
+                >
+                  <Edit className="h-3 w-3" />
+                </Button>
+                 <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta ação não pode ser desfeita. Isso excluirá permanentemente o hospital "{calendar.name}" e todos os seus plantões.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete(calendar.id)}>
+                        Excluir
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </DropdownMenuItem>
           ))}
           <DropdownMenuSeparator />

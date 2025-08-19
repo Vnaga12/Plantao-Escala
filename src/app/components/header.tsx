@@ -25,6 +25,7 @@ type HeaderProps = {
   activeCalendarId: string;
   onCalendarChange: (id: string) => void;
   onCalendarsChange: (calendars: Calendar[]) => void;
+  onDeleteCalendar: (id: string) => void;
   colorMeanings: { color: ShiftColor, meaning: string }[];
   onColorMeaningsChange: (meanings: { color: ShiftColor, meaning: string }[]) => void;
   isSidebarOpen: boolean;
@@ -42,6 +43,7 @@ export default function Header({
   activeCalendarId,
   onCalendarChange,
   onCalendarsChange,
+  onDeleteCalendar,
   colorMeanings,
   onColorMeaningsChange,
   isSidebarOpen,
@@ -71,6 +73,7 @@ export default function Header({
             activeCalendarId={activeCalendarId}
             onCalendarChange={onCalendarChange}
             onCalendarsChange={onCalendarsChange}
+            onDeleteCalendar={onDeleteCalendar}
           />
           <div className="flex items-center gap-2 rounded-md bg-gray-100 p-1">
             <Button variant="ghost" size="icon" onClick={onPrevMonth} aria-label="Mês anterior">

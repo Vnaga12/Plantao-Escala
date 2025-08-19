@@ -269,6 +269,20 @@ export default function Home() {
     });
   };
 
+  const handleDeleteCalendar = (calendarId: string) => {
+    const newCalendars = calendars.filter(c => c.id !== calendarId);
+    setCalendars(newCalendars);
+
+    if (activeCalendarId === calendarId) {
+      setActiveCalendarId(newCalendars[0]?.id || '');
+    }
+
+    toast({
+      title: "Hospital Excluído",
+      description: "O hospital foi removido com sucesso.",
+    });
+  };
+
   const handleAddDayEvent = (event: { date: Date; name: string; color: ShiftColor }) => {
     const { date, name, color } = event;
     const eventDate = format(date, 'yyyy-MM-dd');
@@ -338,13 +352,19 @@ export default function Home() {
   const filteredShifts = shifts.filter(shift => {
     if (!shift.date || !shift.date.includes('-')) return false; // Guard against invalid date formats
     const query = searchQuery.toLowerCase();
-    const shiftDate = parseISO(shift.date);
-
-    return (
-      (shift.employeeName.toLowerCase().includes(query) ||
-      shift.role.toLowerCase().includes(query)) &&
-      isSameMonth(shiftDate, currentDate)
-    );
+    
+    // This could fail if the date is not a valid ISO string
+    try {
+        const shiftDate = parseISO(shift.date);
+        return (
+          (shift.employeeName.toLowerCase().includes(query) ||
+          shift.role.toLowerCase().includes(query)) &&
+          isSameMonth(shiftDate, currentDate)
+        );
+    } catch(e) {
+        console.warn(`Invalid date format for shift id ${shift.id}: ${shift.date}`);
+        return false;
+    }
   });
   
   const shiftTypes = React.useMemo(() => colorMeanings.map(cm => cm.meaning), [colorMeanings]);
@@ -366,6 +386,7 @@ export default function Home() {
         activeCalendarId={activeCalendarId}
         onCalendarChange={setActiveCalendarId}
         onCalendarsChange={setCalendars}
+        onDeleteCalendar={handleDeleteCalendar}
         colorMeanings={colorMeanings}
         onColorMeaningsChange={setColorMeanings}
         isSidebarOpen={isSidebarOpen}
@@ -427,5 +448,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
