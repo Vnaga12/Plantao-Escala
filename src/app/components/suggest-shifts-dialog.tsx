@@ -39,7 +39,7 @@ import { format } from "date-fns";
 
 type SuggestShiftsDialogProps = {
   employees: Employee[];
-  onApplySuggestions: (suggestions: Shift[]) => void;
+  onApplySuggestions: (suggestions: Omit<Shift, 'date'>[]) => void;
   roles: string[];
   currentDate: Date;
 };
@@ -137,17 +137,18 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
 
   const handleApply = () => {
     if (!suggestions) return;
-    const finalShifts: Shift[] = selectedSuggestions.map(index => {
+    const finalShifts: Omit<Shift, 'date'>[] = selectedSuggestions.map(index => {
       const suggestion = editableSuggestions[index];
       const employee = employees.find(e => e.id === suggestion.employeeId);
       return {
         id: `suggested-${Date.now()}-${index}`,
-        date: suggestion.shiftDay, // This will be handled in the parent component
+        // The date here is the day name, e.g., "Monday". The parent will handle the conversion.
+        date: suggestion.shiftDay, 
         employeeName: employee?.name || 'Desconhecido',
         role: suggestion.role,
         startTime: suggestion.shiftStartTime,
         endTime: suggestion.shiftEndTime,
-        color: 'yellow' as ShiftColor, // Or determine color based on role
+        color: 'yellow' as ShiftColor, 
       };
     });
     
@@ -363,3 +364,5 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
     </Dialog>
   );
 }
+
+    

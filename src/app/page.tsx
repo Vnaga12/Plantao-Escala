@@ -296,31 +296,37 @@ export default function Home() {
     });
 };
 
-  const handleApplySuggestions = (newShifts: Shift[], forDate: Date) => {
+  const handleApplySuggestions = (newShiftsFromAI: Omit<Shift, 'date'>[], forDate: Date) => {
     const englishToJsDayMap: Record<string, number> = {
-      Sunday: 0,
-      Monday: 1,
-      Tuesday: 2,
-      Wednesday: 3,
-      Thursday: 4,
-      Friday: 5,
-      Saturday: 6,
+        'Sunday': 0,
+        'Monday': 1,
+        'Tuesday': 2,
+        'Wednesday': 3,
+        'Thursday': 4,
+        'Friday': 5,
+        'Saturday': 6,
     };
 
     const weekStart = startOfWeek(forDate, { locale: ptBR });
     const weekDays = eachDayOfInterval({ start: weekStart, end: endOfWeek(forDate, { locale: ptBR }) });
 
-    const finalShifts = newShifts.map(s => {
-        const targetDayIndex = englishToJsDayMap[s.date];
+    const finalShifts = newShiftsFromAI.map(s => {
+        // Here, s.date from the AI is a string like "Monday"
+        const shiftDayName = (s as any).date; 
+        const targetDayIndex = englishToJsDayMap[shiftDayName];
+        
         if (targetDayIndex === undefined) return null;
 
         const targetDate = weekDays.find(d => d.getDay() === targetDayIndex);
         
+        if (!targetDate) return null;
+        
         return {
             ...s,
-            date: targetDate ? format(targetDate, 'yyyy-MM-dd') : s.date // Fallback
+            date: format(targetDate, 'yyyy-MM-dd'),
+            color: roleToColorMap.get(s.role) || 'yellow'
         };
-    }).filter((s): s is Shift => s !== null && s.date.includes('-')); // Ensure only valid dates are added
+    }).filter((s): s is Shift => s !== null);
 
     updateActiveCalendarShifts([...shifts, ...finalShifts]);
     toast({
@@ -330,6 +336,7 @@ export default function Home() {
   };
 
   const filteredShifts = shifts.filter(shift => {
+    if (!shift.date || !shift.date.includes('-')) return false; // Guard against invalid date formats
     const query = searchQuery.toLowerCase();
     const shiftDate = parseISO(shift.date);
 
@@ -420,3 +427,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
