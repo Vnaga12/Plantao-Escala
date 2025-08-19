@@ -76,14 +76,18 @@ export async function suggestShiftAssignments(input: SuggestShiftAssignmentsInpu
 
 const suggestShiftAssignmentsPrompt = ai.definePrompt({
   name: 'suggestShiftAssignmentsPrompt',
-  input: {schema: SuggestShiftAssignmentsInputSchema},
+  input: {schema: z.object({
+      employees: z.string(),
+      shifts: z.string(),
+      scheduleConstraints: z.string(),
+  })},
   output: {schema: SuggestShiftAssignmentsOutputSchema},
   prompt: `Você é um assistente de IA que ajuda a criar atribuições de turno ideais para uma equipe médica. A resposta deve ser em português, EXCETO pelo campo shiftDay.
 
   Com base na disponibilidade dos funcionários, preferências, requisitos de turno e restrições de horário, sugira atribuições de turno.
 
-  Funcionários: {{{JSON.stringify employees}}}
-  Turnos: {{{JSON.stringify shifts}}}
+  Funcionários: {{{employees}}}
+  Turnos: {{{shifts}}}
   Restrições de Horário: {{{scheduleConstraints}}}
 
   Considere as preferências dos funcionários e a justiça ao fazer as atribuições.
@@ -112,11 +116,6 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
       },
     ],
   },
-  template: {
-    helpers: {
-      'JSON.stringify': (context: any) => JSON.stringify(context),
-    }
-  }
 });
 
 const suggestShiftAssignmentsFlow = ai.defineFlow(
@@ -126,7 +125,11 @@ const suggestShiftAssignmentsFlow = ai.defineFlow(
     outputSchema: SuggestShiftAssignmentsOutputSchema,
   },
   async input => {
-    const {output} = await suggestShiftAssignmentsPrompt(input);
+    const {output} = await suggestShiftAssignmentsPrompt({
+        employees: JSON.stringify(input.employees),
+        shifts: JSON.stringify(input.shifts),
+        scheduleConstraints: input.scheduleConstraints
+    });
     return output!;
   }
 );
