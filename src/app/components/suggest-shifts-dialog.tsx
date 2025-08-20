@@ -190,7 +190,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
 
         <div className="flex-1 flex gap-6 overflow-hidden pt-4">
             {/* Form Section */}
-            <div className="w-1/3 flex-shrink-0">
+            <ScrollArea className="w-1/3 flex-shrink-0 pr-6 -mr-6">
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div>
                         <Label className="font-semibold">1. Período da Escala</Label>
@@ -295,7 +295,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
                         )}
                     </Button>
                 </form>
-            </div>
+            </ScrollArea>
 
             {/* Results Section */}
             <div className="flex-1 flex flex-col overflow-hidden border-l pl-6">
