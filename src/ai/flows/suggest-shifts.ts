@@ -54,7 +54,7 @@ const SuggestShiftAssignmentsOutputSchema = z.object({
   assignments: z
     .array(
       z.object({
-        employeeId: z.string().describe('The ID of the employee assigned to the shift.'),
+        employeeId: z.string().describe('The ID of the employee assigned to the shift. This ID must be one of the employee IDs provided in the input.'),
         shiftDate: z.string().describe('The date of the assigned shift in YYYY-MM-DD format.'),
         shiftStartTime: z.string().describe('Start time of the assigned shift.'),
         shiftEndTime: z.string().describe('End time of the assigned shift.'),
@@ -89,6 +89,7 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
 
   Considere as preferências dos funcionários e a justiça ao fazer as atribuições.
   Retorne as atribuições de turno como um objeto JSON. A data do turno (shiftDate) DEVE ser no formato YYYY-MM-DD.
+  Para cada atribuição, o campo 'employeeId' DEVE ser um dos IDs fornecidos na lista de funcionários de entrada. Não invente novos IDs.
   Certifique-se de que sua resposta corresponda exatamente ao esquema de saída, incluindo todos os campos.
   Pense passo a passo e explique seu raciocínio no resumo.
   IMPORTANTE: O resumo deve estar em português.
