@@ -310,34 +310,12 @@ export default function Home() {
     });
 };
 
-  const handleApplySuggestions = (newShiftsFromAI: Omit<Shift, 'date'>[], forDate: Date) => {
-    const englishToJsDayMap: Record<string, number> = {
-        'Sunday': 0,
-        'Monday': 1,
-        'Tuesday': 2,
-        'Wednesday': 3,
-        'Thursday': 4,
-        'Friday': 5,
-        'Saturday': 6,
-    };
-
-    const weekStart = startOfWeek(forDate, { locale: ptBR });
-    const weekDays = eachDayOfInterval({ start: weekStart, end: endOfWeek(forDate, { locale: ptBR }) });
-
+  const handleApplySuggestions = (newShiftsFromAI: Omit<Shift, 'id' | 'date' | 'color'> & { date: string }) => {
     const finalShifts = newShiftsFromAI.map(s => {
-        // Here, s.date from the AI is a string like "Monday"
-        const shiftDayName = (s as any).date; 
-        const targetDayIndex = englishToJsDayMap[shiftDayName];
-        
-        if (targetDayIndex === undefined) return null;
-
-        const targetDate = weekDays.find(d => d.getDay() === targetDayIndex);
-        
-        if (!targetDate) return null;
-        
         return {
             ...s,
-            date: format(targetDate, 'yyyy-MM-dd'),
+            id: s.id,
+            date: s.date,
             color: roleToColorMap.get(s.role) || 'yellow'
         };
     }).filter((s): s is Shift => s !== null);
@@ -401,7 +379,7 @@ export default function Home() {
             <SuggestShiftsDialog 
               employees={employees} 
               roles={shiftTypes} 
-              onApplySuggestions={(newShifts) => handleApplySuggestions(newShifts, currentDate)}
+              onApplySuggestions={handleApplySuggestions}
               currentDate={currentDate}
             />
         </div>

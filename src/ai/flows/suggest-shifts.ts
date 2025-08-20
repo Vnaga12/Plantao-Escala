@@ -17,6 +17,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { eachDayOfInterval, format, parseISO } from 'date-fns';
 
 const SuggestShiftAssignmentsInputSchema = z.object({
   employees: z
@@ -37,20 +38,14 @@ const SuggestShiftAssignmentsInputSchema = z.object({
       })
     )
     .describe('List of employees and their unavailability and preferences.'),
-  shifts: z
-    .array(
-      z.object({
-        day: z.string().describe('Day of the week for the shift.'),
-        startTime: z.string().describe('Start time of the shift (e.g., 09:00).'),
-        endTime: z.string().describe('End time of the shift (e.g., 17:00).'),
-        role: z.string().describe('The role that needs to be filled for the shift (e.g. Doctor, Nurse)'),
-      })
-    )
-    .describe('List of shifts that need to be filled.'),
+  rolesToFill: z
+    .array(z.string())
+    .describe('List of roles that need to be filled (e.g. Doctor, Nurse).'),
   scheduleConstraints: z
     .string()
     .describe('Constraints or requirements for the overall schedule.'),
-  currentDate: z.string().describe('The current date for context, in YYYY-MM-DD format.'),
+  startDate: z.string().describe('The start date for the schedule period, in YYYY-MM-DD format.'),
+  endDate: z.string().describe('The end date for the schedule period, in YYYY-MM-DD format.'),
 });
 
 export type SuggestShiftAssignmentsInput = z.infer<typeof SuggestShiftAssignmentsInputSchema>;
@@ -60,7 +55,7 @@ const SuggestShiftAssignmentsOutputSchema = z.object({
     .array(
       z.object({
         employeeId: z.string().describe('The ID of the employee assigned to the shift.'),
-        shiftDay: z.string().describe('Day of the week for the assigned shift. MUST be in English (e.g., Monday, Tuesday).'),
+        shiftDate: z.string().describe('The date of the assigned shift in YYYY-MM-DD format.'),
         shiftStartTime: z.string().describe('Start time of the assigned shift.'),
         shiftEndTime: z.string().describe('End time of the assigned shift.'),
         role: z.string().describe('The role that the employee will fulfill'),
@@ -82,24 +77,21 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
       employees: z.string(),
       shifts: z.string(),
       scheduleConstraints: z.string(),
-      currentDate: z.string(),
   })},
   output: {schema: SuggestShiftAssignmentsOutputSchema},
-  prompt: `Você é um assistente de IA que ajuda a criar atribuições de turno ideais para uma equipe médica. A resposta deve ser em português, EXCETO pelo campo shiftDay.
+  prompt: `Você é um assistente de IA que ajuda a criar atribuições de turno ideais para uma equipe médica. A resposta deve ser em português.
 
   Com base na indisponibilidade dos funcionários, preferências, requisitos de turno e restrições de horário, sugira atribuições de turno. Os períodos de indisponibilidade são bloqueios e nenhum turno deve ser atribuído a um funcionário durante esses horários.
 
-  A data de hoje para referência é {{{currentDate}}}. Use isso para entender quaisquer datas relativas ou específicas mencionadas nas restrições.
-
   Funcionários (incluindo indisponibilidades): {{{employees}}}
-  Turnos: {{{shifts}}}
+  Turnos a serem preenchidos: {{{shifts}}}
   Restrições de Horário: {{{scheduleConstraints}}}
 
   Considere as preferências dos funcionários e a justiça ao fazer as atribuições.
-  Retorne as atribuições de turno como um objeto JSON.
+  Retorne as atribuições de turno como um objeto JSON. A data do turno (shiftDate) DEVE ser no formato YYYY-MM-DD.
   Certifique-se de que sua resposta corresponda exatamente ao esquema de saída, incluindo todos os campos.
   Pense passo a passo e explique seu raciocínio no resumo.
-  IMPORTANTE: Os dias da semana no campo shiftDay DEVEM estar em inglês (ex: Monday, Tuesday, etc.). O resumo deve estar em português.
+  IMPORTANTE: O resumo deve estar em português.
   `,
   config: {
     safetySettings: [
@@ -130,11 +122,25 @@ const suggestShiftAssignmentsFlow = ai.defineFlow(
     outputSchema: SuggestShiftAssignmentsOutputSchema,
   },
   async input => {
+
+    const allDates = eachDayOfInterval({
+        start: parseISO(input.startDate),
+        end: parseISO(input.endDate),
+    });
+
+    const shiftsToFill = allDates.flatMap(date =>
+        input.rolesToFill.map(role => ({
+            date: format(date, 'yyyy-MM-dd'),
+            startTime: '09:00', // Default, can be adjusted or made configurable
+            endTime: '17:00', // Default
+            role: role
+        }))
+    );
+
     const {output} = await suggestShiftAssignmentsPrompt({
         employees: JSON.stringify(input.employees),
-        shifts: JSON.stringify(input.shifts),
+        shifts: JSON.stringify(shiftsToFill),
         scheduleConstraints: input.scheduleConstraints,
-        currentDate: input.currentDate,
     });
     return output!;
   }
