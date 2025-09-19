@@ -310,7 +310,7 @@ export default function Home() {
     });
 };
 
-  const handleApplySuggestions = (newShiftsFromAI: Omit<Shift, 'id' | 'date' | 'color'> & { date: string }) => {
+  const handleApplySuggestions = (newShiftsFromAI: Omit<Shift, 'id' | 'color'> & { date: string }) => {
     const finalShifts = newShiftsFromAI.map(s => {
         return {
             ...s,
@@ -328,33 +328,38 @@ export default function Home() {
   };
   
   const handleColorMeaningsChange = (newMeanings: { color: ShiftColor; meaning: string }[]) => {
-    const oldMeanings = colorMeanings;
+      const oldMeanings = colorMeanings;
+      const renameMap = new Map<string, string>();
 
-    // Find renamed meanings
-    const renameMap = new Map<string, string>();
-    oldMeanings.forEach((oldItem, index) => {
-        const newItem = newMeanings.find(item => item.color === oldItem.color);
-        if (newItem && newItem.meaning !== oldItem.meaning) {
-            renameMap.set(oldItem.meaning, newItem.meaning);
-        }
-    });
+      // Create a map of old meanings for quick lookup
+      const oldMeaningsMap = new Map(oldMeanings.map(item => [item.meaning, item]));
 
-    // Update shifts in all calendars if there are renames
-    if (renameMap.size > 0) {
-        const updatedCalendars = calendars.map(cal => ({
-            ...cal,
-            shifts: cal.shifts.map(shift => {
-                if (renameMap.has(shift.role)) {
-                    return { ...shift, role: renameMap.get(shift.role)! };
-                }
-                return shift;
-            })
-        }));
-        setCalendars(updatedCalendars);
-    }
-    
-    // Update the color meanings state
-    setColorMeanings(newMeanings);
+      // Identify renamed items
+      newMeanings.forEach(newItem => {
+          const oldItem = oldMeaningsMap.get(newItem.meaning);
+          if (!oldItem) { // if the new meaning name does not exist in the old map
+              // Find an item in the old list with the same color, but different name
+              const renamedFrom = oldMeanings.find(om => om.color === newItem.color && !newMeanings.some(nm => nm.meaning === om.meaning));
+              if (renamedFrom) {
+                  renameMap.set(renamedFrom.meaning, newItem.meaning);
+              }
+          }
+      });
+      
+      if (renameMap.size > 0) {
+          const updatedCalendars = calendars.map(cal => ({
+              ...cal,
+              shifts: cal.shifts.map(shift => {
+                  if (renameMap.has(shift.role)) {
+                      return { ...shift, role: renameMap.get(shift.role)! };
+                  }
+                  return shift;
+              })
+          }));
+          setCalendars(updatedCalendars);
+      }
+      
+      setColorMeanings(newMeanings);
   };
 
   const filteredShifts = shifts.filter(shift => {
@@ -456,3 +461,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
