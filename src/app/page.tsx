@@ -326,6 +326,36 @@ export default function Home() {
       description: `${finalShifts.length} novos turnos foram adicionados ao calendário.`
     });
   };
+  
+  const handleColorMeaningsChange = (newMeanings: { color: ShiftColor; meaning: string }[]) => {
+    const oldMeanings = colorMeanings;
+
+    // Find renamed meanings
+    const renameMap = new Map<string, string>();
+    oldMeanings.forEach((oldItem, index) => {
+        const newItem = newMeanings.find(item => item.color === oldItem.color);
+        if (newItem && newItem.meaning !== oldItem.meaning) {
+            renameMap.set(oldItem.meaning, newItem.meaning);
+        }
+    });
+
+    // Update shifts in all calendars if there are renames
+    if (renameMap.size > 0) {
+        const updatedCalendars = calendars.map(cal => ({
+            ...cal,
+            shifts: cal.shifts.map(shift => {
+                if (renameMap.has(shift.role)) {
+                    return { ...shift, role: renameMap.get(shift.role)! };
+                }
+                return shift;
+            })
+        }));
+        setCalendars(updatedCalendars);
+    }
+    
+    // Update the color meanings state
+    setColorMeanings(newMeanings);
+  };
 
   const filteredShifts = shifts.filter(shift => {
     if (!shift.date || !shift.date.includes('-')) return false; // Guard against invalid date formats
@@ -366,7 +396,7 @@ export default function Home() {
         onCalendarsChange={setCalendars}
         onDeleteCalendar={handleDeleteCalendar}
         colorMeanings={colorMeanings}
-        onColorMeaningsChange={setColorMeanings}
+        onColorMeaningsChange={handleColorMeaningsChange}
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
