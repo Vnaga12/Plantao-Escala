@@ -310,12 +310,11 @@ export default function Home() {
     });
 };
 
-  const handleApplySuggestions = (newShiftsFromAI: Omit<Shift, 'id' | 'color'> & { date: string }) => {
+  const handleApplySuggestions = (newShiftsFromAI: Omit<Shift, 'id'>[]) => {
     const finalShifts = newShiftsFromAI.map(s => {
         return {
             ...s,
-            id: s.id,
-            date: s.date,
+            id: `suggested-${Date.now()}-${Math.random()}`,
             color: roleToColorMap.get(s.role) || 'yellow'
         };
     }).filter((s): s is Shift => s !== null);
@@ -328,21 +327,17 @@ export default function Home() {
   };
   
   const handleColorMeaningsChange = (newMeanings: { color: ShiftColor; meaning: string }[]) => {
-      const oldMeanings = colorMeanings;
+      const oldMeaningsList = colorMeanings;
       const renameMap = new Map<string, string>();
+      
+      const oldMeaningsMap = new Map(oldMeaningsList.map(item => [item.color, item.meaning]));
+      const newMeaningsMap = new Map(newMeanings.map(item => [item.color, item.meaning]));
 
-      // Create a map of old meanings for quick lookup
-      const oldMeaningsMap = new Map(oldMeanings.map(item => [item.meaning, item]));
-
-      // Identify renamed items
-      newMeanings.forEach(newItem => {
-          const oldItem = oldMeaningsMap.get(newItem.meaning);
-          if (!oldItem) { // if the new meaning name does not exist in the old map
-              // Find an item in the old list with the same color, but different name
-              const renamedFrom = oldMeanings.find(om => om.color === newItem.color && !newMeanings.some(nm => nm.meaning === om.meaning));
-              if (renamedFrom) {
-                  renameMap.set(renamedFrom.meaning, newItem.meaning);
-              }
+      // Identify renamed roles by color key
+      oldMeaningsMap.forEach((oldMeaning, color) => {
+          const newMeaning = newMeaningsMap.get(color);
+          if (newMeaning && newMeaning !== oldMeaning) {
+              renameMap.set(oldMeaning, newMeaning);
           }
       });
       
@@ -461,5 +456,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
