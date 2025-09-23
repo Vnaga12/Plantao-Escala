@@ -86,7 +86,7 @@ export default function Home() {
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [searchQuery, setSearchQuery] = React.useState("");
   const [calendars, setCalendars] = React.useState<Calendar[]>([]);
-  const [activeCalendarId, setActiveCalendarId] = React.useState<string>('');
+  const [activeCalendarId, setActiveCalendarId] = React.useState<string>('all');
   const [employees, setEmployees] = React.useState<Employee[]>([]);
   const [colorMeanings, setColorMeanings] = React.useState<{ color: ShiftColor, meaning: string }[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
@@ -137,7 +137,7 @@ export default function Home() {
 
 
         setCalendars(migratedCalendars);
-        setActiveCalendarId(storedActiveId || migratedCalendars[0]?.id || '');
+        setActiveCalendarId(storedActiveId || 'all');
         setEmployees(loadedEmployees);
         setColorMeanings(storedColorMeanings ? JSON.parse(storedColorMeanings) : initialColorMeanings);
         setIsSidebarOpen(storedSidebarState ? JSON.parse(storedSidebarState) : true);
@@ -145,7 +145,7 @@ export default function Home() {
     } catch (error) {
         console.error("Failed to load from localStorage", error);
         setCalendars(initialCalendars);
-        setActiveCalendarId(initialCalendars[0]?.id || '');
+        setActiveCalendarId('all');
         setEmployees(initialEmployees);
         setColorMeanings(initialColorMeanings);
         setIsSidebarOpen(true);
@@ -165,8 +165,23 @@ export default function Home() {
   }, [currentDate, calendars, activeCalendarId, employees, colorMeanings, isSidebarOpen, isClient]);
 
 
-  const activeCalendar = calendars.find(c => c.id === activeCalendarId) ?? calendars[0];
-  const shifts = activeCalendar?.shifts || [];
+  const activeCalendar = calendars.find(c => c.id === activeCalendarId);
+
+  const shifts = React.useMemo(() => {
+      if (activeCalendarId === 'all') {
+          return calendars.flatMap(cal => 
+              cal.shifts.map(shift => ({
+                  ...shift,
+                  calendarName: cal.name
+              }))
+          );
+      }
+      return activeCalendar?.shifts.map(shift => ({
+          ...shift,
+          calendarName: activeCalendar.name
+      })) || [];
+  }, [calendars, activeCalendarId, activeCalendar]);
+
 
   const handleNextMonth = () => {
     setCurrentDate((prevDate) => addMonths(prevDate, 1));
@@ -177,26 +192,47 @@ export default function Home() {
   };
 
   const updateActiveCalendarShifts = (newShifts: Shift[]) => {
-    setCalendars(prev => prev.map(cal => 
-      cal.id === activeCalendarId ? { ...cal, shifts: newShifts } : cal
-    ));
+      if (activeCalendarId === 'all') {
+          console.warn("Shift updates are not performed when 'All Calendars' is selected.");
+          return;
+      }
+      setCalendars(prev => prev.map(cal => 
+        cal.id === activeCalendarId ? { ...cal, shifts: newShifts } : cal
+      ));
   };
   
   const roleToColorMap = React.useMemo(() => new Map(colorMeanings.map(m => [m.meaning, m.color])), [colorMeanings]);
 
   const handleAddShift = (newShift: Omit<Shift, 'id' | 'color'>) => {
+    if (activeCalendarId === 'all') {
+        toast({
+            variant: "destructive",
+            title: "Seleção Necessária",
+            description: "Por favor, selecione um hospital específico para adicionar um turno."
+        });
+        return;
+    }
     const shiftWithId: Shift = {
       ...newShift,
       id: Date.now().toString(),
       color: roleToColorMap.get(newShift.role) || 'gray'
     };
-    updateActiveCalendarShifts([...shifts, shiftWithId]);
+    updateActiveCalendarShifts([...(activeCalendar?.shifts || []), shiftWithId]);
     toast({ title: "Turno Adicionado", description: "O novo turno foi adicionado ao calendário." });
   };
   
   const handleUpdateShift = (updatedShift: Shift) => {
-    const newShifts = shifts.map(s => s.id === updatedShift.id ? { ...updatedShift, color: roleToColorMap.get(updatedShift.role) || 'gray' } : s);
-    updateActiveCalendarShifts(newShifts);
+    const calendarIdOfShift = calendars.find(cal => cal.shifts.some(s => s.id === updatedShift.id))?.id;
+    if (!calendarIdOfShift) return;
+
+    setCalendars(prev => prev.map(cal => {
+        if (cal.id === calendarIdOfShift) {
+            const newShifts = cal.shifts.map(s => s.id === updatedShift.id ? { ...updatedShift, color: roleToColorMap.get(updatedShift.role) || 'gray' } : s);
+            return { ...cal, shifts: newShifts };
+        }
+        return cal;
+    }));
+
     toast({ title: "Turno Atualizado", description: "O turno foi atualizado com sucesso." });
   };
 
@@ -243,8 +279,17 @@ export default function Home() {
   };
 
   const handleDeleteShift = (shiftId: string) => {
-    const newShifts = shifts.filter(s => s.id !== shiftId);
-    updateActiveCalendarShifts(newShifts);
+    const calendarIdOfShift = calendars.find(cal => cal.shifts.some(s => s.id === shiftId))?.id;
+    if (!calendarIdOfShift) return;
+
+    setCalendars(prev => prev.map(cal => {
+        if (cal.id === calendarIdOfShift) {
+            const newShifts = cal.shifts.filter(s => s.id !== shiftId);
+            return { ...cal, shifts: newShifts };
+        }
+        return cal;
+    }));
+
     toast({ title: "Turno Excluído", description: "O turno foi removido do calendário." });
   };
   
@@ -274,7 +319,7 @@ export default function Home() {
     setCalendars(newCalendars);
 
     if (activeCalendarId === calendarId) {
-      setActiveCalendarId(newCalendars[0]?.id || '');
+      setActiveCalendarId(newCalendars[0]?.id || 'all');
     }
 
     toast({
@@ -311,6 +356,14 @@ export default function Home() {
 };
 
   const handleApplySuggestions = (newShiftsFromAI: Omit<Shift, 'id'>[]) => {
+    if (activeCalendarId === 'all') {
+        toast({
+            variant: "destructive",
+            title: "Seleção Necessária",
+            description: "Por favor, selecione um hospital específico para aplicar as sugestões."
+        });
+        return;
+    }
     const finalShifts = newShiftsFromAI.map(s => {
         return {
             ...s,
@@ -319,7 +372,7 @@ export default function Home() {
         };
     }).filter((s): s is Shift => s !== null);
 
-    updateActiveCalendarShifts([...shifts, ...finalShifts]);
+    updateActiveCalendarShifts([...(activeCalendar?.shifts || []), ...finalShifts]);
     toast({
       title: "Sugestões Aplicadas!",
       description: `${finalShifts.length} novos turnos foram adicionados ao calendário.`
@@ -377,7 +430,7 @@ export default function Home() {
   
   const shiftTypes = React.useMemo(() => colorMeanings.map(cm => cm.meaning), [colorMeanings]);
 
-  if (!isClient || !activeCalendar) {
+  if (!isClient) {
     return null;
   }
   
@@ -402,7 +455,7 @@ export default function Home() {
       />
        <div className="hidden print:block p-4 text-center print:p-0 mb-4">
             <h1 className="text-2xl font-bold capitalize">{format(currentDate, "MMMM yyyy", { locale: ptBR })}</h1>
-            <h2 className="text-lg">{activeCalendar.name}</h2>
+            <h2 className="text-lg">{activeCalendar ? activeCalendar.name : "Todos os Hospitais"}</h2>
        </div>
        <div className="flex-1 min-h-0 flex flex-col">
         <div className="flex justify-end p-2 print:hidden">
@@ -425,7 +478,7 @@ export default function Home() {
                 onDeleteShift={handleDeleteShift}
                 onAddShift={handleAddShift}
                 shiftTypes={shiftTypes}
-                calendarName={activeCalendar.name}
+                calendarName={activeCalendar?.name || "Todos"}
                 onAddDayEvent={handleAddDayEvent}
                 colorMeanings={colorMeanings}
                 />}
@@ -440,6 +493,7 @@ export default function Home() {
                 onDeleteShift={handleDeleteShift}
                 shiftTypes={shiftTypes}
                 colorMeanings={colorMeanings}
+                disableAddShift={activeCalendarId === 'all'}
                 />
             </div>
             {/* Legend for Screen */}

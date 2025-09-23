@@ -55,7 +55,13 @@ export default function CalendarSwitcher({
   const [newCalendarName, setNewCalendarName] = React.useState("");
   const [editingCalendar, setEditingCalendar] = React.useState<Calendar | null>(null);
 
-  const activeCalendar = calendars.find((c) => c.id === activeCalendarId);
+  const getActiveCalendarName = () => {
+    if (activeCalendarId === 'all') {
+      return "Todos os Hospitais";
+    }
+    return calendars.find((c) => c.id === activeCalendarId)?.name || "Selecionar Calendário";
+  };
+  const activeCalendarName = getActiveCalendarName();
 
   const handleAddCalendar = () => {
     if (newCalendarName.trim() === "") return;
@@ -94,12 +100,15 @@ export default function CalendarSwitcher({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" className="w-[200px] justify-between">
-            {activeCalendar?.name || "Selecionar Calendário"}
+            {activeCalendarName}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-[200px]">
           <DropdownMenuLabel>Hospitais Disponíveis</DropdownMenuLabel>
+          <DropdownMenuItem onSelect={() => onCalendarChange('all')}>
+            Todos os Hospitais
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           {calendars.map((calendar) => (
             <DropdownMenuItem

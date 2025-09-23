@@ -17,6 +17,7 @@ type CalendarViewProps = {
   onDeleteShift: (shiftId: string) => void;
   shiftTypes: string[];
   colorMeanings: { color: ShiftColor, meaning: string }[];
+  disableAddShift?: boolean;
 };
 
 export default function CalendarView({ 
@@ -27,7 +28,8 @@ export default function CalendarView({
     onUpdateShift, 
     onDeleteShift, 
     shiftTypes,
-    colorMeanings
+    colorMeanings,
+    disableAddShift = false
 }: CalendarViewProps) {
   const firstDayOfMonth = startOfMonth(currentDate);
   const daysInMonth = getDaysInMonth(currentDate);
@@ -79,7 +81,9 @@ export default function CalendarView({
                   {day}
                 </span>
                 <div className="print:hidden">
-                    <AddShiftDialog onAddShift={onAddShift} date={dateForDay} shiftTypes={shiftTypes} colorMeanings={colorMeanings} employees={employees} />
+                    {!disableAddShift && (
+                        <AddShiftDialog onAddShift={onAddShift} date={dateForDay} shiftTypes={shiftTypes} colorMeanings={colorMeanings} employees={employees} />
+                    )}
                 </div>
               </div>
               <div className="flex flex-col gap-1 overflow-y-auto print:overflow-visible">

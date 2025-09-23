@@ -2,7 +2,7 @@
 "use client";
 
 import type { Shift, Employee, ShiftColor } from "@/lib/types";
-import { Clock, Trash2 } from "lucide-react";
+import { Clock, Trash2, Hospital } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -20,7 +20,7 @@ import { SwapShiftDialog } from "./swap-shift-dialog";
 import { EditShiftDialog } from "./edit-shift-dialog";
 
 type ShiftCardProps = {
-  shift: Shift;
+  shift: Shift & { calendarName?: string };
   employees: Employee[];
   shiftTypes: string[];
   onUpdateShift: (updatedShift: Shift) => void;
@@ -54,6 +54,12 @@ export default function ShiftCard({ shift, employees, onUpdateShift, onDeleteShi
             <Clock className="h-3 w-3" />
             <span>{shift.startTime} - {shift.endTime}</span>
           </div>
+          {shift.calendarName && (
+            <div className="flex items-center gap-1 mt-1 text-muted-foreground text-gray-500">
+                <Hospital className="h-3 w-3" />
+                <span>{shift.calendarName}</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center print:hidden">
             <EditShiftDialog shift={shift} shiftTypes={shiftTypes} onUpdateShift={onUpdateShift} colorMeanings={colorMeanings} />
@@ -84,5 +90,3 @@ export default function ShiftCard({ shift, employees, onUpdateShift, onDeleteShi
     </div>
   );
 }
-
-    
