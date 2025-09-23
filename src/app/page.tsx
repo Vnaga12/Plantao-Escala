@@ -384,28 +384,38 @@ export default function Home() {
     });
 };
 
-  const handleApplySuggestions = (newShiftsFromAI: Omit<Shift, 'id'>[]) => {
-    if (activeCalendarId === 'all') {
-        toast({
-            variant: "destructive",
-            title: "Seleção Necessária",
-            description: "Por favor, selecione uma turma específica para aplicar as sugestões."
-        });
-        return;
-    }
-    const finalShifts = newShiftsFromAI.map(s => {
-        return {
-            ...s,
-            id: `suggested-${Date.now()}-${Math.random()}`,
-            color: roleToColorMap.get(s.role) || 'yellow'
-        };
-    }).filter((s): s is Shift => s !== null);
+  const handleApplySuggestions = (suggestions: (Omit<Shift, 'id'> & { calendarId: string })[]) => {
+      const shiftsByCalendar: Record<string, Shift[]> = {};
 
-    updateActiveCalendarShifts([...(activeCalendar?.shifts || []), ...finalShifts]);
-    toast({
-      title: "Sugestões Aplicadas!",
-      description: `${finalShifts.length} novos turnos foram adicionados ao calendário.`
-    });
+      suggestions.forEach(suggestion => {
+          const { calendarId, ...shiftData } = suggestion;
+          if (!shiftsByCalendar[calendarId]) {
+              shiftsByCalendar[calendarId] = [];
+          }
+          const newShift: Shift = {
+              ...shiftData,
+              id: `suggested-${Date.now()}-${Math.random()}`,
+              color: roleToColorMap.get(shiftData.role) || 'yellow',
+          };
+          shiftsByCalendar[calendarId].push(newShift);
+      });
+
+      setCalendars(prevCalendars => 
+          prevCalendars.map(cal => {
+              if (shiftsByCalendar[cal.id]) {
+                  return {
+                      ...cal,
+                      shifts: [...cal.shifts, ...shiftsByCalendar[cal.id]]
+                  };
+              }
+              return cal;
+          })
+      );
+      
+      toast({
+          title: "Sugestões Aplicadas!",
+          description: `${suggestions.length} novos turnos foram adicionados.`
+      });
   };
   
   const handleColorMeaningsChange = (newMeanings: { color: ShiftColor; meaning: string }[]) => {
@@ -493,6 +503,8 @@ export default function Home() {
               roles={shiftTypes} 
               onApplySuggestions={handleApplySuggestions}
               currentDate={currentDate}
+              calendars={calendars}
+              activeCalendarId={activeCalendarId}
             />
         </div>
         <div className="flex flex-1 overflow-hidden print:block print:overflow-visible">
@@ -541,3 +553,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
