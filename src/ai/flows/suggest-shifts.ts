@@ -105,7 +105,7 @@ Sua saída DEVE conter exatamente esse número total de plantões.
 - NENHUM plantão pode ser criado fora desses dias. Verifique o dia da semana para cada data que você escolher.
 
 **REGRA OBRIGATÓRIA 3: DISTRIBUIÇÃO DIÁRIA**
-- Para garantir que a escala seja bem distribuída, cada dia no calendário pode ter no máximo 2 plantões de CADA função. (Ex: no máximo 2 de 'Anestesia' e no máximo 2 de 'Enfermaria' no mesmo dia).
+- Para garantir que a escala seja bem distribuída e utilize todo o período disponível, cada dia no calendário pode ter no máximo 2 plantões de CADA função (Ex: no máximo 2 de 'Anestesia' e no máximo 2 de 'Enfermaria' no mesmo dia). Tente espaçar os plantões ao máximo ao longo do período entre {{{startDate}}} e {{{endDate}}}.
 
 **Dados de Entrada:**
 - **Período da Escala:** Os plantões devem ser distribuídos entre as datas {{{startDate}}} e {{{endDate}}}.
@@ -123,7 +123,7 @@ Sua saída DEVE conter exatamente esse número total de plantões.
 **Passo 4: Gere a Saída**
 Ao fazer as atribuições, considere:
 1. A indisponibilidade dos funcionários é um bloqueio total.
-2. As preferências dos funcionários e a distribuição justa dos plantões ao longo do período.
+2. As preferências dos funcionários e a distribuição justa e espaçada dos plantões ao longo de todo o período.
 3. Para cada atribuição, especifique o 'calendarId' correspondente. O funcionário deve pertencer à turma do plantão.
 4. O 'employeeId' DEVE ser um dos IDs fornecidos.
 5. A 'shiftDate' DEVE estar no formato YYYY-MM-DD e dentro do período especificado.
@@ -132,7 +132,7 @@ Depois de gerar as atribuições, revise sua lista para garantir que o número t
 IMPORTANTE: O resumo deve estar em português.
   `,
   config: {
-    model: googleAI('gemini-1.5-flash-latest'),
+    model: googleAI('gemini-1.5-pro-latest'),
     safetySettings: [
       {
         category: 'HARM_CATEGORY_HATE_SPEECH',
