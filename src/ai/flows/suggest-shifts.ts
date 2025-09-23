@@ -82,9 +82,11 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
   output: {schema: SuggestShiftAssignmentsOutputSchema},
   prompt: `Você é um assistente de IA especialista em criar escalas de trabalho para equipes médicas. Sua resposta deve ser em português.
 
-  Sua tarefa principal é atribuir plantões aos funcionários, seguindo uma regra obrigatória e as restrições fornecidas.
+  Sua tarefa principal é atribuir plantões aos funcionários, seguindo as regras obrigatórias e as restrições fornecidas.
 
   **REGRA OBRIGATÓRIA:** Para cada função na lista 'Funções a Preencher', você DEVE atribuir exatamente UM plantão dessa função a CADA funcionário da lista. Não crie mais ou menos plantões do que o necessário para cumprir esta regra.
+
+  **REGRA DE DISTRIBUIÇÃO:** Para garantir que a escala seja bem distribuída, cada dia no calendário pode ter no máximo 2 plantões de cada função. Por exemplo, em um único dia, pode haver no máximo 2 plantões de 'Anestesia', no máximo 2 de 'Enfermaria', e assim por diante.
 
   **Período da Escala:** Os plantões devem ser distribuídos entre as seguintes datas: {{{startDate}}} e {{{endDate}}}.
   **DIAS OBRIGATÓRIOS:** Os plantões SÓ PODEM ser agendados nos seguintes dias da semana: {{#if allowedDays}}{{#each allowedDays}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}Qualquer dia{{/if}}. NENHUM plantão pode ser criado fora desses dias.
@@ -104,11 +106,11 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
   **Restrições Adicionais:** {{{scheduleConstraints}}}
 
   Ao fazer as atribuições, considere:
-  1.  A indisponibilidade dos funcionários é um bloqueio total. Nenhum plantão deve ser atribuído a um funcionário durante esses horários.
-  2.  As preferências dos funcionários e a distribuição justa dos plantões ao longo do período.
-  3.  Para cada atribuição, você DEVE especificar o 'calendarId' correspondente à turma em que o plantão foi alocado.
-  4.  O campo 'employeeId' DEVE ser um dos IDs fornecidos na lista de funcionários de entrada. Não invente novos IDs.
-  5.  A data do plantão (shiftDate) DEVE estar no formato YYYY-MM-DD e dentro do período especificado.
+  1. A indisponibilidade dos funcionários é um bloqueio total. Nenhum plantão deve ser atribuído a um funcionário durante esses horários.
+  2. As preferências dos funcionários e a distribuição justa dos plantões ao longo do período.
+  3. Para cada atribuição, você DEVE especificar o 'calendarId' correspondente à turma em que o plantão foi alocado.
+  4. O campo 'employeeId' DEVE ser um dos IDs fornecidos na lista de funcionários de entrada. Não invente novos IDs.
+  5. A data do plantão (shiftDate) DEVE estar no formato YYYY-MM-DD e dentro do período especificado.
 
   Pense passo a passo, explique seu raciocínio no resumo e certifique-se de que sua resposta corresponda exatamente ao esquema de saída.
   IMPORTANTE: O resumo deve estar em português.
