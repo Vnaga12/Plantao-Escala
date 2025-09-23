@@ -92,28 +92,34 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
   name: 'suggestShiftAssignmentsPrompt',
   input: {schema: z.object({
       employees: z.string(),
-      shifts: z.string(),
+      rolesToFill: z.string(),
       scheduleConstraints: z.string(),
       calendars: z.string(),
+      dateRange: z.string(),
+      allowedDays: z.string(),
   })},
   output: {schema: SuggestShiftAssignmentsOutputSchema},
-  prompt: `Você é um assistente de IA que ajuda a criar atribuições de turno ideais para uma equipe médica. A resposta deve ser em português.
+  prompt: `Você é um assistente de IA especialista em criar escalas de trabalho para equipes médicas. Sua resposta deve ser em português.
 
-  Com base na indisponibilidade dos funcionários, preferências, requisitos de turno e restrições de horário, sugira atribuições de turno. Os períodos de indisponibilidade são bloqueios e nenhum turno deve ser atribuído a um funcionário durante esses horários.
+  Sua tarefa principal é atribuir plantões aos funcionários, seguindo uma regra obrigatória e as restrições fornecidas.
 
-  **REGRA IMPLÍCITA E OBRIGATÓRIA:** Para cada função na lista 'Funções a serem preenchidas', você DEVE atribuir exatamente UM turno dessa função a CADA funcionário no período selecionado.
+  **REGRA OBRIGATÓRIA:** Para cada função na lista 'Funções a Preencher', você DEVE atribuir exatamente UM plantão dessa função a CADA funcionário da lista. Não crie mais ou menos plantões do que o necessário para cumprir esta regra.
 
-  Turmas para preencher: {{{calendars}}}
-  Funcionários (incluindo indisponibilidades): {{{employees}}}
-  Funções a serem preenchidas em cada dia e em cada turma: {{{shifts}}}
-  Restrições de Horário: {{{scheduleConstraints}}}
+  **Período da Escala:** Os plantões devem ser distribuídos entre as seguintes datas: {{{dateRange}}}.
+  **Dias Permitidos:** Os plantões só podem ocorrer nos seguintes dias da semana: {{{allowedDays}}}.
+  **Turmas:** {{{calendars}}}
+  **Funcionários (incluindo indisponibilidades e preferências):** {{{employees}}}
+  **Funções a Preencher:** {{{rolesToFill}}}
+  **Restrições Adicionais:** {{{scheduleConstraints}}}
 
-  Considere as preferências dos funcionários e a justiça ao fazer as atribuições.
-  Para cada atribuição, você DEVE especificar o 'calendarId' correspondente à turma em que o turno foi alocado.
-  Retorne as atribuições de turno como um objeto JSON. A data do turno (shiftDate) DEVE ser no formato YYYY-MM-DD.
-  Para cada atribuição, o campo 'employeeId' DEVE ser um dos IDs fornecidos na lista de funcionários de entrada. Não invente novos IDs.
-  Certifique-se de que sua resposta corresponda exatamente ao esquema de saída, incluindo todos os campos.
-  Pense passo a passo e explique seu raciocínio no resumo.
+  Ao fazer as atribuições, considere:
+  1.  A indisponibilidade dos funcionários é um bloqueio total. Nenhum plantão deve ser atribuído a um funcionário durante esses horários.
+  2.  As preferências dos funcionários e a distribuição justa dos plantões ao longo do período.
+  3.  Para cada atribuição, você DEVE especificar o 'calendarId' correspondente à turma em que o plantão foi alocado.
+  4.  O campo 'employeeId' DEVE ser um dos IDs fornecidos na lista de funcionários de entrada. Não invente novos IDs.
+  5.  A data do plantão (shiftDate) DEVE estar no formato YYYY-MM-DD.
+
+  Pense passo a passo, explique seu raciocínio no resumo e certifique-se de que sua resposta corresponda exatamente ao esquema de saída.
   IMPORTANTE: O resumo deve estar em português.
   `,
   config: {
@@ -145,33 +151,15 @@ const suggestShiftAssignmentsFlow = ai.defineFlow(
     outputSchema: SuggestShiftAssignmentsOutputSchema,
   },
   async input => {
-
-    let allDates = eachDayOfInterval({
-        start: parseISO(input.startDate),
-        end: parseISO(input.endDate),
-    });
-
-    if (input.allowedDays && input.allowedDays.length > 0) {
-        const allowedDayNumbers = input.allowedDays.map(day => dayOfWeekMap[day]);
-        allDates = allDates.filter(date => allowedDayNumbers.includes(getDay(date)));
-    }
-
-    const shiftsToFill = allDates.flatMap(date =>
-        input.rolesToFill.map(role => ({
-            date: format(date, 'yyyy-MM-dd'),
-            startTime: '09:00', // Default, can be adjusted or made configurable
-            endTime: '17:00', // Default
-            role: role
-        }))
-    );
-    
     const constraints = [input.scheduleConstraints];
 
     const {output} = await suggestShiftAssignmentsPrompt({
         employees: JSON.stringify(input.employees),
-        shifts: JSON.stringify(shiftsToFill),
+        rolesToFill: JSON.stringify(input.rolesToFill),
         scheduleConstraints: constraints.join(' '),
         calendars: JSON.stringify(input.calendars),
+        dateRange: `${input.startDate} a ${input.endDate}`,
+        allowedDays: JSON.stringify(input.allowedDays || ['Qualquer dia']),
     });
     return output!;
   }
