@@ -54,8 +54,13 @@ export default function EmployeeSidebar({
     setNewEmployeeName("");
   };
 
+  const naturalSort = (a: Employee, b: Employee) => {
+    const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+    return collator.compare(a.name, b.name);
+  };
+
   const sortedEmployees = React.useMemo(() => 
-    [...employees].sort((a, b) => a.name.localeCompare(b.name)),
+    [...employees].sort(naturalSort),
   [employees]);
 
   return (
