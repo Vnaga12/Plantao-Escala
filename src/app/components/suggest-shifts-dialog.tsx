@@ -70,7 +70,7 @@ const formSchema = z.object({
   shiftsPerPerson: z.array(z.object({
       role: z.string(),
       count: z.number().min(1)
-  })).optional()
+  })).optional(),
 }).refine((data) => data.endDate >= data.startDate, {
     message: "A data final deve ser posterior à data de início.",
     path: ["endDate"],
@@ -96,7 +96,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
       endDate: endOfWeek(currentDate, { locale: ptBR }),
       calendarIds: activeCalendarId !== 'all' ? [activeCalendarId] : [],
       allowedDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      shiftsPerPerson: []
+      shiftsPerPerson: [],
     },
   });
 
@@ -136,7 +136,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
         endDate: endOfWeek(currentDate, { locale: ptBR }),
         calendarIds: activeCalendarId !== 'all' ? [activeCalendarId] : [],
         allowedDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-        shiftsPerPerson: roles.map(r => ({ role: r, count: 1}))
+        shiftsPerPerson: roles.map(r => ({ role: r, count: 1})),
       });
       setSuggestions(null);
       setIsLoading(false);
@@ -172,7 +172,9 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
         calendars: selectedCalendars.map(c => ({ id: c.id, name: c.name })),
         allowedDays: data.allowedDays,
         shiftsPerPerson: data.shiftsPerPerson?.reduce((acc, curr) => {
-            acc[curr.role] = curr.count;
+            if(curr.role && curr.count) {
+              acc[curr.role] = curr.count;
+            }
             return acc;
         }, {} as Record<string, number>),
       });
