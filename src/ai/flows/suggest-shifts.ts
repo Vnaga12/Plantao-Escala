@@ -62,7 +62,6 @@ const SuggestShiftAssignmentsInputSchema = z.object({
       name: z.string(),
   })).describe("The calendars/teams for which to generate shifts."),
   allowedDays: z.array(z.string()).optional().describe("Array of weekday strings (e.g., ['Monday', 'Tuesday']) on which shifts can be scheduled."),
-  shiftsPerPerson: z.record(z.number()).optional().describe("A map where the key is a role and the value is the exact number of times that role must be assigned to each person in the period."),
 });
 
 export type SuggestShiftAssignmentsInput = z.infer<typeof SuggestShiftAssignmentsInputSchema>;
@@ -96,18 +95,18 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
       shifts: z.string(),
       scheduleConstraints: z.string(),
       calendars: z.string(),
-      shiftsPerPerson: z.string().optional(),
   })},
   output: {schema: SuggestShiftAssignmentsOutputSchema},
   prompt: `Você é um assistente de IA que ajuda a criar atribuições de turno ideais para uma equipe médica. A resposta deve ser em português.
 
   Com base na indisponibilidade dos funcionários, preferências, requisitos de turno e restrições de horário, sugira atribuições de turno. Os períodos de indisponibilidade são bloqueios e nenhum turno deve ser atribuído a um funcionário durante esses horários.
 
+  **REGRA IMPLÍCITA E OBRIGATÓRIA:** Para cada função na lista 'Funções a serem preenchidas', você DEVE atribuir exatamente UM turno dessa função a CADA funcionário no período selecionado.
+
   Turmas para preencher: {{{calendars}}}
   Funcionários (incluindo indisponibilidades): {{{employees}}}
   Funções a serem preenchidas em cada dia e em cada turma: {{{shifts}}}
   Restrições de Horário: {{{scheduleConstraints}}}
-  {{#if shiftsPerPerson}}Restrições de quantidade de turnos por pessoa: {{{shiftsPerPerson}}}{{/if}}
 
   Considere as preferências dos funcionários e a justiça ao fazer as atribuições.
   Para cada atribuição, você DEVE especificar o 'calendarId' correspondente à turma em que o turno foi alocado.
@@ -157,7 +156,6 @@ const suggestShiftAssignmentsFlow = ai.defineFlow(
         allDates = allDates.filter(date => allowedDayNumbers.includes(getDay(date)));
     }
 
-
     const shiftsToFill = allDates.flatMap(date =>
         input.rolesToFill.map(role => ({
             date: format(date, 'yyyy-MM-dd'),
@@ -168,15 +166,6 @@ const suggestShiftAssignmentsFlow = ai.defineFlow(
     );
     
     const constraints = [input.scheduleConstraints];
-    if (input.shiftsPerPerson) {
-        const shiftsPerPersonString = Object.entries(input.shiftsPerPerson)
-            .map(([role, count]) => `${role}: exatamente ${count} por pessoa`)
-            .join(', ');
-        if (shiftsPerPersonString) {
-             constraints.push(`Regra de atribuição obrigatória por pessoa: ${shiftsPerPersonString}.`);
-        }
-    }
-
 
     const {output} = await suggestShiftAssignmentsPrompt({
         employees: JSON.stringify(input.employees),
@@ -187,5 +176,3 @@ const suggestShiftAssignmentsFlow = ai.defineFlow(
     return output!;
   }
 );
-
-    

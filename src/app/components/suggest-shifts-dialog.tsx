@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { useForm, Controller, SubmitHandler, useFieldArray } from "react-hook-form";
+import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -23,10 +23,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Wand2, Loader2, Check, X, Pencil, Trash2, Calendar as CalendarIcon, Minus, Plus } from "lucide-react";
+import { Wand2, Loader2, Check, X, Pencil, Trash2, Calendar as CalendarIcon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Employee, Shift, ShiftColor, Calendar as CalendarType } from "@/lib/types";
@@ -40,6 +38,7 @@ import { ptBR } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 
 const weekdays = [
     { id: "Sunday", label: "Domingo" },
@@ -67,10 +66,6 @@ const formSchema = z.object({
   endDate: z.date({ required_error: "A data final é obrigatória."}),
   calendarIds: z.array(z.string()).min(1, "Selecione pelo menos uma turma."),
   allowedDays: z.array(z.string()).optional(),
-  shiftsPerPerson: z.array(z.object({
-      role: z.string(),
-      count: z.number().min(1)
-  })).optional(),
 }).refine((data) => data.endDate >= data.startDate, {
     message: "A data final deve ser posterior à data de início.",
     path: ["endDate"],
@@ -96,43 +91,11 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
       endDate: endOfWeek(currentDate, { locale: ptBR }),
       calendarIds: activeCalendarId !== 'all' ? [activeCalendarId] : [],
       allowedDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      shiftsPerPerson: [],
     },
   });
 
-  const { fields, append, remove, update } = useFieldArray({
-      control: form.control,
-      name: "shiftsPerPerson"
-  });
-  const watchedRoles = form.watch("rolesToFill");
-
-  React.useEffect(() => {
-    const existingRoles = new Set(fields.map(f => f.role));
-    const selectedRoles = new Set(watchedRoles);
-
-    // Add roles that are selected but not in the field array
-    const rolesToAdd = watchedRoles.filter(role => !existingRoles.has(role));
-    if (rolesToAdd.length > 0) {
-      append(rolesToAdd.map(role => ({ role, count: 1 })));
-    }
-
-    // Find indices of roles to remove
-    const rolesToRemoveIndices: number[] = [];
-    fields.forEach((field, index) => {
-        if (!selectedRoles.has(field.role)) {
-            rolesToRemoveIndices.push(index);
-        }
-    });
-    // Remove from the end to avoid index shifting issues
-    if (rolesToRemoveIndices.length > 0) {
-      remove(rolesToRemoveIndices.sort((a, b) => b - a));
-    }
-  }, [watchedRoles, fields, append, remove]);
-
-
   React.useEffect(() => {
     if (isOpen) {
-      const defaultShiftsPerPerson = roles.map(r => ({ role: r, count: 1}));
       form.reset({
         rolesToFill: roles,
         scheduleConstraints: "",
@@ -140,7 +103,6 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
         endDate: endOfWeek(currentDate, { locale: ptBR }),
         calendarIds: activeCalendarId !== 'all' ? [activeCalendarId] : [],
         allowedDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-        shiftsPerPerson: defaultShiftsPerPerson,
       });
       setSuggestions(null);
       setIsLoading(false);
@@ -175,12 +137,6 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
         endDate: format(data.endDate, 'yyyy-MM-dd'),
         calendars: selectedCalendars.map(c => ({ id: c.id, name: c.name })),
         allowedDays: data.allowedDays,
-        shiftsPerPerson: data.shiftsPerPerson?.reduce((acc, curr) => {
-            if(curr.role && curr.count) {
-              acc[curr.role] = curr.count;
-            }
-            return acc;
-        }, {} as Record<string, number>),
       });
         
       if (result && result.assignments) {
@@ -404,31 +360,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
                     </div>
 
                     <div>
-                        <Label className="font-semibold">5. Distribuição de Plantões por Pessoa</Label>
-                        <p className="text-sm text-muted-foreground mt-1 mb-2">Defina quantos plantões de cada tipo devem ser atribuídos a CADA funcionário no período.</p>
-                         <div className="space-y-2 mt-2">
-                             {fields.map((field, index) => (
-                                 <div key={field.id} className="flex items-center justify-between gap-2">
-                                     <Label htmlFor={`shiftsPerPerson.${index}.count`} className="text-sm flex-1 truncate">{field.role}</Label>
-                                      <div className="flex items-center gap-1">
-                                         <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => update(index, { ...field, count: Math.max(1, field.count - 1) })}><Minus className="h-3 w-3"/></Button>
-                                         <Input 
-                                            id={`shiftsPerPerson.${index}.count`}
-                                            type="number"
-                                            min={1}
-                                            className="h-7 w-12 text-center"
-                                            {...form.register(`shiftsPerPerson.${index}.count`, { valueAsNumber: true })}
-                                         />
-                                          <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => update(index, { ...field, count: (field.count || 0) + 1 })}><Plus className="h-3 w-3" /></Button>
-                                     </div>
-                                 </div>
-                             ))}
-                         </div>
-                    </div>
-
-
-                    <div>
-                        <Label htmlFor="scheduleConstraints" className="font-semibold">6. Restrições e Preferências</Label>
+                        <Label htmlFor="scheduleConstraints" className="font-semibold">5. Restrições e Preferências</Label>
                         <Textarea
                         id="scheduleConstraints"
                         placeholder="Ex: Pelo menos 2 médicos de plantão no fim de semana. Dra. Alice não pode trabalhar às quartas-feiras."
