@@ -15,7 +15,7 @@ import { SuggestShiftsDialog } from "./components/suggest-shifts-dialog";
 const initialCalendars: Calendar[] = [
   {
     id: 'cal1',
-    name: 'Hospital Principal',
+    name: 'Turma A',
     shifts: [
       { id: '1', date: '2024-07-05', role: 'Cirurgia Eletiva', employeeName: 'Dra. Alice', startTime: '08:00', endTime: '16:00', color: 'blue' },
       { id: '2', date: '2024-07-05', role: 'Plantão', employeeName: 'Beto', startTime: '14:00', endTime: '22:00', color: 'green' },
@@ -25,7 +25,7 @@ const initialCalendars: Calendar[] = [
   },
   {
     id: 'cal2',
-    name: 'Clínica Secundária',
+    name: 'Turma B',
     shifts: [
         { id: '5', date: '2024-07-10', role: 'Cirurgia Eletiva', employeeName: 'Dr. David', startTime: '09:00', endTime: '17:00', color: 'blue' },
     ],
@@ -222,7 +222,7 @@ export default function Home() {
         toast({
             variant: "destructive",
             title: "Seleção Necessária",
-            description: "Por favor, selecione um hospital específico para adicionar um turno."
+            description: "Por favor, selecione uma turma específica para adicionar um turno."
         });
         return;
     }
@@ -344,8 +344,8 @@ export default function Home() {
     }
 
     toast({
-      title: "Hospital Excluído",
-      description: "O hospital foi removido com sucesso.",
+      title: "Turma Excluída",
+      description: "A turma foi removida com sucesso.",
     });
   };
 
@@ -381,7 +381,7 @@ export default function Home() {
         toast({
             variant: "destructive",
             title: "Seleção Necessária",
-            description: "Por favor, selecione um hospital específico para aplicar as sugestões."
+            description: "Por favor, selecione uma turma específica para aplicar as sugestões."
         });
         return;
     }
@@ -475,8 +475,8 @@ export default function Home() {
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
        <div className="hidden print:block p-4 text-center print:p-0 mb-4">
-            <h1 className="text-2xl font-bold capitalize">{format(currentDate, "MMMM yyyy", { locale: ptBR })}</h1>
-            <h2 className="text-lg">{activeCalendar ? activeCalendar.name : "Todos os Hospitais"}</h2>
+            <h1 className="text-2xl font-bold capitalize">{format(currentDate, "MMMM yy", { locale: ptBR })}</h1>
+            <h2 className="text-lg">{activeCalendar ? activeCalendar.name : "Todas as Turmas"}</h2>
        </div>
        <div className="flex-1 min-h-0 flex flex-col">
         <div className="flex justify-end p-2 print:hidden">
@@ -499,7 +499,7 @@ export default function Home() {
                 onDeleteShift={handleDeleteShift}
                 onAddShift={handleAddShift}
                 shiftTypes={shiftTypes}
-                calendarName={activeCalendar?.name || "Todos"}
+                calendarName={activeCalendar?.name || "Todas"}
                 onAddDayEvent={handleAddDayEvent}
                 colorMeanings={colorMeanings}
                 calendars={calendars}
@@ -533,3 +533,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

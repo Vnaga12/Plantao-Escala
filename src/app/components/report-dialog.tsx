@@ -247,13 +247,13 @@ export function ReportDialog({ employees, calendars, currentDate, shiftTypes, co
             </div>
 
             <div className="flex items-center gap-2">
-              <Label htmlFor="calendar-select">Filtrar por Hospital</Label>
+              <Label htmlFor="calendar-select">Filtrar por Turma</Label>
               <Select value={selectedCalendarId} onValueChange={setSelectedCalendarId}>
                 <SelectTrigger id="calendar-select" className="w-[200px]">
-                  <SelectValue placeholder="Selecione o hospital" />
+                  <SelectValue placeholder="Selecione a turma" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os Hospitais</SelectItem>
+                  <SelectItem value="all">Todas as Turmas</SelectItem>
                   {calendars.map(cal => (
                     <SelectItem key={cal.id} value={cal.id}>{cal.name}</SelectItem>
                   ))}
@@ -343,3 +343,5 @@ export function ReportDialog({ employees, calendars, currentDate, shiftTypes, co
     </Dialog>
   );
 }
+
+    

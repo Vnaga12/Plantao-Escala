@@ -57,9 +57,9 @@ export default function CalendarSwitcher({
 
   const getActiveCalendarName = () => {
     if (activeCalendarId === 'all') {
-      return "Todos os Hospitais";
+      return "Todas as Turmas";
     }
-    return calendars.find((c) => c.id === activeCalendarId)?.name || "Selecionar Calendário";
+    return calendars.find((c) => c.id === activeCalendarId)?.name || "Selecionar Turma";
   };
   const activeCalendarName = getActiveCalendarName();
 
@@ -105,9 +105,9 @@ export default function CalendarSwitcher({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-[200px]">
-          <DropdownMenuLabel>Hospitais Disponíveis</DropdownMenuLabel>
+          <DropdownMenuLabel>Turmas Disponíveis</DropdownMenuLabel>
           <DropdownMenuItem onSelect={() => onCalendarChange('all')}>
-            Todos os Hospitais
+            Todas as Turmas
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           {calendars.map((calendar) => (
@@ -144,7 +144,7 @@ export default function CalendarSwitcher({
                     <AlertDialogHeader>
                       <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Esta ação não pode ser desfeita. Isso excluirá permanentemente o hospital "{calendar.name}" e todos os seus plantões.
+                        Esta ação não pode ser desfeita. Isso excluirá permanentemente a turma "{calendar.name}" e todos os seus plantões.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -161,7 +161,7 @@ export default function CalendarSwitcher({
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setAddIsOpen(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Novo Hospital
+            Nova Turma
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -170,18 +170,18 @@ export default function CalendarSwitcher({
       <Dialog open={isAddOpen} onOpenChange={setAddIsOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Criar Novo Hospital</DialogTitle>
+            <DialogTitle>Criar Nova Turma</DialogTitle>
             <DialogDescription>
-              Dê um nome ao seu novo hospital/calendário (ex: Hospital Central).
+              Dê um nome à sua nova turma (ex: Turma A).
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="name">Nome do Hospital</Label>
+            <Label htmlFor="name">Nome da Turma</Label>
             <Input
               id="name"
               value={newCalendarName}
               onChange={(e) => setNewCalendarName(e.target.value)}
-              placeholder="Ex: Clínica Pediátrica"
+              placeholder="Ex: Turma de Cardiologia"
             />
           </div>
           <DialogFooter>
@@ -195,10 +195,10 @@ export default function CalendarSwitcher({
       <Dialog open={isEditOpen} onOpenChange={setEditIsOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Nome do Hospital</DialogTitle>
+            <DialogTitle>Editar Nome da Turma</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="edit-name">Nome do Hospital</Label>
+            <Label htmlFor="edit-name">Nome da Turma</Label>
             <Input
               id="edit-name"
               value={editingCalendar?.name || ""}
@@ -218,3 +218,5 @@ export default function CalendarSwitcher({
     </>
   );
 }
+
+    

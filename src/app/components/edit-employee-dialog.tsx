@@ -170,8 +170,8 @@ export function EditEmployeeDialog({
                                     </div>
                                 </div>
                                 <div>
-                                    <Label className="font-semibold">Hospitais</Label>
-                                    <p className="text-sm text-muted-foreground mb-2">Selecione os hospitais aos quais este funcionário pertence.</p>
+                                    <Label className="font-semibold">Turmas</Label>
+                                    <p className="text-sm text-muted-foreground mb-2">Selecione as turmas às quais este funcionário pertence.</p>
                                     <div className="space-y-2 p-3 border rounded-md">
                                         <Controller
                                             control={control}
@@ -361,3 +361,5 @@ export function EditEmployeeDialog({
     </Dialog>
   );
 }
+
+    
