@@ -110,25 +110,29 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
     const existingRoles = new Set(fields.map(f => f.role));
     const selectedRoles = new Set(watchedRoles);
 
+    // Add roles that are selected but not in the field array
     const rolesToAdd = watchedRoles.filter(role => !existingRoles.has(role));
     if (rolesToAdd.length > 0) {
       append(rolesToAdd.map(role => ({ role, count: 1 })));
     }
 
-    const rolesToRemove: number[] = [];
+    // Find indices of roles to remove
+    const rolesToRemoveIndices: number[] = [];
     fields.forEach((field, index) => {
         if (!selectedRoles.has(field.role)) {
-            rolesToRemove.push(index);
+            rolesToRemoveIndices.push(index);
         }
     });
-    if (rolesToRemove.length > 0) {
-      remove(rolesToRemove);
+    // Remove from the end to avoid index shifting issues
+    if (rolesToRemoveIndices.length > 0) {
+      remove(rolesToRemoveIndices.sort((a, b) => b - a));
     }
   }, [watchedRoles, fields, append, remove]);
 
 
   React.useEffect(() => {
     if (isOpen) {
+      const defaultShiftsPerPerson = roles.map(r => ({ role: r, count: 1}));
       form.reset({
         rolesToFill: roles,
         scheduleConstraints: "",
@@ -136,7 +140,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
         endDate: endOfWeek(currentDate, { locale: ptBR }),
         calendarIds: activeCalendarId !== 'all' ? [activeCalendarId] : [],
         allowedDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-        shiftsPerPerson: roles.map(r => ({ role: r, count: 1})),
+        shiftsPerPerson: defaultShiftsPerPerson,
       });
       setSuggestions(null);
       setIsLoading(false);
@@ -352,19 +356,20 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
                             render={({ field }) => (
                                 <div className="flex flex-wrap gap-2 mt-2">
                                     {weekdays.map(day => (
-                                        <Checkbox
-                                            key={day.id}
-                                            id={`day-${day.id}`}
-                                            checked={field.value?.includes(day.id)}
-                                            onCheckedChange={(checked) => {
-                                                const newValue = checked
-                                                    ? [...(field.value || []), day.id]
-                                                    : (field.value || []).filter(id => id !== day.id);
-                                                field.onChange(newValue);
-                                            }}
-                                            className="hidden peer"
-                                        />
-                                        <Label htmlFor={`day-${day.id}`} className="px-3 py-1 border rounded-full cursor-pointer text-sm peer-checked:bg-primary peer-checked:text-primary-foreground peer-checked:border-primary transition-colors">{day.label}</Label>
+                                        <div key={day.id} className="flex items-center">
+                                            <Checkbox
+                                                id={`day-${day.id}`}
+                                                checked={field.value?.includes(day.id)}
+                                                onCheckedChange={(checked) => {
+                                                    const newValue = checked
+                                                        ? [...(field.value || []), day.id]
+                                                        : (field.value || []).filter(id => id !== day.id);
+                                                    field.onChange(newValue);
+                                                }}
+                                                className="hidden peer"
+                                            />
+                                            <Label htmlFor={`day-${day.id}`} className="px-3 py-1 border rounded-full cursor-pointer text-sm peer-checked:bg-primary peer-checked:text-primary-foreground peer-checked:border-primary transition-colors">{day.label}</Label>
+                                        </div>
                                     ))}
                                 </div>
                             )}
@@ -414,7 +419,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
                                             className="h-7 w-12 text-center"
                                             {...form.register(`shiftsPerPerson.${index}.count`, { valueAsNumber: true })}
                                          />
-                                          <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => update(index, { ...field, count: field.count + 1 })}><Plus className="h-3 w-3" /></Button>
+                                          <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => update(index, { ...field, count: (field.count || 0) + 1 })}><Plus className="h-3 w-3" /></Button>
                                      </div>
                                  </div>
                              ))}
