@@ -1,4 +1,3 @@
-
 // src/ai/flows/suggest-shifts.ts
 'use server';
 
@@ -18,6 +17,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { eachDayOfInterval, format, parseISO, getDay } from 'date-fns';
+import { googleAI } from '@genkit-ai/googleai';
 
 const dayOfWeekMap: Record<string, number> = {
   'Sunday': 0,
@@ -123,6 +123,7 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
   IMPORTANTE: O resumo deve estar em português.
   `,
   config: {
+    model: googleAI('gemini-1.5-flash-latest'),
     safetySettings: [
       {
         category: 'HARM_CATEGORY_HATE_SPEECH',
