@@ -96,7 +96,7 @@ Sua saída DEVE conter exatamente esse número total de plantões.
 **Passo 3: Use as Informações e Siga as Regras**
 
 **REGRA OBRIGATÓRIA 1: ATRIBUIÇÃO COMPLETA**
-- Você DEVE garantir que CADA funcionário da lista receba exatamente UM plantão para CADA função listada em 'Funções a Preencher'. Sem exceções. Todos os funcionários devem ser incluídos.
+- Você DEVE garantir que CADA funcionário da lista receba somente UM plantão para CADA função listada em 'Funções a Preencher'. Não crie mais opções de turnos do que isso. Todos os funcionários devem ser incluídos. Por exemplo, se há 16 funcionários e 2 funções, por exemplo anestesia e enfermaria, o número máximo de plantões a serem sugeridos deve ser de 32, sendo um plantão de enfermaria e um plantão de anestesia para cada funcionário dentro do período delimitado e respeitando todas as demais regras.
 
 **REGRA OBRIGATÓRIA 2: DATAS DE TRABALHO**
 - Os plantões SÓ PODEM ser agendados nas seguintes datas: {{#each validDates}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}.
