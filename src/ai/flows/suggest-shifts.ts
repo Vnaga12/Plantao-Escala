@@ -130,7 +130,7 @@ Depois de gerar as atribuições, revise sua lista para garantir que o número t
 IMPORTANTE: O resumo deve estar em português.
   `,
   config: {
-    model: googleAI('gemini-1.5-flash-latest'),
+    model: googleAI('gemini-1.5-pro-latest'),
     safetySettings: [
       {
         category: 'HARM_CATEGORY_HATE_SPEECH',
