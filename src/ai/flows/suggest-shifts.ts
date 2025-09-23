@@ -16,19 +16,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { eachDayOfInterval, format, parseISO, getDay } from 'date-fns';
 import { googleAI } from '@genkit-ai/googleai';
-
-const dayOfWeekMap: Record<string, number> = {
-  'Sunday': 0,
-  'Monday': 1,
-  'Tuesday': 2,
-  'Wednesday': 3,
-  'Thursday': 4,
-  'Friday': 5,
-  'Saturday': 6,
-};
-
 
 const SuggestShiftAssignmentsInputSchema = z.object({
   employees: z
@@ -95,7 +83,8 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
       rolesToFill: z.string(),
       scheduleConstraints: z.string(),
       calendars: z.string(),
-      dateRange: z.string(),
+      startDate: z.string(),
+      endDate: z.string(),
       allowedDays: z.string(),
   })},
   output: {schema: SuggestShiftAssignmentsOutputSchema},
@@ -105,7 +94,7 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
 
   **REGRA OBRIGATÓRIA:** Para cada função na lista 'Funções a Preencher', você DEVE atribuir exatamente UM plantão dessa função a CADA funcionário da lista. Não crie mais ou menos plantões do que o necessário para cumprir esta regra.
 
-  **Período da Escala:** Os plantões devem ser distribuídos entre as seguintes datas: {{{dateRange}}}.
+  **Período da Escala:** Os plantões devem ser distribuídos entre as seguintes datas: {{{startDate}}} e {{{endDate}}}.
   **DIAS OBRIGATÓRIOS:** Os plantões SÓ PODEM ser agendados nos seguintes dias da semana: {{{allowedDays}}}. NENHUM plantão pode ser criado fora desses dias.
   **Turmas:** {{{calendars}}}
   **Funcionários (incluindo indisponibilidades e preferências):** {{{employees}}}
@@ -117,7 +106,7 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
   2.  As preferências dos funcionários e a distribuição justa dos plantões ao longo do período.
   3.  Para cada atribuição, você DEVE especificar o 'calendarId' correspondente à turma em que o plantão foi alocado.
   4.  O campo 'employeeId' DEVE ser um dos IDs fornecidos na lista de funcionários de entrada. Não invente novos IDs.
-  5.  A data do plantão (shiftDate) DEVE estar no formato YYYY-MM-DD.
+  5.  A data do plantão (shiftDate) DEVE estar no formato YYYY-MM-DD e dentro do período especificado.
 
   Pense passo a passo, explique seu raciocínio no resumo e certifique-se de que sua resposta corresponda exatamente ao esquema de saída.
   IMPORTANTE: O resumo deve estar em português.
@@ -159,7 +148,8 @@ const suggestShiftAssignmentsFlow = ai.defineFlow(
         rolesToFill: JSON.stringify(input.rolesToFill),
         scheduleConstraints: constraints.join(' '),
         calendars: JSON.stringify(input.calendars),
-        dateRange: `${input.startDate} a ${input.endDate}`,
+        startDate: input.startDate,
+        endDate: input.endDate,
         allowedDays: (input.allowedDays || ['Qualquer dia']).join(', '),
     });
     return output!;
