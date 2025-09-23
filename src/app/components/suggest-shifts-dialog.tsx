@@ -41,14 +41,17 @@ import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 
 const weekdays = [
-    { id: "Sunday", label: "Domingo" },
-    { id: "Monday", label: "Segunda-feira" },
-    { id: "Tuesday", label: "Terça-feira" },
-    { id: "Wednesday", label: "Quarta-feira" },
-    { id: "Thursday", label: "Quinta-feira" },
-    { id: "Friday", label: "Sexta-feira" },
-    { id: "Saturday", label: "Sábado" },
+    { id: "Sunday", label: "Dom" },
+    { id: "Monday", label: "Seg" },
+    { id: "Tuesday", label: "Ter" },
+    { id: "Wednesday", label: "Qua" },
+    { id: "Thursday", label: "Qui" },
+    { id: "Friday", label: "Sex" },
+    { id: "Saturday", label: "Sáb" },
 ];
+
+const allWeekdays = weekdays.map(d => d.id);
+const businessDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
 type SuggestShiftsDialogProps = {
   employees: Employee[];
@@ -304,28 +307,35 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
                          {form.formState.errors.calendarIds && <p className="text-xs text-red-500 mt-1">{form.formState.errors.calendarIds.message}</p>}
                     </div>
 
-                     <div>
+                    <div>
                         <Label className="font-semibold">3. Dias de Trabalho</Label>
                         <Controller
                             control={form.control}
                             name="allowedDays"
                             render={({ field }) => (
-                                <div className="space-y-2 p-3 border rounded-md max-h-40 overflow-y-auto mt-2">
-                                    {weekdays.map(day => (
-                                        <div key={day.id} className="flex items-center space-x-2">
-                                            <Checkbox
-                                                id={`day-${day.id}`}
-                                                checked={field.value?.includes(day.id)}
-                                                onCheckedChange={(checked) => {
-                                                    const newValue = checked
-                                                        ? [...(field.value || []), day.id]
-                                                        : (field.value || []).filter(id => id !== day.id);
-                                                    field.onChange(newValue);
-                                                }}
-                                            />
-                                            <Label htmlFor={`day-${day.id}`} className="font-normal">{day.label}</Label>
-                                        </div>
-                                    ))}
+                                <div className="p-3 border rounded-md mt-2 space-y-3">
+                                    <div className="flex items-center gap-2">
+                                        <Button type="button" variant="outline" size="xs" onClick={() => field.onChange(allWeekdays)}>Todos</Button>
+                                        <Button type="button" variant="outline" size="xs" onClick={() => field.onChange([])}>Nenhum</Button>
+                                        <Button type="button" variant="outline" size="xs" onClick={() => field.onChange(businessDays)}>Dias Úteis</Button>
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {weekdays.map(day => (
+                                            <div key={day.id} className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id={`day-${day.id}`}
+                                                    checked={field.value?.includes(day.id)}
+                                                    onCheckedChange={(checked) => {
+                                                        const newValue = checked
+                                                            ? [...(field.value || []), day.id]
+                                                            : (field.value || []).filter(id => id !== day.id);
+                                                        field.onChange(newValue);
+                                                    }}
+                                                />
+                                                <Label htmlFor={`day-${day.id}`} className="font-normal">{day.label}</Label>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                          />
