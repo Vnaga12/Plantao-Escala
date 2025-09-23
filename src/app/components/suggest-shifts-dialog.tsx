@@ -110,20 +110,20 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
     const existingRoles = new Set(fields.map(f => f.role));
     const selectedRoles = new Set(watchedRoles);
 
-    // Add new fields for newly selected roles
-    selectedRoles.forEach(role => {
-        if (!existingRoles.has(role)) {
-            append({ role, count: 1 });
-        }
-    });
+    const rolesToAdd = watchedRoles.filter(role => !existingRoles.has(role));
+    if (rolesToAdd.length > 0) {
+      append(rolesToAdd.map(role => ({ role, count: 1 })));
+    }
 
-    // Remove fields for deselected roles
+    const rolesToRemove: number[] = [];
     fields.forEach((field, index) => {
         if (!selectedRoles.has(field.role)) {
-            remove(index);
+            rolesToRemove.push(index);
         }
     });
-
+    if (rolesToRemove.length > 0) {
+      remove(rolesToRemove);
+    }
   }, [watchedRoles, fields, append, remove]);
 
 
@@ -142,7 +142,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
       setIsLoading(false);
       setSelectedSuggestions([]);
     }
-  }, [isOpen, form, roles, currentDate, calendars, activeCalendarId]);
+  }, [isOpen, roles, currentDate, activeCalendarId, form]);
 
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
