@@ -83,38 +83,53 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
   output: {schema: SuggestShiftAssignmentsOutputSchema},
   prompt: `Você é um assistente de IA especialista em criar escalas de trabalho para equipes médicas. Sua resposta deve ser em português.
 
-  Sua tarefa principal é atribuir plantões aos funcionários, seguindo as regras obrigatórias e as restrições fornecidas.
+Sua tarefa é gerar uma lista de atribuições de plantão com base nas regras e dados fornecidos. Pense passo a passo para garantir que todas as regras sejam cumpridas.
 
-  **REGRA OBRIGATÓRIA:** Você deve garantir que CADA funcionário da lista receba a quantidade exata de plantões para CADA função listada em 'Funções a Preencher'. Para este caso, cada funcionário deve receber exatamente 1 (um) plantão de cada uma das funções.
+**Passo 1: Entenda a Meta Principal**
+A meta é criar uma escala onde CADA funcionário listado receba exatamente UM plantão para CADA uma das funções especificadas.
 
-  **REGRA DE DISTRIBUIÇÃO:** Para garantir que a escala seja bem distribuída, cada dia no calendário pode ter no máximo 2 plantões de cada função. Por exemplo, em um único dia, pode haver no máximo 2 plantões de 'Anestesia', no máximo 2 de 'Enfermaria', e assim por diante.
+**Passo 2: Calcule o Total de Plantões**
+- Número de Funcionários: {{employees.length}}
+- Número de Funções a Preencher: {{rolesToFill.length}}
+- Total de Plantões a Criar: (Funcionários * Funções) = {{employees.length}} * {{rolesToFill.length}}
 
-  **Período da Escala:** Os plantões devem ser distribuídos entre as seguintes datas: {{{startDate}}} e {{{endDate}}}.
-  **DIAS OBRIGATÓRIOS:** Os plantões SÓ PODEM ser agendados nos seguintes dias da semana: {{#if allowedDays}}{{#each allowedDays}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}Qualquer dia{{/if}}. NENHUM plantão pode ser criado fora desses dias.
-  
-  **Turmas:**
+Sua saída DEVE conter exatamente esse número total de plantões.
+
+**Passo 3: Use as Informações e Siga as Regras**
+
+**REGRA OBRIGATÓRIA 1: ATRIBUIÇÃO COMPLETA**
+- Você DEVE garantir que CADA funcionário da lista receba exatamente UM plantão para CADA função listada em 'Funções a Preencher'. Sem exceções. Todos os funcionários devem ser incluídos.
+
+**REGRA OBRIGATÓRIA 2: DIAS DE TRABALHO**
+- Os plantões SÓ PODEM ser agendados nos seguintes dias da semana: {{#if allowedDays}}{{#each allowedDays}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}Qualquer dia{{/if}}.
+- NENHUM plantão pode ser criado fora desses dias. Verifique o dia da semana para cada data que você escolher.
+
+**REGRA OBRIGATÓRIA 3: DISTRIBUIÇÃO DIÁRIA**
+- Para garantir que a escala seja bem distribuída, cada dia no calendário pode ter no máximo 2 plantões de CADA função. (Ex: no máximo 2 de 'Anestesia' e no máximo 2 de 'Enfermaria' no mesmo dia).
+
+**Dados de Entrada:**
+- **Período da Escala:** Os plantões devem ser distribuídos entre as datas {{{startDate}}} e {{{endDate}}}.
+- **Turmas:**
   {{#each calendars}}
   - ID: {{{id}}}, Nome: {{{name}}}
   {{/each}}
-  
-  **Funcionários (incluindo indisponibilidades e preferências):**
+- **Funcionários (Indisponibilidades e Preferências):**
   {{#each employees}}
   - ID: {{{id}}}, Nome: {{{name}}}, Preferências: {{{preferences}}}, Indisponibilidade: {{#if unavailability}}{{#each unavailability}}{{{day}}} de {{{startTime}}} a {{{endTime}}}; {{/each}}{{else}}Nenhuma{{/if}}
   {{/each}}
-  
-  **Funções a Preencher:** {{#each rolesToFill}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
-  
-  **Restrições Adicionais:** {{{scheduleConstraints}}}
+- **Funções a Preencher:** {{#each rolesToFill}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+- **Restrições Adicionais:** {{{scheduleConstraints}}}
 
-  Ao fazer as atribuições, considere:
-  1. A indisponibilidade dos funcionários é um bloqueio total. Nenhum plantão deve ser atribuído a um funcionário durante esses horários.
-  2. As preferências dos funcionários e a distribuição justa dos plantões ao longo do período.
-  3. Para cada atribuição, você DEVE especificar o 'calendarId' correspondente à turma em que o plantão foi alocado.
-  4. O campo 'employeeId' DEVE ser um dos IDs fornecidos na lista de funcionários de entrada. Não invente novos IDs.
-  5. A data do plantão (shiftDate) DEVE estar no formato YYYY-MM-DD e dentro do período especificado.
+**Passo 4: Gere a Saída**
+Ao fazer as atribuições, considere:
+1. A indisponibilidade dos funcionários é um bloqueio total.
+2. As preferências dos funcionários e a distribuição justa dos plantões ao longo do período.
+3. Para cada atribuição, especifique o 'calendarId' correspondente. O funcionário deve pertencer à turma do plantão.
+4. O 'employeeId' DEVE ser um dos IDs fornecidos.
+5. A 'shiftDate' DEVE estar no formato YYYY-MM-DD e dentro do período especificado.
 
-  Pense passo a passo, explique seu raciocínio no resumo e certifique-se de que sua resposta corresponda exatamente ao esquema de saída.
-  IMPORTANTE: O resumo deve estar em português.
+Depois de gerar as atribuições, revise sua lista para garantir que o número total de plantões está correto e que todas as regras obrigatórias foram cumpridas. Explique seu raciocínio no resumo.
+IMPORTANTE: O resumo deve estar em português.
   `,
   config: {
     model: googleAI('gemini-1.5-flash-latest'),
