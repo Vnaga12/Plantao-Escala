@@ -404,7 +404,8 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
                     </div>
 
                     <div>
-                        <Label className="font-semibold">5. Limite de Plantões por Pessoa</Label>
+                        <Label className="font-semibold">5. Distribuição de Plantões por Pessoa</Label>
+                        <p className="text-sm text-muted-foreground mt-1 mb-2">Defina quantos plantões de cada tipo devem ser atribuídos a CADA funcionário no período.</p>
                          <div className="space-y-2 mt-2">
                              {fields.map((field, index) => (
                                  <div key={field.id} className="flex items-center justify-between gap-2">

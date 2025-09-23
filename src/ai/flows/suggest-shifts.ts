@@ -1,3 +1,4 @@
+
 // src/ai/flows/suggest-shifts.ts
 'use server';
 
@@ -61,7 +62,7 @@ const SuggestShiftAssignmentsInputSchema = z.object({
       name: z.string(),
   })).describe("The calendars/teams for which to generate shifts."),
   allowedDays: z.array(z.string()).optional().describe("Array of weekday strings (e.g., ['Monday', 'Tuesday']) on which shifts can be scheduled."),
-  shiftsPerPerson: z.record(z.number()).optional().describe("A map where the key is a role and the value is the maximum number of times that role can be assigned to a single person in the period."),
+  shiftsPerPerson: z.record(z.number()).optional().describe("A map where the key is a role and the value is the exact number of times that role must be assigned to each person in the period."),
 });
 
 export type SuggestShiftAssignmentsInput = z.infer<typeof SuggestShiftAssignmentsInputSchema>;
@@ -169,10 +170,10 @@ const suggestShiftAssignmentsFlow = ai.defineFlow(
     const constraints = [input.scheduleConstraints];
     if (input.shiftsPerPerson) {
         const shiftsPerPersonString = Object.entries(input.shiftsPerPerson)
-            .map(([role, count]) => `${role}: máximo de ${count} por pessoa`)
+            .map(([role, count]) => `${role}: exatamente ${count} por pessoa`)
             .join(', ');
         if (shiftsPerPersonString) {
-             constraints.push(`Limite de atribuições por pessoa: ${shiftsPerPersonString}.`);
+             constraints.push(`Regra de atribuição obrigatória por pessoa: ${shiftsPerPersonString}.`);
         }
     }
 
