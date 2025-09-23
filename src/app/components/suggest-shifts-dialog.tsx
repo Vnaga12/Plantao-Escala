@@ -43,11 +43,11 @@ import { cn } from "@/lib/utils";
 
 const weekdays = [
     { id: "Sunday", label: "Domingo" },
-    { id: "Monday", label: "Segunda" },
-    { id: "Tuesday", label: "Terça" },
-    { id: "Wednesday", label: "Quarta" },
-    { id: "Thursday", label: "Quinta" },
-    { id: "Friday", label: "Sexta" },
+    { id: "Monday", label: "Segunda-feira" },
+    { id: "Tuesday", label: "Terça-feira" },
+    { id: "Wednesday", label: "Quarta-feira" },
+    { id: "Thursday", label: "Quinta-feira" },
+    { id: "Friday", label: "Sexta-feira" },
     { id: "Saturday", label: "Sábado" },
 ];
 
@@ -354,9 +354,9 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
                             control={form.control}
                             name="allowedDays"
                             render={({ field }) => (
-                                <div className="flex flex-wrap gap-2 mt-2">
+                                <div className="space-y-2 p-3 border rounded-md max-h-40 overflow-y-auto mt-2">
                                     {weekdays.map(day => (
-                                        <React.Fragment key={day.id}>
+                                        <div key={day.id} className="flex items-center space-x-2">
                                             <Checkbox
                                                 id={`day-${day.id}`}
                                                 checked={field.value?.includes(day.id)}
@@ -366,10 +366,9 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
                                                         : (field.value || []).filter(id => id !== day.id);
                                                     field.onChange(newValue);
                                                 }}
-                                                className="hidden peer"
                                             />
-                                            <Label htmlFor={`day-${day.id}`} className="px-3 py-1 border rounded-full cursor-pointer text-sm peer-checked:bg-primary peer-checked:text-primary-foreground peer-checked:border-primary transition-colors">{day.label}</Label>
-                                        </React.Fragment>
+                                            <Label htmlFor={`day-${day.id}`} className="font-normal">{day.label}</Label>
+                                        </div>
                                     ))}
                                 </div>
                             )}
