@@ -356,7 +356,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
                             render={({ field }) => (
                                 <div className="flex flex-wrap gap-2 mt-2">
                                     {weekdays.map(day => (
-                                        <div key={day.id} className="flex items-center">
+                                        <React.Fragment key={day.id}>
                                             <Checkbox
                                                 id={`day-${day.id}`}
                                                 checked={field.value?.includes(day.id)}
@@ -369,7 +369,7 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
                                                 className="hidden peer"
                                             />
                                             <Label htmlFor={`day-${day.id}`} className="px-3 py-1 border rounded-full cursor-pointer text-sm peer-checked:bg-primary peer-checked:text-primary-foreground peer-checked:border-primary transition-colors">{day.label}</Label>
-                                        </div>
+                                        </React.Fragment>
                                     ))}
                                 </div>
                             )}
