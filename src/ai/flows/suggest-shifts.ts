@@ -160,7 +160,7 @@ const suggestShiftAssignmentsFlow = ai.defineFlow(
         scheduleConstraints: constraints.join(' '),
         calendars: JSON.stringify(input.calendars),
         dateRange: `${input.startDate} a ${input.endDate}`,
-        allowedDays: JSON.stringify(input.allowedDays || ['Qualquer dia']),
+        allowedDays: (input.allowedDays || ['Qualquer dia']).join(', '),
     });
     return output!;
   }
