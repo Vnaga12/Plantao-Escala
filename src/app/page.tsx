@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { addMonths, subMonths, getDaysInMonth, getDay, format, parse, isSameMonth, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, getDayOfYear } from "date-fns";
+import { addMonths, subMonths, getDaysInMonth, getDay, format, parse, isSameMonth, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, getDayOfYear, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Shift, Employee, Calendar, ShiftColor, Role } from "@/lib/types";
 import Header from "@/app/components/header";
@@ -11,6 +11,19 @@ import ColorLegend from "./components/color-legend";
 import { useToast } from "@/components/ui/use-toast";
 import EmployeeSidebar from "./components/employee-sidebar";
 import { SuggestShiftsDialog } from "./components/suggest-shifts-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 const initialCalendars: Calendar[] = [
   {
@@ -449,6 +462,36 @@ export default function Home() {
       setColorMeanings(newMeanings);
   };
 
+  const handleClearShifts = () => {
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
+
+    const newCalendars = calendars.map(cal => {
+        // If 'All Calendars' is not selected, only modify the active one
+        if (activeCalendarId !== 'all' && cal.id !== activeCalendarId) {
+            return cal;
+        }
+
+        const shiftsToKeep = cal.shifts.filter(shift => {
+            try {
+                const shiftDate = parseISO(shift.date);
+                return !isSameMonth(shiftDate, currentDate);
+            } catch (e) {
+                // Keep shifts with invalid dates so they are not accidentally deleted
+                return true; 
+            }
+        });
+
+        return { ...cal, shifts: shiftsToKeep };
+    });
+
+    setCalendars(newCalendars);
+    toast({
+      title: "Escala Limpa",
+      description: `Todos os plantões de ${format(currentDate, "MMMM", { locale: ptBR })} foram removidos.`,
+    });
+  }
+
   const filteredShifts = shifts.filter(shift => {
     if (!shift.date || !shift.date.includes('-')) return false; // Guard against invalid date formats
     const query = searchQuery.toLowerCase();
@@ -497,7 +540,29 @@ export default function Home() {
             <h2 className="text-lg">{activeCalendar ? activeCalendar.name : "Todas as Turmas"}</h2>
        </div>
        <div className="flex-1 min-h-0 flex flex-col">
-        <div className="flex justify-end p-2 print:hidden">
+        <div className="flex justify-end p-2 gap-2 print:hidden">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Limpar Escala
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação não pode ser desfeita. Isso removerá permanentemente todos os plantões do mês de {format(currentDate, "MMMM", { locale: ptBR })} para a(s) turma(s) selecionada(s).
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearShifts}>
+                    Excluir Plantões
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <SuggestShiftsDialog 
               employees={employees} 
               roles={shiftTypes} 
@@ -553,5 +618,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
