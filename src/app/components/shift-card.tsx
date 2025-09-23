@@ -46,22 +46,9 @@ const roleColorClasses: Record<ShiftColor, string> = {
 export default function ShiftCard({ shift, employees, onUpdateShift, onDeleteShift, shiftTypes, colorMeanings }: ShiftCardProps) {
   return (
     <div className={cn("rounded-lg border-l-4 p-2 text-xs shadow-sm print:shadow-none print:border", roleColorClasses[shift.color])}>
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="font-bold">{shift.role}</p>
-          <p className="text-muted-foreground">{shift.employeeName}</p>
-          <div className="flex items-center gap-1 mt-1 text-muted-foreground">
-            <Clock className="h-3 w-3" />
-            <span>{shift.startTime} - {shift.endTime}</span>
-          </div>
-          {shift.calendarName && (
-            <div className="flex items-center gap-1 mt-1 text-muted-foreground text-gray-500">
-                <Hospital className="h-3 w-3" />
-                <span>{shift.calendarName}</span>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center print:hidden">
+      <div className="flex justify-between items-start mb-1">
+        <p className="font-bold">{shift.role}</p>
+        <div className="flex items-center -mr-2 print:hidden">
             <EditShiftDialog shift={shift} shiftTypes={shiftTypes} onUpdateShift={onUpdateShift} colorMeanings={colorMeanings} />
             <SwapShiftDialog shift={shift} employees={employees} onUpdateShift={onUpdateShift} />
             <AlertDialog>
@@ -87,6 +74,19 @@ export default function ShiftCard({ shift, employees, onUpdateShift, onDeleteShi
             </AlertDialog>
         </div>
       </div>
+       <div className="space-y-1">
+          <p className="text-muted-foreground">{shift.employeeName}</p>
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            <span>{shift.startTime} - {shift.endTime}</span>
+          </div>
+          {shift.calendarName && (
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Hospital className="h-3 w-3" />
+                <span>{shift.calendarName}</span>
+            </div>
+          )}
+        </div>
     </div>
   );
 }
