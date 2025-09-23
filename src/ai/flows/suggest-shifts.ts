@@ -106,7 +106,7 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
   **REGRA OBRIGATÓRIA:** Para cada função na lista 'Funções a Preencher', você DEVE atribuir exatamente UM plantão dessa função a CADA funcionário da lista. Não crie mais ou menos plantões do que o necessário para cumprir esta regra.
 
   **Período da Escala:** Os plantões devem ser distribuídos entre as seguintes datas: {{{dateRange}}}.
-  **Dias Permitidos:** Os plantões só podem ocorrer nos seguintes dias da semana: {{{allowedDays}}}.
+  **DIAS OBRIGATÓRIOS:** Os plantões SÓ PODEM ser agendados nos seguintes dias da semana: {{{allowedDays}}}. NENHUM plantão pode ser criado fora desses dias.
   **Turmas:** {{{calendars}}}
   **Funcionários (incluindo indisponibilidades e preferências):** {{{employees}}}
   **Funções a Preencher:** {{{rolesToFill}}}
