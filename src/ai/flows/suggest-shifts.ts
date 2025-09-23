@@ -18,25 +18,28 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
+const EmployeeSchema = z.object({
+  id: z.string().describe('Unique identifier for the employee.'),
+  name: z.string().describe('Name of the employee.'),
+  unavailability: z
+    .array(z.object({
+      day: z.string().describe('Day of the week (e.g., Monday).'),
+      startTime: z.string().describe('Start time of unavailability (e.g., 09:00).'),
+      endTime: z.string().describe('End time of unavailability (e.g., 17:00).'),
+    }))
+    .describe('Employee unavailability for the week.'),
+  preferences: z
+    .string()
+    .describe('Employee shift preferences or constraints.'),
+});
+
+const CalendarSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+});
+
 const SuggestShiftAssignmentsInputSchema = z.object({
-  employees: z
-    .array(
-      z.object({
-        id: z.string().describe('Unique identifier for the employee.'),
-        name: z.string().describe('Name of the employee.'),
-        unavailability: z
-          .array(z.object({
-            day: z.string().describe('Day of the week (e.g., Monday).'),
-            startTime: z.string().describe('Start time of unavailability (e.g., 09:00).'),
-            endTime: z.string().describe('End time of unavailability (e.g., 17:00).'),
-          }))
-          .describe('Employee unavailability for the week.'),
-        preferences: z
-          .string()
-          .describe('Employee shift preferences or constraints.'),
-      })
-    )
-    .describe('List of employees and their unavailability and preferences.'),
+  employees: z.array(EmployeeSchema).describe('List of all employees to be scheduled.'),
   rolesToFill: z
     .array(z.string())
     .describe('List of roles that need to be filled (e.g. Doctor, Nurse).'),
@@ -45,10 +48,7 @@ const SuggestShiftAssignmentsInputSchema = z.object({
     .describe('Constraints or requirements for the overall schedule.'),
   startDate: z.string().describe('The start date for the schedule period, in YYYY-MM-DD format.'),
   endDate: z.string().describe('The end date for the schedule period, in YYYY-MM-DD format.'),
-  calendars: z.array(z.object({
-      id: z.string(),
-      name: z.string(),
-  })).describe("The calendars/teams for which to generate shifts."),
+  calendars: z.array(CalendarSchema).describe("The calendars/teams for which to generate shifts."),
   allowedDays: z.array(z.string()).optional().describe("Array of weekday strings (e.g., ['Monday', 'Tuesday']) on which shifts can be scheduled."),
 });
 
@@ -78,15 +78,7 @@ export async function suggestShiftAssignments(input: SuggestShiftAssignmentsInpu
 
 const suggestShiftAssignmentsPrompt = ai.definePrompt({
   name: 'suggestShiftAssignmentsPrompt',
-  input: {schema: z.object({
-      employees: z.string(),
-      rolesToFill: z.string(),
-      scheduleConstraints: z.string(),
-      calendars: z.string(),
-      startDate: z.string(),
-      endDate: z.string(),
-      allowedDays: z.string(),
-  })},
+  input: {schema: SuggestShiftAssignmentsInputSchema},
   output: {schema: SuggestShiftAssignmentsOutputSchema},
   prompt: `Você é um assistente de IA especialista em criar escalas de trabalho para equipes médicas. Sua resposta deve ser em português.
 
@@ -95,10 +87,20 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
   **REGRA OBRIGATÓRIA:** Para cada função na lista 'Funções a Preencher', você DEVE atribuir exatamente UM plantão dessa função a CADA funcionário da lista. Não crie mais ou menos plantões do que o necessário para cumprir esta regra.
 
   **Período da Escala:** Os plantões devem ser distribuídos entre as seguintes datas: {{{startDate}}} e {{{endDate}}}.
-  **DIAS OBRIGATÓRIOS:** Os plantões SÓ PODEM ser agendados nos seguintes dias da semana: {{{allowedDays}}}. NENHUM plantão pode ser criado fora desses dias.
-  **Turmas:** {{{calendars}}}
-  **Funcionários (incluindo indisponibilidades e preferências):** {{{employees}}}
-  **Funções a Preencher:** {{{rolesToFill}}}
+  **DIAS OBRIGATÓRIOS:** Os plantões SÓ PODEM ser agendados nos seguintes dias da semana: {{#if allowedDays}}{{#each allowedDays}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}Qualquer dia{{/if}}. NENHUM plantão pode ser criado fora desses dias.
+  
+  **Turmas:**
+  {{#each calendars}}
+  - ID: {{{id}}}, Nome: {{{name}}}
+  {{/each}}
+  
+  **Funcionários (incluindo indisponibilidades e preferências):**
+  {{#each employees}}
+  - ID: {{{id}}}, Nome: {{{name}}}, Preferências: {{{preferences}}}, Indisponibilidade: {{#if unavailability}}{{#each unavailability}}{{{day}}} de {{{startTime}}} a {{{endTime}}}; {{/each}}{{else}}Nenhuma{{/if}}
+  {{/each}}
+  
+  **Funções a Preencher:** {{#each rolesToFill}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+  
   **Restrições Adicionais:** {{{scheduleConstraints}}}
 
   Ao fazer as atribuições, considere:
@@ -141,17 +143,7 @@ const suggestShiftAssignmentsFlow = ai.defineFlow(
     outputSchema: SuggestShiftAssignmentsOutputSchema,
   },
   async input => {
-    const constraints = [input.scheduleConstraints];
-
-    const {output} = await suggestShiftAssignmentsPrompt({
-        employees: JSON.stringify(input.employees),
-        rolesToFill: JSON.stringify(input.rolesToFill),
-        scheduleConstraints: constraints.join(' '),
-        calendars: JSON.stringify(input.calendars),
-        startDate: input.startDate,
-        endDate: input.endDate,
-        allowedDays: (input.allowedDays || ['Qualquer dia']).join(', '),
-    });
+    const {output} = await suggestShiftAssignmentsPrompt(input);
     return output!;
   }
 );
