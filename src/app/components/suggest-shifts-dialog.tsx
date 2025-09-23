@@ -33,7 +33,7 @@ import type { SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
 import { useToast } from "@/components/ui/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EditShiftDialog } from "./edit-shift-dialog";
-import { format, startOfWeek, endOfWeek, parseISO } from "date-fns";
+import { format, startOfWeek, endOfWeek, parseISO, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -52,6 +52,7 @@ const weekdays = [
 
 const allWeekdays = weekdays.map(d => d.id);
 const businessDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+const dayNameToIndex: Record<string, number> = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
 
 type SuggestShiftsDialogProps = {
   employees: Employee[];
@@ -131,15 +132,37 @@ export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, 
         return;
     }
 
+    // Pre-calculate the valid dates
+    const validDates = eachDayOfInterval({
+        start: data.startDate,
+        end: data.endDate
+    }).filter(date => {
+        if (!data.allowedDays || data.allowedDays.length === 0) {
+            return true; // If no days are specified, all days are allowed
+        }
+        const dayIndex = date.getDay();
+        const allowedIndexes = data.allowedDays.map(dayName => dayNameToIndex[dayName]);
+        return allowedIndexes.includes(dayIndex);
+    }).map(date => format(date, 'yyyy-MM-dd'));
+
+    if (validDates.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "Nenhuma Data Válida",
+            description: "Não há dias correspondentes aos selecionados no período de tempo escolhido. Por favor, ajuste o período ou os dias da semana.",
+        });
+        setIsLoading(false);
+        return;
+    }
+
+
     try {
       const result = await suggestShiftAssignments({
         employees: employeesForCalendars.map(({ id, name, unavailability, preferences }) => ({ id, name, unavailability, preferences })),
         rolesToFill: data.rolesToFill,
         scheduleConstraints: data.scheduleConstraints || "",
-        startDate: format(data.startDate, 'yyyy-MM-dd'),
-        endDate: format(data.endDate, 'yyyy-MM-dd'),
+        validDates,
         calendars: selectedCalendars.map(c => ({ id: c.id, name: c.name })),
-        allowedDays: data.allowedDays,
       });
         
       if (result && result.assignments) {

@@ -47,10 +47,8 @@ const SuggestShiftAssignmentsInputSchema = z.object({
   scheduleConstraints: z
     .string()
     .describe('Constraints or requirements for the overall schedule.'),
-  startDate: z.string().describe('The start date for the schedule period, in YYYY-MM-DD format.'),
-  endDate: z.string().describe('The end date for the schedule period, in YYYY-MM-DD format.'),
+  validDates: z.array(z.string()).describe('A list of all possible dates (in YYYY-MM-DD format) on which shifts can be scheduled.'),
   calendars: z.array(CalendarSchema).describe("The calendars/teams for which to generate shifts."),
-  allowedDays: z.array(z.string()).optional().describe("Array of weekday strings (e.g., ['Monday', 'Tuesday']) on which shifts can be scheduled."),
 });
 
 export type SuggestShiftAssignmentsInput = z.infer<typeof SuggestShiftAssignmentsInputSchema>;
@@ -100,15 +98,15 @@ Sua saída DEVE conter exatamente esse número total de plantões.
 **REGRA OBRIGATÓRIA 1: ATRIBUIÇÃO COMPLETA**
 - Você DEVE garantir que CADA funcionário da lista receba exatamente UM plantão para CADA função listada em 'Funções a Preencher'. Sem exceções. Todos os funcionários devem ser incluídos.
 
-**REGRA OBRIGATÓRIA 2: DIAS DE TRABALHO**
-- Os plantões SÓ PODEM ser agendados nos seguintes dias da semana: {{#if allowedDays}}{{#each allowedDays}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}Qualquer dia{{/if}}.
-- NENHUM plantão pode ser criado fora desses dias. Verifique o dia da semana para cada data que você escolher.
+**REGRA OBRIGATÓRIA 2: DATAS DE TRABALHO**
+- Os plantões SÓ PODEM ser agendados nas seguintes datas: {{#each validDates}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}.
+- NENHUM plantão pode ser criado fora dessas datas.
 
 **REGRA OBRIGATÓRIA 3: DISTRIBUIÇÃO DIÁRIA**
-- Para garantir que a escala seja bem distribuída e utilize todo o período disponível, cada dia no calendário pode ter no máximo 2 plantões de CADA função (Ex: no máximo 2 de 'Anestesia' e no máximo 2 de 'Enfermaria' no mesmo dia). Tente espaçar os plantões ao máximo ao longo do período entre {{{startDate}}} e {{{endDate}}}.
+- Para garantir que a escala seja bem distribuída e utilize todo o período disponível, cada dia no calendário pode ter no máximo 2 plantões de CADA função (Ex: no máximo 2 de 'Anestesia' e no máximo 2 de 'Enfermaria' no mesmo dia). Tente espaçar os plantões ao máximo ao longo de todas as datas válidas.
 
 **Dados de Entrada:**
-- **Período da Escala:** Os plantões devem ser distribuídos entre as datas {{{startDate}}} e {{{endDate}}}.
+- **Datas Válidas para Plantão:** {{#each validDates}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 - **Turmas:**
   {{#each calendars}}
   - ID: {{{id}}}, Nome: {{{name}}}
@@ -126,7 +124,7 @@ Ao fazer as atribuições, considere:
 2. As preferências dos funcionários e a distribuição justa e espaçada dos plantões ao longo de todo o período.
 3. Para cada atribuição, especifique o 'calendarId' correspondente. O funcionário deve pertencer à turma do plantão.
 4. O 'employeeId' DEVE ser um dos IDs fornecidos.
-5. A 'shiftDate' DEVE estar no formato YYYY-MM-DD e dentro do período especificado.
+5. A 'shiftDate' DEVE ser uma das datas fornecidas na lista de Datas Válidas.
 
 Depois de gerar as atribuições, revise sua lista para garantir que o número total de plantões está correto e que todas as regras obrigatórias foram cumpridas. Explique seu raciocínio no resumo.
 IMPORTANTE: O resumo deve estar em português.
