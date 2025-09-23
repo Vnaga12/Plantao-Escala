@@ -171,6 +171,14 @@ export default function Home() {
 
 
   const activeCalendar = calendars.find(c => c.id === activeCalendarId);
+  
+  const activeCalendarName = React.useMemo(() => {
+      if (activeCalendarId === 'all') {
+          return "Grupo";
+      }
+      return activeCalendar?.name || "Grupo";
+  }, [activeCalendarId, activeCalendar]);
+
 
   const shifts = React.useMemo(() => {
       if (activeCalendarId === 'all') {
@@ -499,7 +507,7 @@ export default function Home() {
                 onDeleteShift={handleDeleteShift}
                 onAddShift={handleAddShift}
                 shiftTypes={shiftTypes}
-                calendarName={activeCalendar?.name || "Todas"}
+                calendarName={activeCalendarName}
                 onAddDayEvent={handleAddDayEvent}
                 colorMeanings={colorMeanings}
                 calendars={calendars}
@@ -533,5 +541,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

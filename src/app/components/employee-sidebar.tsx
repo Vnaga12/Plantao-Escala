@@ -61,7 +61,7 @@ export default function EmployeeSidebar({
   return (
     <aside className="w-72 flex-shrink-0 border-r bg-gray-50 p-4 flex flex-col print:hidden">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2"><Users className="h-5 w-5" /> Grupo</h2>
+        <h2 className="text-lg font-semibold flex items-center gap-2"><Users className="h-5 w-5" /> {calendarName}</h2>
       </div>
       
       <div className="flex items-center gap-2 mb-4">
