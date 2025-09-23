@@ -1,3 +1,4 @@
+
 // src/ai/flows/suggest-shifts.ts
 'use server';
 
@@ -84,7 +85,7 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
 
   Sua tarefa principal é atribuir plantões aos funcionários, seguindo as regras obrigatórias e as restrições fornecidas.
 
-  **REGRA OBRIGATÓRIA:** Para cada função na lista 'Funções a Preencher', você DEVE atribuir exatamente UM plantão dessa função a CADA funcionário da lista. Não crie mais ou menos plantões do que o necessário para cumprir esta regra.
+  **REGRA OBRIGATÓRIA:** Você deve garantir que CADA funcionário da lista receba a quantidade exata de plantões para CADA função listada em 'Funções a Preencher'. Para este caso, cada funcionário deve receber exatamente 1 (um) plantão de cada uma das funções.
 
   **REGRA DE DISTRIBUIÇÃO:** Para garantir que a escala seja bem distribuída, cada dia no calendário pode ter no máximo 2 plantões de cada função. Por exemplo, em um único dia, pode haver no máximo 2 plantões de 'Anestesia', no máximo 2 de 'Enfermaria', e assim por diante.
 
