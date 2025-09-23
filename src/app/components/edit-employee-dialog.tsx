@@ -29,7 +29,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, Save, Hospital, Pencil, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
-import type { Employee, Shift, ShiftColor } from "@/lib/types";
+import type { Employee, Shift, ShiftColor, Calendar } from "@/lib/types";
 import { useToast } from "@/components/ui/use-toast";
 import { format, addMonths, subMonths, isSameMonth, parseISO, getDate } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -38,6 +38,7 @@ import { Separator } from "@/components/ui/separator";
 import { EditShiftDialog } from "./edit-shift-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ManageEmployeeShiftsDialog } from "./manage-employee-shifts-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const weekdays = [
     { value: "Monday", label: "Segunda-feira" },
@@ -65,6 +66,7 @@ type EditEmployeeDialogProps = {
   shiftTypes: string[];
   calendarName: string;
   colorMeanings: { color: ShiftColor, meaning: string }[];
+  calendars: Calendar[];
 };
 
 export function EditEmployeeDialog({ 
@@ -80,7 +82,8 @@ export function EditEmployeeDialog({
     onAddShift,
     shiftTypes,
     calendarName,
-    colorMeanings
+    colorMeanings,
+    calendars
 }: EditEmployeeDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [viewedMonth, setViewedMonth] = React.useState(currentDate);
@@ -99,7 +102,10 @@ export function EditEmployeeDialog({
 
   React.useEffect(() => {
     if (isOpen) {
-      reset(employee);
+      reset({
+        ...employee,
+        calendarIds: employee.calendarIds || []
+      });
       setViewedMonth(currentDate);
     }
   }, [isOpen, employee, reset, currentDate]);
@@ -161,6 +167,35 @@ export function EditEmployeeDialog({
                                     <div>
                                         <Label htmlFor="role" className="font-semibold">Função</Label>
                                         <Input id="role" {...register("role")} className="mt-1" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label className="font-semibold">Hospitais</Label>
+                                    <p className="text-sm text-muted-foreground mb-2">Selecione os hospitais aos quais este funcionário pertence.</p>
+                                    <div className="space-y-2 p-3 border rounded-md">
+                                        <Controller
+                                            control={control}
+                                            name="calendarIds"
+                                            render={({ field }) => (
+                                                <>
+                                                {calendars.map(cal => (
+                                                    <div key={cal.id} className="flex items-center gap-2">
+                                                        <Checkbox
+                                                            id={`cal-${cal.id}`}
+                                                            checked={field.value?.includes(cal.id)}
+                                                            onCheckedChange={(checked) => {
+                                                                const newValue = checked
+                                                                    ? [...(field.value || []), cal.id]
+                                                                    : (field.value || []).filter(id => id !== cal.id);
+                                                                field.onChange(newValue);
+                                                            }}
+                                                        />
+                                                        <Label htmlFor={`cal-${cal.id}`} className="font-normal">{cal.name}</Label>
+                                                    </div>
+                                                ))}
+                                                </>
+                                            )}
+                                        />
                                     </div>
                                 </div>
                                 <div>

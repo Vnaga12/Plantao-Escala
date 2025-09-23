@@ -5,7 +5,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusCircle, User, CalendarPlus, Users } from "lucide-react";
-import type { Employee, Shift, ShiftColor } from "@/lib/types";
+import type { Employee, Shift, ShiftColor, Calendar } from "@/lib/types";
 import { EditEmployeeDialog } from "./edit-employee-dialog";
 import { EditDayDialog } from "./edit-day-dialog";
 import { Separator } from "@/components/ui/separator";
@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 
 type EmployeeSidebarProps = {
   employees: Employee[];
+  allEmployees: Employee[];
   onAddEmployee: (name: string) => void;
   onUpdateEmployee: (employee: Employee) => void;
   onDeleteEmployee: (employeeId: string) => void;
@@ -25,10 +26,12 @@ type EmployeeSidebarProps = {
   calendarName: string;
   onAddDayEvent: (event: { date: Date; name: string; color: ShiftColor }) => void;
   colorMeanings: { color: ShiftColor, meaning: string }[];
+  calendars: Calendar[];
 };
 
 export default function EmployeeSidebar({
   employees,
+  allEmployees,
   onAddEmployee,
   onUpdateEmployee,
   onDeleteEmployee,
@@ -41,6 +44,7 @@ export default function EmployeeSidebar({
   calendarName,
   onAddDayEvent,
   colorMeanings,
+  calendars,
 }: EmployeeSidebarProps) {
   const [newEmployeeName, setNewEmployeeName] = React.useState("");
 
@@ -84,7 +88,7 @@ export default function EmployeeSidebar({
               <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                   <EditEmployeeDialog 
                       employee={employee}
-                      allEmployees={employees}
+                      allEmployees={allEmployees}
                       onUpdateEmployee={onUpdateEmployee}
                       onDeleteEmployee={onDeleteEmployee}
                       shifts={shifts}
@@ -95,6 +99,7 @@ export default function EmployeeSidebar({
                       shiftTypes={shiftTypes}
                       calendarName={calendarName}
                       colorMeanings={colorMeanings}
+                      calendars={calendars}
                   >
                       <Button variant="ghost" size="icon" className="h-7 w-7"><User className="h-4 w-4" /></Button>
                   </EditEmployeeDialog>

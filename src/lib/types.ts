@@ -26,6 +26,7 @@ export type Employee = {
   role: string;
   unavailability: EmployeeUnavailability[];
   preferences: string;
+  calendarIds?: string[]; // Array of calendar IDs the employee belongs to
 };
 
 export type Calendar = {

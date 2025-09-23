@@ -38,35 +38,40 @@ const initialEmployees: Employee[] = [
         name: 'Dra. Alice',
         role: 'Médico(a)',
         unavailability: [{ day: 'Monday', startTime: '08:00', endTime: '17:00' }],
-        preferences: 'Prefere turnos da manhã.'
+        preferences: 'Prefere turnos da manhã.',
+        calendarIds: ['cal1']
     },
     {
         id: '2',
         name: 'Beto',
         role: 'Enfermeiro(a)',
         unavailability: [{ day: 'Tuesday', startTime: '12:00', endTime: '20:00' }],
-        preferences: 'Não pode trabalhar nos fins de semana.'
+        preferences: 'Não pode trabalhar nos fins de semana.',
+        calendarIds: ['cal1']
     },
     {
         id: '3',
         name: 'Carlos',
         role: 'Médico(a)',
         unavailability: [],
-        preferences: 'Disponível para cobrir turnos.'
+        preferences: 'Disponível para cobrir turnos.',
+        calendarIds: ['cal1', 'cal2']
     },
     {
         id: '4',
         name: 'Dr. David',
         role: 'Médico(a)',
         unavailability: [],
-        preferences: 'Prefere turnos da noite.'
+        preferences: 'Prefere turnos da noite.',
+        calendarIds: ['cal2']
     },
     {
         id: '5',
         name: 'Dra. Elisa',
         role: 'Técnico(a)',
         unavailability: [],
-        preferences: ''
+        preferences: '',
+        calendarIds: ['cal1', 'cal2']
     }
 ];
 
@@ -181,6 +186,15 @@ export default function Home() {
           calendarName: activeCalendar.name
       })) || [];
   }, [calendars, activeCalendarId, activeCalendar]);
+  
+  const displayedEmployees = React.useMemo(() => {
+    if (activeCalendarId === 'all') {
+      return employees;
+    }
+    return employees.filter(employee => 
+      employee.calendarIds?.includes(activeCalendarId)
+    );
+  }, [employees, activeCalendarId]);
 
 
   const handleNextMonth = () => {
@@ -249,6 +263,7 @@ export default function Home() {
       role: '',
       unavailability: [],
       preferences: "",
+      calendarIds: activeCalendarId !== 'all' ? [activeCalendarId] : [],
     };
     setEmployees([...employees, newEmployee]);
   };
@@ -317,6 +332,12 @@ export default function Home() {
   const handleDeleteCalendar = (calendarId: string) => {
     const newCalendars = calendars.filter(c => c.id !== calendarId);
     setCalendars(newCalendars);
+    
+    // Also remove the calendarId from any employees
+    setEmployees(prevEmployees => prevEmployees.map(emp => ({
+        ...emp,
+        calendarIds: emp.calendarIds?.filter(id => id !== calendarId) || []
+    })));
 
     if (activeCalendarId === calendarId) {
       setActiveCalendarId(newCalendars[0]?.id || 'all');
@@ -468,7 +489,7 @@ export default function Home() {
         </div>
         <div className="flex flex-1 overflow-hidden print:block print:overflow-visible">
             {isSidebarOpen && <EmployeeSidebar 
-                employees={employees} 
+                employees={displayedEmployees} 
                 onAddEmployee={handleAddEmployee}
                 onUpdateEmployee={handleUpdateEmployee}
                 onDeleteEmployee={handleDeleteEmployee}
@@ -481,6 +502,8 @@ export default function Home() {
                 calendarName={activeCalendar?.name || "Todos"}
                 onAddDayEvent={handleAddDayEvent}
                 colorMeanings={colorMeanings}
+                calendars={calendars}
+                allEmployees={employees}
                 />}
             <main className="flex-1 overflow-auto p-4 md:p-6 print:p-0 print:overflow-visible">
             <div className="bg-white rounded-lg shadow print:shadow-none print:rounded-none flex-1 flex flex-col print:block">
@@ -488,7 +511,7 @@ export default function Home() {
                 currentDate={currentDate} 
                 shifts={filteredShifts}
                 onAddShift={handleAddShift} 
-                employees={employees}
+                employees={displayedEmployees}
                 onUpdateShift={handleUpdateShift}
                 onDeleteShift={handleDeleteShift}
                 shiftTypes={shiftTypes}
