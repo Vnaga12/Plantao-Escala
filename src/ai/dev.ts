@@ -1,4 +1,2 @@
-import { config } from 'dotenv';
-config();
-
-import '@/ai/flows/suggest-shifts.ts';
+import './genkit';
+import './flows/suggest-shifts';

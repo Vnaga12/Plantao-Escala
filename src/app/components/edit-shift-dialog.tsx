@@ -27,19 +27,26 @@ const availableColors: { name: ShiftColor, class: string }[] = [
   { name: 'red', class: 'bg-red-500' },
   { name: 'yellow', class: 'bg-yellow-500' },
   { name: 'gray', class: 'bg-gray-500' },
+  { name: 'pink', class: 'bg-pink-500' },
+  { name: 'cyan', class: 'bg-cyan-500' },
+  { name: 'orange', class: 'bg-orange-500' },
+  { name: 'indigo', class: 'bg-indigo-500' },
+  { name: 'teal', class: 'bg-teal-500' },
+  { name: 'lime', class: 'bg-lime-500' },
 ];
 
-type EditShiftFormValues = Omit<Shift, 'id' | 'day'>;
+type EditShiftFormValues = Omit<Shift, 'id' | 'date'>;
 
 type EditShiftDialogProps = {
   shift: Shift;
   onUpdateShift: (shift: Shift) => void;
-  roles: string[];
+  shiftTypes: string[];
+  colorMeanings: { color: ShiftColor, meaning: string }[];
 };
 
-export function EditShiftDialog({ onUpdateShift, shift, roles }: EditShiftDialogProps) {
+export function EditShiftDialog({ onUpdateShift, shift, shiftTypes, colorMeanings }: EditShiftDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { register, handleSubmit, control, reset, formState: { errors } } = useForm<EditShiftFormValues>({
+  const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<EditShiftFormValues>({
     defaultValues: {
       employeeName: shift.employeeName,
       startTime: shift.startTime,
@@ -49,8 +56,19 @@ export function EditShiftDialog({ onUpdateShift, shift, roles }: EditShiftDialog
     }
   });
 
+  const roleToColorMap = React.useMemo(() => new Map(colorMeanings.map(m => [m.meaning, m.color])), [colorMeanings]);
+  const selectedRole = watch("role");
+
+  React.useEffect(() => {
+    if (colorMeanings && colorMeanings.length > 0) {
+      const newColor = roleToColorMap.get(selectedRole) || 'gray';
+      setValue('color', newColor);
+    }
+  }, [selectedRole, setValue, roleToColorMap, colorMeanings]);
+
+
   const onSubmit: SubmitHandler<EditShiftFormValues> = (data) => {
-    onUpdateShift({ ...data, id: shift.id, day: shift.day });
+    onUpdateShift({ ...data, id: shift.id, date: shift.date });
     setIsOpen(false);
   };
   
@@ -71,6 +89,8 @@ export function EditShiftDialog({ onUpdateShift, shift, roles }: EditShiftDialog
         <Edit className="h-3 w-3 text-gray-500" />
     </Button>
   );
+  
+  const selectedColor = watch('color');
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -90,18 +110,18 @@ export function EditShiftDialog({ onUpdateShift, shift, roles }: EditShiftDialog
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="role" className="text-right">Função</Label>
+              <Label htmlFor="role" className="text-right">Tipo</Label>
               <Controller
                   name="role"
                   control={control}
                   render={({ field }) => (
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Selecione uma função" />
+                        <SelectValue placeholder="Selecione um tipo" />
                         </SelectTrigger>
                         <SelectContent>
-                        {roles.map(role => (
-                            <SelectItem key={role} value={role}>{role}</SelectItem>
+                        {shiftTypes.map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
                         ))}
                         </SelectContent>
                     </Select>
@@ -123,27 +143,21 @@ export function EditShiftDialog({ onUpdateShift, shift, roles }: EditShiftDialog
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="color" className="text-right">Cor</Label>
-               <Controller
-                name="color"
-                control={control}
-                render={({ field }) => (
-                  <div className="col-span-3 flex gap-2">
-                    {availableColors.map(color => (
-                      <button
-                        key={color.name}
-                        type="button"
-                        onClick={() => field.onChange(color.name)}
-                        className={cn(
-                          "h-6 w-6 rounded-full border-2",
-                          color.class,
-                          field.value === color.name ? 'border-primary' : 'border-transparent'
-                        )}
-                        aria-label={`Select ${color.name} color`}
-                      />
-                    ))}
-                  </div>
-                )}
-              />
+               <div className="col-span-3 flex gap-2">
+                {availableColors.map(color => (
+                  <button
+                    key={color.name}
+                    type="button"
+                    disabled
+                    className={cn(
+                      "h-6 w-6 rounded-full border-2",
+                      color.class,
+                      selectedColor === color.name ? 'border-primary ring-2 ring-primary ring-offset-2' : 'border-transparent opacity-50'
+                    )}
+                    aria-label={`Select ${color.name} color`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -154,5 +168,3 @@ export function EditShiftDialog({ onUpdateShift, shift, roles }: EditShiftDialog
     </Dialog>
   );
 }
-
-    

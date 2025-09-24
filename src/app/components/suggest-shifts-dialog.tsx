@@ -2,285 +2,520 @@
 "use client";
 
 import * as React from "react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
-import type { Employee } from "@/lib/types";
-import { getShiftSuggestions } from "@/lib/actions";
+import { useForm, Controller, SubmitHandler } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, Trash2, Plus, Loader2, User } from "lucide-react";
+import { Wand2, Loader2, Check, X, Pencil, Trash2, Calendar as CalendarIcon } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import type { Employee, Shift, ShiftColor, Calendar as CalendarType } from "@/lib/types";
+import { suggestShiftAssignments } from "@/lib/actions";
+import type { SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
 import { useToast } from "@/components/ui/use-toast";
-import type { SuggestShiftAssignmentsInput, SuggestShiftAssignmentsOutput } from "@/ai/flows/suggest-shifts";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { EditShiftDialog } from "./edit-shift-dialog";
+import { format, startOfWeek, endOfWeek, parseISO, eachDayOfInterval } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 
+const weekdays = [
+    { id: "Sunday", label: "Dom" },
+    { id: "Monday", label: "Seg" },
+    { id: "Tuesday", label: "Ter" },
+    { id: "Wednesday", label: "Qua" },
+    { id: "Thursday", label: "Qui" },
+    { id: "Friday", label: "Sex" },
+    { id: "Saturday", label: "Sáb" },
+];
+
+const allWeekdays = weekdays.map(d => d.id);
+const businessDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+const dayNameToIndex: Record<string, number> = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
 
 type SuggestShiftsDialogProps = {
   employees: Employee[];
-  onApplySuggestions: (suggestions: SuggestShiftAssignmentsOutput['assignments']) => void;
+  onApplySuggestions: (suggestions: (Omit<Shift, 'id'> & { calendarId: string })[]) => void;
   roles: string[];
+  currentDate: Date;
+  calendars: CalendarType[];
+  activeCalendarId: string;
 };
 
-type FormValues = SuggestShiftAssignmentsInput;
+const formSchema = z.object({
+  rolesToFill: z.array(z.string()).min(1, "Selecione pelo menos uma função."),
+  scheduleConstraints: z.string().optional(),
+  startDate: z.date({ required_error: "A data de início é obrigatória."}),
+  endDate: z.date({ required_error: "A data final é obrigatória."}),
+  calendarIds: z.array(z.string()).min(1, "Selecione pelo menos uma turma."),
+  allowedDays: z.array(z.string()).optional(),
+}).refine((data) => data.endDate >= data.startDate, {
+    message: "A data final deve ser posterior à data de início.",
+    path: ["endDate"],
+});
 
-const weekdays = [
-    { value: "Monday", label: "Segunda-feira" },
-    { value: "Tuesday", label: "Terça-feira" },
-    { value: "Wednesday", label: "Quarta-feira" },
-    { value: "Thursday", label: "Quinta-feira" },
-    { value: "Friday", label: "Sexta-feira" },
-    { value: "Saturday", label: "Sábado" },
-    { value: "Sunday", label: "Domingo" },
-];
+type FormValues = z.infer<typeof formSchema>;
 
-export function SuggestShiftsDialog({ employees, onApplySuggestions, roles }: SuggestShiftsDialogProps) {
+export function SuggestShiftsDialog({ employees, onApplySuggestions = () => {}, roles, currentDate, calendars, activeCalendarId }: SuggestShiftsDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [isPending, setIsPending] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
   const [suggestions, setSuggestions] = React.useState<SuggestShiftAssignmentsOutput | null>(null);
+  const [selectedSuggestions, setSelectedSuggestions] = React.useState<number[]>([]);
+  const [editableSuggestions, setEditableSuggestions] = React.useState<SuggestShiftAssignmentsOutput['assignments']>([]);
+
   const { toast } = useToast();
 
-  const { register, control, handleSubmit, reset, watch } = useForm<FormValues>({
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      employees: [],
-      shifts: [],
+      rolesToFill: roles,
       scheduleConstraints: "",
+      startDate: startOfWeek(currentDate, { locale: ptBR }),
+      endDate: endOfWeek(currentDate, { locale: ptBR }),
+      calendarIds: activeCalendarId !== 'all' ? [activeCalendarId] : [],
+      allowedDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
     },
   });
-  
+
   React.useEffect(() => {
     if (isOpen) {
-        reset({
-            employees: employees,
-            shifts: [{ day: "Monday", startTime: "09:00", endTime: "17:00", role: roles[0] || "" }],
-            scheduleConstraints: "Garantir que haja pelo menos um médico de plantão em todos os momentos. Nenhum funcionário deve trabalhar mais de 40 horas por semana.",
-        });
-        setSuggestions(null);
-    }
-  }, [isOpen, reset, employees, roles]);
-
-  const handleOpenChange = React.useCallback((open: boolean) => {
-    setIsOpen(open);
-  }, []);
-
-  const {
-    fields: employeeFields,
-  } = useFieldArray({ control, name: "employees" });
-  
-  const {
-    fields: shiftFields,
-    append: appendShift,
-    remove: removeShift,
-  } = useFieldArray({ control, name: "shifts" });
-
-  const currentEmployees = watch("employees");
-
-
-  const handleFormSubmit = async (data: FormValues) => {
-    setIsPending(true);
-    setSuggestions(null);
-    
-    // Ensure all employees have IDs for the AI flow
-    const processedData = {
-        ...data,
-        employees: data.employees.map(emp => ({...emp, id: emp.id || `temp-${Math.random()}`}))
-    }
-
-    const result = await getShiftSuggestions(processedData);
-    setIsPending(false);
-
-    if (result.success && result.data) {
-      setSuggestions(result.data);
-      toast({
-        title: "Sugestões Prontas",
-        description: "A IA gerou sugestões de turnos.",
+      form.reset({
+        rolesToFill: roles,
+        scheduleConstraints: "",
+        startDate: startOfWeek(currentDate, { locale: ptBR }),
+        endDate: endOfWeek(currentDate, { locale: ptBR }),
+        calendarIds: activeCalendarId !== 'all' ? [activeCalendarId] : [],
+        allowedDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
       });
-    } else {
+      setSuggestions(null);
+      setIsLoading(false);
+      setSelectedSuggestions([]);
+    }
+  }, [isOpen, roles, currentDate, activeCalendarId, form]);
+
+
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    setIsLoading(true);
+    setSuggestions(null);
+
+    const selectedCalendars = calendars.filter(c => data.calendarIds.includes(c.id));
+    const employeesForCalendars = employees.filter(e => e.calendarIds?.some(cid => data.calendarIds.includes(cid)));
+    
+    if (employeesForCalendars.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "Nenhum Funcionário Encontrado",
+            description: "Não há funcionários associados às turmas selecionadas. Adicione funcionários às turmas antes de gerar turnos.",
+        });
+        setIsLoading(false);
+        return;
+    }
+
+    // Pre-calculate the valid dates
+    const validDates = eachDayOfInterval({
+        start: data.startDate,
+        end: data.endDate
+    }).filter(date => {
+        if (!data.allowedDays || data.allowedDays.length === 0) {
+            return true; // If no days are specified, all days are allowed
+        }
+        const dayIndex = date.getDay();
+        const allowedIndexes = data.allowedDays.map(dayName => dayNameToIndex[dayName]);
+        return allowedIndexes.includes(dayIndex);
+    }).map(date => format(date, 'yyyy-MM-dd'));
+
+    if (validDates.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "Nenhuma Data Válida",
+            description: "Não há dias correspondentes aos selecionados no período de tempo escolhido. Por favor, ajuste o período ou os dias da semana.",
+        });
+        setIsLoading(false);
+        return;
+    }
+
+
+    try {
+      const result = await suggestShiftAssignments({
+        employees: employeesForCalendars.map(({ id, name, unavailability, preferences }) => ({ id, name, unavailability, preferences })),
+        rolesToFill: data.rolesToFill,
+        scheduleConstraints: data.scheduleConstraints || "",
+        validDates,
+        calendars: selectedCalendars.map(c => ({ id: c.id, name: c.name })),
+      });
+        
+      if (result && result.assignments) {
+          setSuggestions(result);
+          setEditableSuggestions(result.assignments);
+          setSelectedSuggestions(result.assignments.map((_, index) => index)); // Select all by default
+      } else {
+        toast({
+            variant: "destructive",
+            title: "Erro ao Sugerir Turnos",
+            description: "A IA não conseguiu gerar sugestões. Verifique as restrições ou tente novamente.",
+        });
+      }
+    } catch (error) {
+      console.error("Error suggesting shifts:", error);
       toast({
         variant: "destructive",
-        title: "Erro",
-        description: result.error,
+        title: "Erro ao Sugerir Turnos",
+        description: "Ocorreu um erro ao tentar obter sugestões. Tente novamente.",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
-  
+
   const handleApply = () => {
-    if (suggestions) {
-      onApplySuggestions(suggestions.assignments);
-      handleOpenChange(false);
-    }
-  };
-
-  const EmployeeFormFields = ({ index, control, register }: { index: number; control: any; register: any }) => {
-    const { fields, append, remove } = useFieldArray({
-      control,
-      name: `employees.${index}.availability`,
+    if (!suggestions) return;
+    const finalShifts = selectedSuggestions.map(index => {
+      const suggestion = editableSuggestions[index];
+      const employee = employees.find(e => e.id === suggestion.employeeId);
+      return {
+        id: `suggested-${Date.now()}-${index}`,
+        date: suggestion.shiftDate, // The AI now returns the full date string
+        employeeName: employee?.name || 'Desconhecido',
+        role: suggestion.role,
+        startTime: suggestion.shiftStartTime,
+        endTime: suggestion.shiftEndTime,
+        color: 'yellow' as ShiftColor, 
+        calendarId: suggestion.calendarId,
+      };
     });
-  
-    return (
-      <div className="mt-4 space-y-2">
-        <div className="flex justify-between items-center">
-          <Label className="text-sm font-medium">Disponibilidade</Label>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => append({ day: 'Monday', startTime: '09:00', endTime: '17:00' })}
-          >
-            <Plus className="mr-2 h-3 w-3" /> Adicionar
-          </Button>
-        </div>
-        <div className="space-y-2 pl-2">
-          {fields.map((item, k) => (
-            <div key={item.id} className="grid grid-cols-[1fr,1fr,auto] items-center gap-2">
-                <Controller
-                  control={control}
-                  name={`employees.${index}.availability.${k}.day`}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {weekdays.map(day => <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              <Input type="time" {...register(`employees.${index}.availability.${k}.startTime`)} />
-              <div className="flex items-center gap-1">
-                <Input type="time" {...register(`employees.${index}.availability.${k}.endTime`)} />
-                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => remove(k)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            </div>
-          ))}
-          {fields.length === 0 && <p className="text-xs text-muted-foreground pt-2">Nenhuma disponibilidade especificada.</p>}
-        </div>
-      </div>
-    );
+    
+    onApplySuggestions(finalShifts);
+    setIsOpen(false);
   };
 
-  const getDayLabel = (dayValue: string) => {
-    return weekdays.find(d => d.value === dayValue)?.label || dayValue;
-  }
+  const handleUpdateSuggestion = (updatedShift: Shift, index: number) => {
+    const newEditableSuggestions = [...editableSuggestions];
+    const suggestionToUpdate = newEditableSuggestions[index];
+    
+    const employee = employees.find(e => e.name === updatedShift.employeeName);
+    
+    newEditableSuggestions[index] = {
+      ...suggestionToUpdate,
+      employeeId: employee?.id || suggestionToUpdate.employeeId,
+      role: updatedShift.role,
+      startTime: updatedShift.startTime,
+      endTime: updatedShift.endTime,
+    };
+    setEditableSuggestions(newEditableSuggestions);
+  };
+  
+  const handleDeleteSuggestion = (index: number) => {
+    const newEditableSuggestions = editableSuggestions.filter((_, i) => i !== index);
+    setEditableSuggestions(newEditableSuggestions);
+    setSelectedSuggestions(prev => prev.filter(i => i !== index).map(i => (i > index ? i - 1 : i)));
+  };
+  
+  const getCalendarNameById = (id: string) => calendars.find(c => c.id === id)?.name || 'Desconhecida';
+
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>
-          <Sparkles />
+          <Wand2 className="mr-2 h-4 w-4" />
           Sugerir Turnos
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Sugestões de Turnos com IA</DialogTitle>
+          <DialogTitle>Sugerir Turnos com IA</DialogTitle>
           <DialogDescription>
-            Defina seu grupo e os turnos necessários, e deixe a IA construir o cronograma ideal.
+            Use a IA para preencher automaticamente a escala com base nas funções necessárias e na disponibilidade da equipe.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="flex-1 overflow-y-auto">
-          <Tabs defaultValue="employees" className="h-full flex flex-col">
-            <TabsList className="flex-shrink-0">
-              <TabsTrigger value="employees">Grupo ({currentEmployees.length})</TabsTrigger>
-              <TabsTrigger value="shifts">Turnos a Preencher</TabsTrigger>
-              <TabsTrigger value="constraints">Restrições</TabsTrigger>
-              {suggestions && <TabsTrigger value="suggestions">Sugestões</TabsTrigger>}
-            </TabsList>
-            <ScrollArea className="flex-1 p-1">
-              <TabsContent value="employees" className="mt-2">
-                  <p className="text-sm text-muted-foreground mb-4">Ajuste as preferências e disponibilidade do grupo para esta sugestão específica.</p>
-                  {employeeFields.map((field, index) => (
-                      <div key={field.id} className="p-4 border rounded-lg mb-4 bg-background">
-                          <div className="flex justify-between items-center mb-2">
-                             <Label className="font-semibold">{currentEmployees[index]?.name || `Funcionário #${index + 1}`}</Label>
-                             <div className="flex items-center gap-2">
-                               {/* EditEmployeeDialog expects a lot of props that we don't have here. 
-                                   A simpler approach is to edit the details inline for now.
-                                */}
-                             </div>
-                          </div>
-                          <Input {...register(`employees.${index}.name`)} placeholder="Nome" className="mb-2" />
-                          <Textarea {...register(`employees.${index}.preferences`)} placeholder="Preferências (ex: prefere turnos da manhã)" />
-                          <EmployeeFormFields index={index} control={control} register={register} />
-                      </div>
-                  ))}
-                   {employeeFields.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum funcionário neste grupo. Adicione funcionários na barra lateral.</p>}
-              </TabsContent>
-              <TabsContent value="shifts" className="mt-2">
-                  {shiftFields.map((field, index) => (
-                      <div key={field.id} className="p-4 border rounded-lg mb-4 grid grid-cols-1 md:grid-cols-4 gap-2 bg-background">
-                           <Controller
-                              control={control}
-                              name={`shifts.${index}.day`}
-                              render={({ field }) => (
-                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                  <SelectTrigger><SelectValue placeholder="Selecione o dia" /></SelectTrigger>
-                                  <SelectContent>
-                                    {weekdays.map(day => <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>)}
-                                  </SelectContent>
-                                  </Select>
-                              )}
-                          />
-                          <Input {...register(`shifts.${index}.startTime`)} type="time" />
-                          <Input {...register(`shifts.${index}.endTime`)} type="time" />
-                          <div className="flex items-center gap-2">
-                            <Controller
-                                control={control}
-                                name={`shifts.${index}.role`}
+
+        <div className="flex-1 flex gap-6 overflow-hidden pt-4">
+            {/* Form Section */}
+            <ScrollArea className="w-1/3 flex-shrink-0 pr-6 -mr-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <div>
+                        <Label className="font-semibold">1. Período da Escala</Label>
+                         <div className="grid grid-cols-2 gap-2 mt-2">
+                             <Controller
+                                control={form.control}
+                                name="startDate"
                                 render={({ field }) => (
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                      {roles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
-                                    </SelectContent>
-                                    </Select>
+                                    <div className="flex flex-col gap-1">
+                                        <Label htmlFor="startDate" className="text-xs">Início</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                variant={"outline"}
+                                                className={cn("justify-start text-left font-normal h-9", !field.value && "text-muted-foreground")}
+                                                >
+                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                {field.value ? format(field.value, "dd/MM/y") : <span>Escolha</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus locale={ptBR} /></PopoverContent>
+                                        </Popover>
+                                    </div>
                                 )}
                             />
-                            <Button type="button" variant="ghost" size="icon" onClick={() => removeShift(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                          </div>
-                      </div>
-                  ))}
-                  <Button type="button" variant="outline" onClick={() => appendShift({ day: 'Tuesday', startTime: '09:00', endTime: '17:00', role: roles[0] || '' })}>
-                      <Plus className="mr-2 h-4 w-4" /> Adicionar Turno
-                  </Button>
-              </TabsContent>
-              <TabsContent value="constraints" className="mt-2">
-                 <Textarea {...register('scheduleConstraints')} rows={10} placeholder="ex: Garantir justiça nos turnos de fim de semana." />
-              </TabsContent>
-              <TabsContent value="suggestions" className="mt-2">
-                  {isPending && <div className="flex items-center justify-center p-8"><Loader2 className="animate-spin mr-2"/> Gerando...</div>}
-                  {suggestions && (
-                      <div className="bg-background rounded-lg p-4">
-                          <h3 className="font-bold mb-2 text-lg">Resumo e Justificativa da IA</h3>
-                          <p className="text-sm bg-muted p-3 rounded-md mb-4">{suggestions.summary}</p>
-                          <h3 className="font-bold mb-2 text-lg">Atribuições Sugeridas</h3>
-                          <div className="space-y-2">
-                          {suggestions.assignments.map((a, i) => (
-                              <div key={i} className="text-sm p-3 border rounded-lg grid grid-cols-1 sm:grid-cols-3 gap-2 bg-white">
-                                  <span className="font-semibold">{currentEmployees.find(e => e.id === a.employeeId)?.name}</span>
-                                  <span>{a.role} na {getDayLabel(a.shiftDay)}</span>
-                                  <span className="font-mono">{a.shiftStartTime} - {a.shiftEndTime}</span>
-                              </div>
-                          ))}
-                          </div>
-                      </div>
-                  )}
-              </TabsContent>
+                             <Controller
+                                control={form.control}
+                                name="endDate"
+                                render={({ field }) => (
+                                    <div className="flex flex-col gap-1">
+                                        <Label htmlFor="endDate" className="text-xs">Fim</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                variant={"outline"}
+                                                className={cn("justify-start text-left font-normal h-9", !field.value && "text-muted-foreground")}
+                                                >
+                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                {field.value ? format(field.value, "dd/MM/y") : <span>Escolha</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus locale={ptBR} /></PopoverContent>
+                                        </Popover>
+                                    </div>
+                                )}
+                            />
+                        </div>
+                         {form.formState.errors.endDate && <p className="text-xs text-red-500 mt-1">{form.formState.errors.endDate.message}</p>}
+                    </div>
+
+                    <div>
+                        <Label className="font-semibold">2. Turmas para Escala</Label>
+                        <div className="space-y-2 p-3 border rounded-md max-h-40 overflow-y-auto mt-2">
+                        {calendars.map((cal) => (
+                            <div key={cal.id} className="flex items-center space-x-2">
+                                <Controller
+                                    control={form.control}
+                                    name="calendarIds"
+                                    render={({ field }) => (
+                                        <Checkbox
+                                            id={`cal-${cal.id}`}
+                                            checked={field.value?.includes(cal.id)}
+                                            onCheckedChange={(checked) => {
+                                                return checked
+                                                ? field.onChange([...(field.value || []), cal.id])
+                                                : field.onChange(field.value?.filter((value) => value !== cal.id));
+                                            }}
+                                        />
+                                    )}
+                                />
+                                <Label htmlFor={`cal-${cal.id}`} className="font-normal">{cal.name}</Label>
+                            </div>
+                        ))}
+                        </div>
+                         {form.formState.errors.calendarIds && <p className="text-xs text-red-500 mt-1">{form.formState.errors.calendarIds.message}</p>}
+                    </div>
+
+                    <div>
+                        <Label className="font-semibold">3. Dias de Trabalho</Label>
+                        <Controller
+                            control={form.control}
+                            name="allowedDays"
+                            render={({ field }) => (
+                                <div className="p-3 border rounded-md mt-2 space-y-3">
+                                    <div className="flex items-center gap-2">
+                                        <Button type="button" variant="outline" size="xs" onClick={() => field.onChange(allWeekdays)}>Todos</Button>
+                                        <Button type="button" variant="outline" size="xs" onClick={() => field.onChange([])}>Nenhum</Button>
+                                        <Button type="button" variant="outline" size="xs" onClick={() => field.onChange(businessDays)}>Dias Úteis</Button>
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {weekdays.map(day => (
+                                            <div key={day.id} className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id={`day-${day.id}`}
+                                                    checked={field.value?.includes(day.id)}
+                                                    onCheckedChange={(checked) => {
+                                                        const newValue = checked
+                                                            ? [...(field.value || []), day.id]
+                                                            : (field.value || []).filter(id => id !== day.id);
+                                                        field.onChange(newValue);
+                                                    }}
+                                                />
+                                                <Label htmlFor={`day-${day.id}`} className="font-normal">{day.label}</Label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                         />
+                    </div>
+                    
+
+                    <div>
+                        <Label className="font-semibold">4. Funções a Preencher</Label>
+                        <div className="space-y-2 p-3 border rounded-md max-h-40 overflow-y-auto mt-2">
+                        {roles.map((role) => (
+                            <div key={role} className="flex items-center space-x-2">
+                                <Controller
+                                    control={form.control}
+                                    name="rolesToFill"
+                                    render={({ field }) => (
+                                        <Checkbox
+                                            id={role}
+                                            checked={field.value?.includes(role)}
+                                            onCheckedChange={(checked) => {
+                                                return checked
+                                                ? field.onChange([...(field.value || []), role])
+                                                : field.onChange(field.value?.filter((value) => value !== role));
+                                            }}
+                                        />
+                                    )}
+                                />
+                                <Label htmlFor={role} className="font-normal">{role}</Label>
+                            </div>
+                        ))}
+                        </div>
+                         {form.formState.errors.rolesToFill && <p className="text-xs text-red-500 mt-1">{form.formState.errors.rolesToFill.message}</p>}
+                    </div>
+
+                    <div>
+                        <Label htmlFor="scheduleConstraints" className="font-semibold">5. Restrições e Preferências</Label>
+                        <Textarea
+                        id="scheduleConstraints"
+                        placeholder="Ex: Pelo menos 2 médicos de plantão no fim de semana. Dra. Alice não pode trabalhar às quartas-feiras."
+                        {...form.register("scheduleConstraints")}
+                        className="h-24 mt-2"
+                        />
+                    </div>
+                    
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? ( <> <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gerando Sugestões... </> ) 
+                                   : ( <> <Wand2 className="mr-2 h-4 w-4" /> Gerar Sugestões </> )}
+                    </Button>
+                </form>
             </ScrollArea>
-            <div className="mt-auto pt-4 border-t flex justify-end gap-2 flex-shrink-0">
-              {suggestions ? (
-                 <Button type="button" onClick={handleApply}>Aplicar ao Calendário</Button>
-              ) : (
-                <Button type="submit" disabled={isPending || currentEmployees.length === 0}>
-                  {isPending ? <><Loader2 className="animate-spin mr-2"/> Pensando...</> : "Gerar Sugestões"}
-                </Button>
-              )}
+
+            {/* Results Section */}
+            <div className="flex-1 flex flex-col overflow-hidden border-l pl-6">
+                <Label className="font-semibold mb-2">Resultados</Label>
+                <div className="flex-1 overflow-y-auto -mr-6 pr-6">
+                    {isLoading && (
+                        <div className="flex flex-col items-center justify-center h-full">
+                            <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+                            <p className="text-lg font-medium text-muted-foreground">Analisando disponibilidade e regras...</p>
+                            <p className="text-sm text-muted-foreground">Isso pode levar alguns segundos.</p>
+                        </div>
+                    )}
+
+                    {suggestions && (
+                        <div className="flex flex-col h-full">
+                             <Alert className="mb-4">
+                                <AlertTitle>Resumo da IA</AlertTitle>
+                                <AlertDescription>
+                                    {suggestions.summary}
+                                </AlertDescription>
+                            </Alert>
+                            <ScrollArea className="flex-1">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[40px]">
+                                                <Checkbox
+                                                    checked={selectedSuggestions.length === editableSuggestions.length && editableSuggestions.length > 0}
+                                                    onCheckedChange={(checked) => {
+                                                        setSelectedSuggestions(checked ? editableSuggestions.map((_, index) => index) : []);
+                                                    }}
+                                                />
+                                            </TableHead>
+                                            <TableHead>Data</TableHead>
+                                            <TableHead>Funcionário</TableHead>
+                                            <TableHead>Função</TableHead>
+                                            <TableHead>Turma</TableHead>
+                                            <TableHead className="text-right">Ações</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                    {editableSuggestions.map((suggestion, index) => {
+                                        const employee = employees.find(e => e.id === suggestion.employeeId);
+                                        const shiftForDialog: Shift = {
+                                            id: `suggested-${index}`,
+                                            date: suggestion.shiftDate,
+                                            employeeName: employee?.name || '',
+                                            role: suggestion.role,
+                                            startTime: suggestion.shiftStartTime,
+                                            endTime: suggestion.shiftEndTime,
+                                            color: 'yellow'
+                                        };
+                                        return (
+                                        <TableRow key={index} className={selectedSuggestions.includes(index) ? "bg-muted/50" : ""}>
+                                            <TableCell>
+                                                <Checkbox
+                                                    checked={selectedSuggestions.includes(index)}
+                                                    onCheckedChange={(checked) => {
+                                                        setSelectedSuggestions(prev => 
+                                                            checked ? [...prev, index] : prev.filter(i => i !== index)
+                                                        );
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell>{format(parseISO(suggestion.shiftDate), 'dd/MM/yy')}</TableCell>
+                                            <TableCell>{employee?.name || 'Desconhecido'}</TableCell>
+                                            <TableCell>{suggestion.role}</TableCell>
+                                            <TableCell>{getCalendarNameById(suggestion.calendarId)}</TableCell>
+                                            <TableCell className="text-right">
+                                                <EditShiftDialog 
+                                                    shift={shiftForDialog} 
+                                                    onUpdateShift={(updated) => handleUpdateSuggestion(updated, index)} 
+                                                    shiftTypes={roles}
+                                                    colorMeanings={[]}
+                                                />
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteSuggestion(index)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    )})}
+                                    </TableBody>
+                                </Table>
+                            </ScrollArea>
+                            
+                        </div>
+                    )}
+
+                    {!isLoading && !suggestions && (
+                         <div className="flex flex-col items-center justify-center h-full text-center p-8 border-dashed border-2 rounded-lg">
+                            <p className="text-lg font-medium text-muted-foreground">As sugestões de turno aparecerão aqui.</p>
+                            <p className="text-sm text-muted-foreground">Preencha o formulário à esquerda para começar.</p>
+                        </div>
+                    )}
+                </div>
             </div>
-          </Tabs>
-        </form>
+        </div>
+
+        <DialogFooter className="pt-4 border-t">
+          <Button variant="outline" onClick={() => setIsOpen(false)}>
+            <X className="mr-2 h-4 w-4" />
+            Cancelar
+          </Button>
+          <Button onClick={handleApply} disabled={isLoading || !suggestions || selectedSuggestions.length === 0}>
+            <Check className="mr-2 h-4 w-4" />
+            Aplicar {selectedSuggestions.length > 0 ? `(${selectedSuggestions.length})` : ''} Sugestões
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

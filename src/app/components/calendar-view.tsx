@@ -1,8 +1,8 @@
 
 "use client";
 
-import type { Employee, Shift } from "@/lib/types";
-import { format, getDaysInMonth, startOfMonth, getDay, isToday, isSameMonth } from "date-fns";
+import type { Employee, Shift, ShiftColor } from "@/lib/types";
+import { format, getDaysInMonth, startOfMonth, getDay, isToday, isSameMonth, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import ShiftCard from "./shift-card";
@@ -15,7 +15,9 @@ type CalendarViewProps = {
   employees: Employee[];
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
-  roles: string[];
+  shiftTypes: string[];
+  colorMeanings: { color: ShiftColor, meaning: string }[];
+  disableAddShift?: boolean;
 };
 
 export default function CalendarView({ 
@@ -25,7 +27,9 @@ export default function CalendarView({
     employees, 
     onUpdateShift, 
     onDeleteShift, 
-    roles 
+    shiftTypes,
+    colorMeanings,
+    disableAddShift = false
 }: CalendarViewProps) {
   const firstDayOfMonth = startOfMonth(currentDate);
   const daysInMonth = getDaysInMonth(currentDate);
@@ -51,8 +55,10 @@ export default function CalendarView({
         ))}
         {days.map((day, index) => {
           const dateForDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+          const dateForDayString = format(dateForDay, 'yyyy-MM-dd');
+
           const shiftsForDay = shifts.filter(
-            (shift) => shift.day === day && isSameMonth(dateForDay, currentDate)
+            (shift) => shift.date === dateForDayString
           );
 
           return (
@@ -75,7 +81,9 @@ export default function CalendarView({
                   {day}
                 </span>
                 <div className="print:hidden">
-                    <AddShiftDialog onAddShift={onAddShift} day={day} roles={roles} />
+                    {!disableAddShift && (
+                        <AddShiftDialog onAddShift={onAddShift} date={dateForDay} shiftTypes={shiftTypes} colorMeanings={colorMeanings} employees={employees} />
+                    )}
                 </div>
               </div>
               <div className="flex flex-col gap-1 overflow-y-auto print:overflow-visible">
@@ -86,7 +94,8 @@ export default function CalendarView({
                     employees={employees} 
                     onUpdateShift={onUpdateShift}
                     onDeleteShift={onDeleteShift}
-                    roles={roles}
+                    shiftTypes={shiftTypes}
+                    colorMeanings={colorMeanings}
                   />
                 ))}
               </div>

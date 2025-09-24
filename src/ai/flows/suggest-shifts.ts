@@ -1,3 +1,4 @@
+
 // src/ai/flows/suggest-shifts.ts
 'use server';
 
@@ -5,7 +6,7 @@
  * @fileOverview AI-powered shift assignment suggestions.
  *
  * This file defines a Genkit flow to suggest optimal shift assignments
- * based on employee availability and preferences.
+ * based on employee unavailability and preferences.
  *
  * @module src/ai/flows/suggest-shifts
  *
@@ -16,39 +17,38 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
+
+const EmployeeSchema = z.object({
+  id: z.string().describe('Unique identifier for the employee.'),
+  name: z.string().describe('Name of the employee.'),
+  unavailability: z
+    .array(z.object({
+      day: z.string().describe('Day of the week (e.g., Monday).'),
+      startTime: z.string().describe('Start time of unavailability (e.g., 09:00).'),
+      endTime: z.string().describe('End time of unavailability (e.g., 17:00).'),
+    }))
+    .describe('Employee unavailability for the week.'),
+  preferences: z
+    .string()
+    .describe('Employee shift preferences or constraints.'),
+});
+
+const CalendarSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+});
 
 const SuggestShiftAssignmentsInputSchema = z.object({
-  employees: z
-    .array(
-      z.object({
-        id: z.string().describe('Unique identifier for the employee.'),
-        name: z.string().describe('Name of the employee.'),
-        availability: z
-          .array(z.object({
-            day: z.string().describe('Day of the week (e.g., Monday).'),
-            startTime: z.string().describe('Start time of availability (e.g., 09:00).'),
-            endTime: z.string().describe('End time of availability (e.g., 17:00).'),
-          }))
-          .describe('Employee availability for the week.'),
-        preferences: z
-          .string()
-          .describe('Employee shift preferences or constraints.'),
-      })
-    )
-    .describe('List of employees and their availability and preferences.'),
-  shifts: z
-    .array(
-      z.object({
-        day: z.string().describe('Day of the week for the shift.'),
-        startTime: z.string().describe('Start time of the shift (e.g., 09:00).'),
-        endTime: z.string().describe('End time of the shift (e.g., 17:00).'),
-        role: z.string().describe('The role that needs to be filled for the shift (e.g. Doctor, Nurse)'),
-      })
-    )
-    .describe('List of shifts that need to be filled.'),
+  employees: z.array(EmployeeSchema).describe('List of all employees to be scheduled.'),
+  rolesToFill: z
+    .array(z.string())
+    .describe('List of roles that need to be filled (e.g. Doctor, Nurse).'),
   scheduleConstraints: z
     .string()
     .describe('Constraints or requirements for the overall schedule.'),
+  validDates: z.array(z.string()).describe('A list of all possible dates (in YYYY-MM-DD format) on which shifts can be scheduled.'),
+  calendars: z.array(CalendarSchema).describe("The calendars/teams for which to generate shifts."),
 });
 
 export type SuggestShiftAssignmentsInput = z.infer<typeof SuggestShiftAssignmentsInputSchema>;
@@ -57,15 +57,16 @@ const SuggestShiftAssignmentsOutputSchema = z.object({
   assignments: z
     .array(
       z.object({
-        employeeId: z.string().describe('The ID of the employee assigned to the shift.'),
-        shiftDay: z.string().describe('Day of the week for the assigned shift. Use Portuguese, e.g. Segunda-feira, Terça-feira.'),
+        employeeId: z.string().describe('The ID of the employee assigned to the shift. This ID must be one of the employee IDs provided in the input.'),
+        shiftDate: z.string().describe('The date of the assigned shift in YYYY-MM-DD format.'),
         shiftStartTime: z.string().describe('Start time of the assigned shift.'),
         shiftEndTime: z.string().describe('End time of the assigned shift.'),
         role: z.string().describe('The role that the employee will fulfill'),
+        calendarId: z.string().describe("The ID of the calendar/team this shift belongs to. Must be one of the IDs from the input."),
       })
     )
     .describe('List of suggested shift assignments.'),
-  summary: z.string().describe('A summary of the shift assignment process.'),
+  summary: z.string().describe('A summary of the shift assignment process, in Portuguese.'),
 });
 
 export type SuggestShiftAssignmentsOutput = z.infer<typeof SuggestShiftAssignmentsOutputSchema>;
@@ -78,20 +79,58 @@ const suggestShiftAssignmentsPrompt = ai.definePrompt({
   name: 'suggestShiftAssignmentsPrompt',
   input: {schema: SuggestShiftAssignmentsInputSchema},
   output: {schema: SuggestShiftAssignmentsOutputSchema},
-  prompt: `Você é um assistente de IA que ajuda a criar atribuições de turno ideais para uma equipe médica. A resposta deve ser em português.
+  prompt: `Você é um assistente de IA especialista em criar escalas de trabalho para equipes médicas. Sua resposta deve ser em português.
 
-  Com base na disponibilidade dos funcionários, preferências, requisitos de turno e restrições de horário, sugira atribuições de turno.
+Sua tarefa é gerar uma lista de atribuições de plantão com base nas regras e dados fornecidos. Pense passo a passo para garantir que todas as regras sejam cumpridas.
 
-  Funcionários: {{JSON.stringify(employees)}}
-  Turnos: {{JSON.stringify(shifts)}}
-  Restrições de Horário: {{{scheduleConstraints}}}
+**Passo 1: Entenda a Meta Principal**
+A meta é criar uma escala onde CADA funcionário listado receba exatamente UM plantão para CADA uma das funções especificadas.
 
-  Considere as preferências dos funcionários e a justiça ao fazer as atribuições.
-  Retorne as atribuições de turno como um objeto JSON.
-  Certifique-se de que sua resposta corresponda exatamente ao esquema de saída, incluindo todos os campos.
-  Pense passo a passo e explique seu raciocínio no resumo.
-  Os dias da semana em shiftDay devem estar em português (ex: Segunda-feira, Terça-feira, etc.).
-  `,config: {
+**Passo 2: Calcule o Total de Plantões**
+- Número de Funcionários: {{employees.length}}
+- Número de Funções a Preencher: {{rolesToFill.length}}
+- Total de Plantões a Criar: (Funcionários * Funções) = {{employees.length}} * {{rolesToFill.length}}
+
+Sua saída DEVE conter exatamente esse número total de plantões.
+
+**Passo 3: Use as Informações e Siga as Regras**
+
+**REGRA OBRIGATÓRIA 1: ATRIBUIÇÃO COMPLETA**
+- Você DEVE garantir que CADA funcionário da lista receba somente UM plantão para CADA função listada em 'Funções a Preencher'. Não crie mais opções de turnos do que isso. Todos os funcionários devem ser incluídos. Por exemplo, se há 16 funcionários e 2 funções, por exemplo anestesia e enfermaria, o número máximo de plantões a serem sugeridos deve ser de 32, sendo um plantão de enfermaria e um plantão de anestesia para cada funcionário dentro do período delimitado e respeitando todas as demais regras.
+
+**REGRA OBRIGATÓRIA 2: DATAS DE TRABALHO**
+- Os plantões SÓ PODEM ser agendados nas seguintes datas: {{#each validDates}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}.
+- NENHUM plantão pode ser criado fora dessas datas.
+
+**REGRA OBRIGATÓRIA 3: DISTRIBUIÇÃO DIÁRIA**
+- Para garantir que a escala seja bem distribuída e utilize todo o período disponível, cada dia no calendário pode ter no máximo 2 plantões de CADA função (Ex: no máximo 2 de 'Anestesia' e no máximo 2 de 'Enfermaria' no mesmo dia). Tente espaçar os plantões ao máximo ao longo de todas as datas válidas.
+
+**Dados de Entrada:**
+- **Datas Válidas para Plantão:** {{#each validDates}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+- **Turmas:**
+  {{#each calendars}}
+  - ID: {{{id}}}, Nome: {{{name}}}
+  {{/each}}
+- **Funcionários (Indisponibilidades e Preferências):**
+  {{#each employees}}
+  - ID: {{{id}}}, Nome: {{{name}}}, Preferências: {{{preferences}}}, Indisponibilidade: {{#if unavailability}}{{#each unavailability}}{{{day}}} de {{{startTime}}} a {{{endTime}}}; {{/each}}{{else}}Nenhuma{{/if}}
+  {{/each}}
+- **Funções a Preencher:** {{#each rolesToFill}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+- **Restrições Adicionais:** {{{scheduleConstraints}}}
+
+**Passo 4: Gere a Saída**
+Ao fazer as atribuições, considere:
+1. A indisponibilidade dos funcionários é um bloqueio total.
+2. As preferências dos funcionários e a distribuição justa e espaçada dos plantões ao longo de todo o período.
+3. Para cada atribuição, especifique o 'calendarId' correspondente. O funcionário deve pertencer à turma do plantão.
+4. O 'employeeId' DEVE ser um dos IDs fornecidos.
+5. A 'shiftDate' DEVE ser uma das datas fornecidas na lista de Datas Válidas.
+
+Depois de gerar as atribuições, revise sua lista para garantir que o número total de plantões está correto e que todas as regras obrigatórias foram cumpridas. Explique seu raciocínio no resumo.
+IMPORTANTE: O resumo deve estar em português.
+  `,
+  config: {
+    model: googleAI('gemini-1.5-flash-latest'),
     safetySettings: [
       {
         category: 'HARM_CATEGORY_HATE_SPEECH',

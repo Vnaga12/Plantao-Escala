@@ -28,15 +28,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Save, Hospital, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { Employee, Shift } from "@/lib/types";
+import { Plus, Trash2, Save, Hospital, Pencil, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
+import type { Employee, Shift, ShiftColor, Calendar } from "@/lib/types";
 import { useToast } from "@/components/ui/use-toast";
-import { format, addMonths, subMonths, isSameMonth } from "date-fns";
+import { format, addMonths, subMonths, isSameMonth, parseISO, getDate } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { EditShiftDialog } from "./edit-shift-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ManageEmployeeShiftsDialog } from "./manage-employee-shifts-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const weekdays = [
     { value: "Monday", label: "Segunda-feira" },
@@ -48,10 +50,11 @@ const weekdays = [
     { value: "Sunday", label: "Domingo" },
 ];
 
-type FormValues = Omit<Employee, 'id'>;
+type FormValues = Employee;
 
 type EditEmployeeDialogProps = {
   employee: Employee;
+  allEmployees: Employee[];
   onUpdateEmployee: (employee: Employee) => void;
   onDeleteEmployee: (employeeId: string) => void;
   children: React.ReactNode;
@@ -59,12 +62,16 @@ type EditEmployeeDialogProps = {
   currentDate: Date;
   onUpdateShift: (updatedShift: Shift) => void;
   onDeleteShift: (shiftId: string) => void;
-  roles: string[];
+  onAddShift: (newShift: Omit<Shift, 'id' | 'color'>) => void;
+  shiftTypes: string[];
   calendarName: string;
+  colorMeanings: { color: ShiftColor, meaning: string }[];
+  calendars: Calendar[];
 };
 
 export function EditEmployeeDialog({ 
-    employee, 
+    employee,
+    allEmployees,
     onUpdateEmployee, 
     onDeleteEmployee, 
     children,
@@ -72,8 +79,11 @@ export function EditEmployeeDialog({
     currentDate,
     onUpdateShift,
     onDeleteShift,
-    roles,
-    calendarName
+    onAddShift,
+    shiftTypes,
+    calendarName,
+    colorMeanings,
+    calendars
 }: EditEmployeeDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [viewedMonth, setViewedMonth] = React.useState(currentDate);
@@ -81,23 +91,20 @@ export function EditEmployeeDialog({
 
   const { register, control, handleSubmit, reset } = useForm<FormValues>({
     defaultValues: {
-      name: employee.name,
-      preferences: employee.preferences,
-      availability: employee.availability,
+      ...employee
     }
   });
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "availability"
+    name: "unavailability"
   });
 
   React.useEffect(() => {
     if (isOpen) {
       reset({
-        name: employee.name,
-        preferences: employee.preferences,
-        availability: employee.availability,
+        ...employee,
+        calendarIds: employee.calendarIds || []
       });
       setViewedMonth(currentDate);
     }
@@ -105,7 +112,7 @@ export function EditEmployeeDialog({
 
 
   const onSubmit: SubmitHandler<FormValues> = (data) => {
-    onUpdateEmployee({ ...data, id: employee.id });
+    onUpdateEmployee(data);
     toast({
       title: "Perfil Atualizado",
       description: "As informações do funcionário foram salvas com sucesso.",
@@ -124,7 +131,7 @@ export function EditEmployeeDialog({
 
   const allAssignedShifts = shifts.filter(s => s.employeeName === employee.name);
   const assignedShiftsForMonth = allAssignedShifts.filter(s => {
-    const shiftDate = new Date(viewedMonth.getFullYear(), viewedMonth.getMonth(), s.day);
+    const shiftDate = parseISO(s.date);
     return isSameMonth(shiftDate, viewedMonth);
   });
   
@@ -152,9 +159,44 @@ export function EditEmployeeDialog({
                     <div className="flex-1 min-h-0 overflow-y-auto mt-4 pr-2">
                         <TabsContent value="profile">
                             <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="name" className="font-semibold">Nome</Label>
+                                        <Input id="name" {...register("name", { required: "O nome é obrigatório" })} className="mt-1" />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="role" className="font-semibold">Função</Label>
+                                        <Input id="role" {...register("role")} className="mt-1" />
+                                    </div>
+                                </div>
                                 <div>
-                                    <Label htmlFor="name" className="font-semibold">Nome</Label>
-                                    <Input id="name" {...register("name", { required: "O nome é obrigatório" })} className="mt-1" />
+                                    <Label className="font-semibold">Turmas</Label>
+                                    <p className="text-sm text-muted-foreground mb-2">Selecione as turmas às quais este funcionário pertence.</p>
+                                    <div className="space-y-2 p-3 border rounded-md">
+                                        <Controller
+                                            control={control}
+                                            name="calendarIds"
+                                            render={({ field }) => (
+                                                <>
+                                                {calendars.map(cal => (
+                                                    <div key={cal.id} className="flex items-center gap-2">
+                                                        <Checkbox
+                                                            id={`cal-${cal.id}`}
+                                                            checked={field.value?.includes(cal.id)}
+                                                            onCheckedChange={(checked) => {
+                                                                const newValue = checked
+                                                                    ? [...(field.value || []), cal.id]
+                                                                    : (field.value || []).filter(id => id !== cal.id);
+                                                                field.onChange(newValue);
+                                                            }}
+                                                        />
+                                                        <Label htmlFor={`cal-${cal.id}`} className="font-normal">{cal.name}</Label>
+                                                    </div>
+                                                ))}
+                                                </>
+                                            )}
+                                        />
+                                    </div>
                                 </div>
                                 <div>
                                     <Label htmlFor="preferences" className="font-semibold">Preferências</Label>
@@ -170,11 +212,12 @@ export function EditEmployeeDialog({
 
                                 <div>
                                     <div className="flex justify-between items-center mb-4">
-                                        <h3 className="font-semibold text-lg text-gray-700">Disponibilidade Padrão</h3>
+                                        <h3 className="font-semibold text-lg text-gray-700">Dias de Indisponibilidade</h3>
                                         <Button type="button" size="sm" variant="outline" onClick={() => append({ day: 'Monday', startTime: '09:00', endTime: '17:00' })}>
                                             <Plus className="mr-2 h-4 w-4" /> Adicionar
                                         </Button>
                                     </div>
+                                     <p className="text-sm text-muted-foreground mb-4 -mt-2">Indique os dias e horários em que o funcionário não está disponível para trabalhar. A IA considerará estes como bloqueios.</p>
                                     <div className="space-y-3">
                                     {fields.map((item, index) => (
                                         <div key={item.id} className="grid grid-cols-[1fr,1fr,1fr,auto] items-center gap-2 p-2 border rounded-md bg-gray-50/50">
@@ -182,7 +225,7 @@ export function EditEmployeeDialog({
                                                 <Label className="text-xs">Dia</Label>
                                                 <Controller
                                                     control={control}
-                                                    name={`availability.${index}.day`}
+                                                    name={`unavailability.${index}.day`}
                                                     render={({ field }) => (
                                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                         <SelectTrigger><SelectValue /></SelectTrigger>
@@ -195,11 +238,11 @@ export function EditEmployeeDialog({
                                             </div>
                                             <div className="flex flex-col space-y-1">
                                                 <Label className="text-xs">Início</Label>
-                                                <Input type="time" {...register(`availability.${index}.startTime`)} />
+                                                <Input type="time" {...register(`unavailability.${index}.startTime`)} />
                                             </div>
                                             <div className="flex flex-col space-y-1">
                                             <Label className="text-xs">Fim</Label>
-                                            <Input type="time" {...register(`availability.${index}.endTime`)} />
+                                            <Input type="time" {...register(`unavailability.${index}.endTime`)} />
                                             </div>
                                             <Button type="button" variant="ghost" size="icon" className="self-end text-destructive hover:bg-destructive/10" onClick={() => remove(index)}>
                                                 <Trash2 className="h-4 w-4"/>
@@ -207,7 +250,7 @@ export function EditEmployeeDialog({
                                         </div>
                                     ))}
                                     {fields.length === 0 && (
-                                            <p className="text-sm text-muted-foreground text-center py-4">Nenhuma disponibilidade padrão definida.</p>
+                                            <p className="text-sm text-muted-foreground text-center py-4">Nenhuma indisponibilidade definida.</p>
                                     )}
                                     </div>
                                 </div>
@@ -225,14 +268,32 @@ export function EditEmployeeDialog({
                                 <Button type="button" variant="ghost" size="icon" onClick={() => setViewedMonth(prev => addMonths(prev, 1))}>
                                     <ChevronRight className="h-5 w-5" />
                                 </Button>
+                                <ManageEmployeeShiftsDialog
+                                    employee={employee}
+                                    allEmployees={allEmployees}
+                                    assignedShifts={assignedShiftsForMonth}
+                                    onUpdateShift={onUpdateShift}
+                                    onAddShift={onAddShift}
+                                    onDeleteShift={onDeleteShift}
+                                    shiftTypes={shiftTypes}
+                                    currentDate={viewedMonth}
+                                    colorMeanings={colorMeanings}
+                                >
+                                    <Button type="button" variant="outline" size="sm">
+                                        <Settings2 className="mr-2 h-4 w-4" />
+                                        Gerenciar Plantões
+                                    </Button>
+                                </ManageEmployeeShiftsDialog>
                            </div>
 
                             <div className="space-y-3">
-                            {assignedShiftsForMonth.length > 0 ? assignedShiftsForMonth.map((shift) => (
+                            {assignedShiftsForMonth.length > 0 ? assignedShiftsForMonth.map((shift) => {
+                                const shiftDate = parseISO(shift.date);
+                                return (
                                 <div key={shift.id} className="grid grid-cols-[auto,1fr,auto] items-center gap-4 p-3 border rounded-md bg-gray-50/50">
                                 <div className="font-semibold text-center">
-                                    <div className="text-2xl">{shift.day}</div>
-                                    <div className="text-xs uppercase">{format(new Date(viewedMonth.getFullYear(), viewedMonth.getMonth(), shift.day), 'EEE', { locale: ptBR })}</div>
+                                    <div className="text-2xl">{getDate(shiftDate)}</div>
+                                    <div className="text-xs uppercase">{format(shiftDate, 'EEE', { locale: ptBR })}</div>
                                 </div>
                                 <div>
                                     <div className="font-medium">{shift.role}</div>
@@ -242,7 +303,7 @@ export function EditEmployeeDialog({
                                     </div>
                                 </div>
                                 <div className="flex items-center">
-                                    <EditShiftDialog shift={shift} onUpdateShift={onUpdateShift} roles={roles} />
+                                    <EditShiftDialog shift={shift} onUpdateShift={onUpdateShift} shiftTypes={shiftTypes} colorMeanings={colorMeanings} />
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
@@ -260,7 +321,7 @@ export function EditEmployeeDialog({
                                     </AlertDialog>
                                 </div>
                                 </div>
-                            )) : (
+                            )}) : (
                                 <p className="text-sm text-muted-foreground text-center py-4">Nenhum plantão atribuído neste mês.</p>
                             )}
                             </div>
@@ -286,7 +347,7 @@ export function EditEmployeeDialog({
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+                            <AlertDialogAction onClick={handleDelete}>Excluir Funcionário</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>

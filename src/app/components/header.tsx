@@ -1,32 +1,31 @@
 
 "use client";
 
-import type { Employee, Calendar, ShiftColor } from "@/lib/types";
+import * as React from "react";
+import type { Employee, Calendar, ShiftColor, Role } from "@/lib/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Search, Settings, PanelLeftClose, PanelLeftOpen, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/app/components/icons/logo";
-import { SuggestShiftsDialog } from "./suggest-shifts-dialog";
 import { SettingsDialog } from "./settings-dialog";
 import CalendarSwitcher from "./calendar-switcher";
+import { ReportDialog } from "./report-dialog";
+import { Input } from "@/components/ui/input";
+
 
 type HeaderProps = {
   currentDate: Date;
   onPrevMonth: () => void;
   onNextMonth: () => void;
   employees: Employee[];
-  onApplySuggestions: (
-    suggestions: any[]
-  ) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  roles: string[];
-  onRolesChange: (roles: string[]) => void;
   calendars: Calendar[];
   activeCalendarId: string;
   onCalendarChange: (id: string) => void;
   onCalendarsChange: (calendars: Calendar[]) => void;
+  onDeleteCalendar: (id: string) => void;
   colorMeanings: { color: ShiftColor, meaning: string }[];
   onColorMeaningsChange: (meanings: { color: ShiftColor, meaning: string }[]) => void;
   isSidebarOpen: boolean;
@@ -38,15 +37,13 @@ export default function Header({
   onPrevMonth, 
   onNextMonth, 
   employees, 
-  onApplySuggestions, 
   searchQuery, 
   onSearchChange,
-  roles,
-  onRolesChange,
   calendars,
   activeCalendarId,
   onCalendarChange,
   onCalendarsChange,
+  onDeleteCalendar,
   colorMeanings,
   onColorMeaningsChange,
   isSidebarOpen,
@@ -57,6 +54,9 @@ export default function Header({
     window.print();
   };
 
+  const shiftTypes = React.useMemo(() => colorMeanings.map(cm => cm.meaning), [colorMeanings]);
+
+
   return (
     <header className="flex-shrink-0 border-b print:hidden">
       <div className="p-4 flex items-center justify-between">
@@ -66,13 +66,14 @@ export default function Header({
             </Button>
           <div className="flex items-center gap-2">
             <Logo className="h-8 w-8 text-primary" />
-            <h1 className="text-xl font-bold font-headline text-gray-800">Escala</h1>
+            <h1 className="text-xl font-bold font-headline text-gray-800">Escalas</h1>
           </div>
            <CalendarSwitcher
             calendars={calendars}
             activeCalendarId={activeCalendarId}
             onCalendarChange={onCalendarChange}
             onCalendarsChange={onCalendarsChange}
+            onDeleteCalendar={onDeleteCalendar}
           />
           <div className="flex items-center gap-2 rounded-md bg-gray-100 p-1">
             <Button variant="ghost" size="icon" onClick={onPrevMonth} aria-label="Mês anterior">
@@ -85,27 +86,32 @@ export default function Header({
               <ChevronRight className="h-5 w-5" />
             </Button>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              placeholder="Buscar por funcionário ou função..."
+            <Input
+              placeholder="Buscar por funcionário..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-9 h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="pl-9 h-10 w-[200px]"
             />
           </div>
+        </div>
+        <div className="flex items-center gap-2">
            <SettingsDialog 
-              roles={roles} 
-              onRolesChange={onRolesChange} 
               colorMeanings={colorMeanings} 
               onColorMeaningsChange={onColorMeaningsChange} 
             />
-          <Button variant="outline" onClick={handlePrint}>
-            <Download />
-            Exportar PDF
-          </Button>
+            <ReportDialog 
+              employees={employees}
+              calendars={calendars}
+              currentDate={currentDate}
+              shiftTypes={shiftTypes}
+              colorMeanings={colorMeanings}
+            />
+            <Button variant="outline" onClick={handlePrint}>
+              <Download className="mr-2 h-4 w-4" />
+              Exportar PDF
+            </Button>
         </div>
       </div>
     </header>

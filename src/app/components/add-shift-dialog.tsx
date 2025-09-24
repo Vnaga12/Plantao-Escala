@@ -17,8 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle } from "lucide-react";
-import type { Shift, ShiftColor } from "@/lib/types";
+import type { Shift, ShiftColor, Employee } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 const availableColors: { name: ShiftColor, class: string }[] = [
   { name: 'blue', class: 'bg-blue-500' },
@@ -27,33 +28,66 @@ const availableColors: { name: ShiftColor, class: string }[] = [
   { name: 'red', class: 'bg-red-500' },
   { name: 'yellow', class: 'bg-yellow-500' },
   { name: 'gray', class: 'bg-gray-500' },
+  { name: 'pink', class: 'bg-pink-500' },
+  { name: 'cyan', class: 'bg-cyan-500' },
+  { name: 'orange', class: 'bg-orange-500' },
+  { name: 'indigo', class: 'bg-indigo-500' },
+  { name: 'teal', class: 'bg-teal-500' },
+  { name: 'lime', class: 'bg-lime-500' },
 ];
 
-type AddShiftFormValues = Omit<Shift, 'id' | 'day'>;
+type AddShiftFormValues = Omit<Shift, 'id' | 'date' | 'color'>;
 
 type AddShiftDialogProps = {
-  onAddShift: (shift: Omit<Shift, 'id'>) => void;
-  day: number;
-  roles: string[];
+  onAddShift: (shift: Omit<Shift, 'id' | 'color'>) => void;
+  date: Date;
+  shiftTypes: string[];
+  colorMeanings: { color: ShiftColor, meaning: string }[];
+  employees: Employee[];
 };
 
-export function AddShiftDialog({ onAddShift, day, roles }: AddShiftDialogProps) {
+export function AddShiftDialog({ onAddShift, date, shiftTypes, colorMeanings, employees }: AddShiftDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { register, handleSubmit, control, reset, formState: { errors } } = useForm<AddShiftFormValues>({
+  const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<AddShiftFormValues>({
     defaultValues: {
       employeeName: "",
       startTime: "09:00",
       endTime: "17:00",
-      role: roles[0] || "",
-      color: 'blue'
+      role: shiftTypes[0] || "",
     }
   });
 
+  const roleToColorMap = React.useMemo(() => new Map(colorMeanings.map(m => [m.meaning, m.color])), [colorMeanings]);
+  const selectedRole = watch("role");
+  
+  React.useEffect(() => {
+    if (selectedRole) {
+      setValue('color', roleToColorMap.get(selectedRole) || 'gray');
+    }
+  }, [selectedRole, setValue, roleToColorMap]);
+
+  const selectedColor = watch("color");
+
+
   const onSubmit: SubmitHandler<AddShiftFormValues> = (data) => {
-    onAddShift({ ...data, day });
+    const shiftDate = format(date, 'yyyy-MM-dd');
+    onAddShift({ ...data, date: shiftDate });
     setIsOpen(false);
     reset();
   };
+  
+  React.useEffect(() => {
+    if (isOpen) {
+        reset({
+            employeeName: employees[0]?.name || "",
+            startTime: "09:00",
+            endTime: "17:00",
+            role: shiftTypes[0] || "",
+            color: roleToColorMap.get(shiftTypes[0]) || 'gray'
+        });
+    }
+  }, [isOpen, shiftTypes, reset, employees, roleToColorMap]);
+
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -67,23 +101,23 @@ export function AddShiftDialog({ onAddShift, day, roles }: AddShiftDialogProps) 
           <DialogHeader>
             <DialogTitle>Adicionar Novo Turno</DialogTitle>
             <DialogDescription>
-              Preencha os detalhes para o novo turno no dia {day}.
+              Preencha os detalhes para o novo turno em {format(date, "dd/MM/yyyy")}.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="role" className="text-right">Função</Label>
+              <Label htmlFor="role" className="text-right">Tipo</Label>
               <Controller
                   name="role"
                   control={control}
                   render={({ field }) => (
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Selecione uma função" />
+                        <SelectValue placeholder="Selecione um tipo" />
                         </SelectTrigger>
                         <SelectContent>
-                        {roles.map(role => (
-                            <SelectItem key={role} value={role}>{role}</SelectItem>
+                        {shiftTypes.map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
                         ))}
                         </SelectContent>
                     </Select>
@@ -92,7 +126,23 @@ export function AddShiftDialog({ onAddShift, day, roles }: AddShiftDialogProps) 
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="employeeName" className="text-right">Funcionário</Label>
-              <Input id="employeeName" {...register("employeeName", { required: "O nome do funcionário é obrigatório" })} className="col-span-3" />
+               <Controller
+                  name="employeeName"
+                  control={control}
+                   rules={{ required: "O nome do funcionário é obrigatório" }}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Selecione um funcionário" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        {employees.map(employee => (
+                            <SelectItem key={employee.id} value={employee.name}>{employee.name}</SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                 )}
+              />
               {errors.employeeName && <p className="col-span-4 text-xs text-red-500 text-right">{errors.employeeName.message}</p>}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -105,27 +155,21 @@ export function AddShiftDialog({ onAddShift, day, roles }: AddShiftDialogProps) 
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="color" className="text-right">Cor</Label>
-               <Controller
-                name="color"
-                control={control}
-                render={({ field }) => (
-                  <div className="col-span-3 flex gap-2">
-                    {availableColors.map(color => (
-                      <button
-                        key={color.name}
-                        type="button"
-                        onClick={() => field.onChange(color.name)}
-                        className={cn(
-                          "h-6 w-6 rounded-full border-2",
-                          color.class,
-                          field.value === color.name ? 'border-primary' : 'border-transparent'
-                        )}
-                        aria-label={`Select ${color.name} color`}
-                      />
-                    ))}
-                  </div>
-                )}
-              />
+              <div className="col-span-3 flex gap-2">
+                {availableColors.map(color => (
+                  <button
+                    key={color.name}
+                    type="button"
+                    disabled
+                    className={cn(
+                      "h-6 w-6 rounded-full border-2",
+                      color.class,
+                      selectedColor === color.name ? 'border-primary ring-2 ring-primary ring-offset-2' : 'border-transparent opacity-50'
+                    )}
+                    aria-label={`Select ${color.name} color`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
           <DialogFooter>

@@ -1,9 +1,10 @@
 
-export type ShiftColor = 'blue' | 'green' | 'purple' | 'red' | 'yellow' | 'gray';
+
+export type ShiftColor = 'blue' | 'green' | 'purple' | 'red' | 'yellow' | 'gray' | 'pink' | 'cyan' | 'orange' | 'indigo' | 'teal' | 'lime';
 
 export type Shift = {
   id: string;
-  day: number;
+  date: string; // YYYY-MM-DD
   role: string;
   employeeName: string;
   startTime: string;
@@ -11,8 +12,10 @@ export type Shift = {
   color: ShiftColor;
 };
 
-export type EmployeeAvailability = {
-  day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday' | string;
+export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+
+export type EmployeeUnavailability = {
+  day: DayOfWeek;
   startTime: string;
   endTime: string;
 };
@@ -20,8 +23,10 @@ export type EmployeeAvailability = {
 export type Employee = {
   id: string;
   name: string;
-  availability: EmployeeAvailability[];
+  role: string;
+  unavailability: EmployeeUnavailability[];
   preferences: string;
+  calendarIds?: string[]; // Array of calendar IDs the employee belongs to
 };
 
 export type Calendar = {
@@ -29,3 +34,8 @@ export type Calendar = {
   name: string;
   shifts: Shift[];
 };
+
+export type Role = {
+    id: string;
+    name: string;
+}

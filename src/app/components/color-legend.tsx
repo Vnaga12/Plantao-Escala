@@ -15,6 +15,12 @@ const colorClasses: Record<ShiftColor, string> = {
   red: 'bg-red-500',
   yellow: 'bg-yellow-500',
   gray: 'bg-gray-500',
+  pink: 'bg-pink-500',
+  cyan: 'bg-cyan-500',
+  orange: 'bg-orange-500',
+  indigo: 'bg-indigo-500',
+  teal: 'bg-teal-500',
+  lime: 'bg-lime-500',
 };
 
 export default function ColorLegend({ meanings }: ColorLegendProps) {
